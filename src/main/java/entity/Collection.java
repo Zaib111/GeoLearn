@@ -11,7 +11,7 @@ public class Collection {
      * Creates a new collection with the given non-empty collection ID and collection name, and a country list.
      * @param collectionId the unique identifier for the collection
      * @param collectionName the collection name
-     * @param countryList the list of countries in the collection
+     * @param countryList the list of country codes for each country in the collection
      * @throws IllegalArgumentException if the collection ID, collection name or country list are empty
      */
     public Collection(String collectionId, String collectionName, List<String> countryList) {
