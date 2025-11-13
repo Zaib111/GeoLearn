@@ -8,7 +8,6 @@ public class CollectionInteractor implements CollectionInputBoundary {
     private CollectionUserDataAccessInterface userDataAccessObject;
     private CollectionOutputBoundary collectionPresenter;
 
-
     public CollectionInteractor(CollectionUserDataAccessInterface userDataAccessObject, CollectionOutputBoundary collectionPresenter) {
         this.userDataAccessObject = userDataAccessObject;
         this.collectionPresenter = collectionPresenter;

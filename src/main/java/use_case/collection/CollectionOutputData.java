@@ -13,9 +13,7 @@ public class CollectionOutputData {
         this.countriesInCollection = countriesInCollection;
     }
 
-    public String getCollectionName() {
-        return collectionName;
-    }
+    public String getCollectionName() { return collectionName; }
 
     public List<Country> getCountriesInCollection() { return countriesInCollection; }
 
