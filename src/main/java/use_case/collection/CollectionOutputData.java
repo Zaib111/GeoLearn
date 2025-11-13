@@ -5,9 +5,17 @@ import entity.Country;
 import java.util.*;
 
 public class CollectionOutputData {
-    private List<Country> countriesInCollection;
+    private final String collectionName;
+    private final List<Country> countriesInCollection;
 
-    public CollectionOutputData(List<Country> countriesInCollection) { this.countriesInCollection = countriesInCollection; }
+    public CollectionOutputData(String collectionName, List<Country> countriesInCollection) {
+        this.collectionName = collectionName;
+        this.countriesInCollection = countriesInCollection;
+    }
+
+    public String getCollectionName() {
+        return collectionName;
+    }
 
     public List<Country> getCountriesInCollection() { return countriesInCollection; }
 
