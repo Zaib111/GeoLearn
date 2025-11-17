@@ -14,13 +14,13 @@ public class CollectionView{
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JPanel collectionsPanel = new JPanel();
-            JButton viewCollections = new JButton("View Collections");
+            JButton createCollection = new JButton("Create a New Collection");
             JButton addCollection = new JButton("Add Collection");
             JButton removeCollection = new JButton("Remove Collection");
             JButton addToCollection = new JButton("Add To Collection");
             JButton removeFromCollection = new JButton("Remove From Collection");
 
-            collectionsPanel.add(viewCollections);
+            collectionsPanel.add(createCollection);
             collectionsPanel.add(addCollection);
             collectionsPanel.add(removeCollection);
             collectionsPanel.add(addToCollection);
