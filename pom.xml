@@ -1,349 +1,89 @@
-<project
-  xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.geotools.tutorial</groupId>
-  <artifactId>quickstart</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <packaging>jar</packaging>
-  <name>GeoTools Quickstart</name>
-  <url>http://maven.apache.org</url>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>17</maven.compiler.release>
-    <gt.version>35-SNAPSHOT</gt.version>
-    <maven.deploy.skip>true</maven.deploy.skip>
-  </properties>
-  
-  <dependencyManagement>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.asigra</groupId>
+    <artifactId>geolearn</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <name>GeoLearn</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>11</maven.compiler.release>
+    </properties>
+
     <dependencies>
-      <!-- Import the GeoTools BOM -->
-      <dependency>
-        <groupId>org.geotools</groupId>
-        <artifactId>gt-bom</artifactId>
-        <version>${gt.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.junit</groupId>
-        <artifactId>junit-bom</artifactId>
-        <version>5.11.0</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
+        <!-- OkHttp client -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.11.0</version>
+        </dependency>
+
+        <!-- Okio explicit version to avoid older vulnerable transitive version -->
+        <dependency>
+            <groupId>com.squareup.okio</groupId>
+            <artifactId>okio</artifactId>
+            <version>3.4.0</version>
+        </dependency>
+
+        <!-- org.json for JSON parsing -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20230618</version>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.9.3</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver</artifactId>
+            <version>4.11.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-  </dependencyManagement>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.geotools</groupId>
-      <artifactId>gt-shapefile</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.geotools</groupId>
-      <artifactId>gt-swing</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.geotools</groupId>
-      <artifactId>gt-main</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
-  <repositories>
-    <repository>
-      <id>osgeo</id>
-      <name>OSGeo Release Repository</name>
-      <url>https://repo.osgeo.org/repository/release/</url>
-      <snapshots><enabled>false</enabled></snapshots>
-      <releases><enabled>true</enabled></releases>
-    </repository>
-    <repository>
-      <id>osgeo-snapshot</id>
-      <name>OSGeo Snapshot Repository</name>
-      <url>https://repo.osgeo.org/repository/snapshot/</url>
-      <snapshots><enabled>true</enabled></snapshots>
-      <releases><enabled>false</enabled></releases>
-    </repository>
-  </repositories>
-
-  <build>
-    <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
-      <plugins>
-        <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
-        <plugin>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>3.4.0</version>
-        </plugin>
-        <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
-        <plugin>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>3.3.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.13.0</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.3.0</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.4.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-install-plugin</artifactId>
-          <version>3.1.2</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-deploy-plugin</artifactId>
-          <version>3.1.2</version>
-        </plugin>
-        <!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
-        <plugin>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.12.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-project-info-reports-plugin</artifactId>
-          <version>3.6.1</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <release>17</release>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-  
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.11.2</version>
-        <configuration>
-          <release>17</release>
-          <!-- Force non-modular mode for projects without module-info.java -->
-          <legacyMode>true</legacyMode>
-          <!-- Specifies whether or not the version text is included.-->
-          <version>false</version>
-          <!-- Omit qualifying package name before class names in output.-->
-          <noqualifier>all</noqualifier>
-          <!-- Shuts off non-error and non-warning messages.-->
-          <quiet>true</quiet>
-          <!-- The maximum Java heap size to be used to run javadoc. -->
-          <maxmemory>${javadoc.maxHeapSize}</maxmemory>
-          <!-- Specifies the encoding name of the source files.-->
-          <encoding>UTF-8</encoding>
-          <!-- Set an additional parameter for the command line. -->
-          <additionalOptions>-keywords</additionalOptions>
-          <breakiterator>true</breakiterator>
-          <excludePackageNames>org.geotools.resources:org.geotools.maven:com:net.opengis:org.w3:javax:it.geosolutions</excludePackageNames>
-
-          <!-- Enables the Javadoc tool to interpret a simple, one-argument -->
-          <!-- custom block tag tagname in doc comments. Note: <placement/> -->
-          <!-- should be a combination of the letters Xaoptcmf.             -->
-          <tags>
-            <tag>
-              <name>todo</name>
-              <placement>a</placement>
-              <head>TODO:</head>
-            </tag>
-            <tag>
-              <name>todo:</name>
-              <placement>a</placement>
-              <head>TODO:</head>
-            </tag>
-            <tag>
-              <name>TODO</name>
-              <placement>a</placement>
-              <head>TODO:</head>
-            </tag>
-            <tag>
-              <name>task</name>
-              <placement>tfmc</placement>
-              <head>TODO:</head>
-            </tag>
-            <tag>
-              <name>revisit</name>
-              <placement>tfmc</placement>
-              <head>TODO:</head>
-            </tag>
-            <tag>
-              <name>generated</name>
-              <placement>Xt</placement>
-              <head>Generated</head>
-            </tag>
-            <tag>
-              <name>UML</name>
-              <placement>a</placement>
-              <head>UML:</head>
-            </tag>
-            <tag>
-              <name>uml.property</name>
-              <placement>a</placement>
-              <head>UML property:</head>
-            </tag>
-            <tag>
-              <name>generated</name>
-              <placement>X</placement>
-            </tag>
-          </tags>
-
-          <!-- Creates links to existing javadoc-generated         -->
-          <!-- documentation of external referenced classes.       -->
-          <links>
-            <link>https://docs.oracle.com/en/java/javase/17/docs/api/</link>
-            <link>https://javaee.github.io/javaee-spec/javadocs/</link>
-            <link>https://locationtech.github.io/jts/javadoc/</link>
-          </links>
-        </configuration>
-        <!-- only works with package javadoc:aggregate for use of META-INF/MANIFEST.MF Automatic-Module-Name -->
-        <reportSets>
-          <reportSet>
-            <id>aggregate</id>
-            <reports>
-              <report>aggregate</report>
-            </reports>
-            <inherited>false</inherited>
-          </reportSet>
-          <reportSet>
-            <id>default</id>
-            <reports>
-              <report>javadoc</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-      </plugin>
-    </plugins>
-  </reporting>
-  
-  <profiles>
-    <profile>
-      <id>qa</id>
-      <activation>
-        <property>
-          <name>qa</name>
-        </property>
-      </activation>
-      <properties>
-        <maven.pmd.plugin.version>3.24.0</maven.pmd.plugin.version>
-        <pmd.version>7.14.0</pmd.version>
-        <pom.fmt.action>sort</pom.fmt.action>
-      </properties>
-      <build>
+    <build>
         <plugins>
-          <plugin>
-            <artifactId>maven-pmd-plugin</artifactId>
-            <version>${maven.pmd.plugin.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>check</goal>
-                </goals>
-              </execution>
-            </executions>
-            <dependencies>
-              <dependency>
-                <groupId>net.sourceforge.pmd</groupId>
-                <artifactId>pmd-core</artifactId>
-                <version>${pmd.version}</version>
-              </dependency>
-              <dependency>
-                <groupId>net.sourceforge.pmd</groupId>
-                <artifactId>pmd-java</artifactId>
-                <version>${pmd.version}</version>
-              </dependency>
-            </dependencies>
-            <configuration>
-              <linkXRef>false</linkXRef>
-              <rulesets>
-                <ruleset>${project.basedir}/../../build/qa/pmd-ruleset.xml</ruleset>
-                <ruleset>${project.basedir}/../../build/qa/pmd-junit-ruleset.xml</ruleset>
-              </rulesets>
-              <failurePriority>3</failurePriority>
-              <minimumPriority>3</minimumPriority>
-              <verbose>true</verbose>
-              <printFailingErrors>true</printFailingErrors>
-              <includeTests>true</includeTests>
-            </configuration>
-          </plugin>
-          <plugin>
-            <groupId>com.github.spotbugs</groupId>
-            <artifactId>spotbugs-maven-plugin</artifactId>
-            <version>4.7.3.5</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>check</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <effort>More</effort>
-              <!-- threshold>High</threshold -->
-              <xmlOutput>true</xmlOutput>
-              <maxRank>15</maxRank>
-              <excludeFilterFile>${project.basedir}/../../build/qa/spotbugs-exclude.xml</excludeFilterFile>
-              <jvmArgs>-XX:+TieredCompilation -XX:TieredStopAtLevel=1</jvmArgs>
-              <compilerArgs combine.children="append">
-                <arg>-Xlint:${lint}</arg>
-              </compilerArgs>
-            </configuration>
-          </plugin>
-          <plugin>
-            <artifactId>maven-checkstyle-plugin</artifactId>
-            <version>3.6.0</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>check</goal>
-                </goals>
-              </execution>
-            </executions>
-            <dependencies>
-              <dependency>
-                <groupId>com.puppycrawl.tools</groupId>
-                <artifactId>checkstyle</artifactId>
-                <version>9.3</version>
-              </dependency>
-            </dependencies>
-            <configuration>
-              <logViolationsToConsole>true</logViolationsToConsole>
-              <configLocation>${project.basedir}/../..//build/qa/checkstyle-cc0.xml</configLocation>
-            </configuration>
-          </plugin>
-          <plugin>
-            <groupId>com.github.ekryd.sortpom</groupId>
-            <artifactId>sortpom-maven-plugin</artifactId>
-            <version>2.15.0</version>
-            <executions>
-              <execution>
-                <phase>verify</phase>
-                <goals>
-                  <goal>${pom.fmt.action}</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <skip>true</skip>
-            </configuration>
-          </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                    <source>14</source>
+                    <target>14</target>
+                </configuration>
+            </plugin>
+
+            <!-- Exec plugin to run the simple test runner:
+                 mvn -DskipTests exec:java -Dexec.mainClass=data_access.TestAPICountries -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>data_access.TestAPICountries</mainClass>
+                </configuration>
+            </plugin>
+
+            <!-- Surefire (JUnit 5) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <useModulePath>false</useModulePath>
+                </configuration>
+            </plugin>
         </plugins>
-      </build>
-    </profile>
-  </profiles>
+    </build>
 </project>
