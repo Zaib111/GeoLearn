@@ -4,8 +4,8 @@ import entity.Country;
 import java.util.*;
 
 public class CollectionInputData {
-    private String collectionName;
-    private List<Country> countriesToAdd;
+    private final String collectionName;
+    private final List<Country> countriesToAdd;
 
     public CollectionInputData(String collectionName, List<Country> countriesToAdd) {
         this.collectionName = collectionName;
