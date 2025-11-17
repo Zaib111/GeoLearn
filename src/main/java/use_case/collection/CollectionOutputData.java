@@ -1,12 +1,20 @@
 package use_case.collection;
 
+import entity.Country;
+
 import java.util.*;
 
 public class CollectionOutputData {
-    private List<String> countries; // countries in a certain collection that the user chooses to view
+    private final String collectionName;
+    private final List<Country> countriesInCollection;
 
-    public CollectionOutputData(List<String> countries) { this.countries = countries; }
+    public CollectionOutputData(String collectionName, List<Country> countriesInCollection) {
+        this.collectionName = collectionName;
+        this.countriesInCollection = countriesInCollection;
+    }
 
-    public List<String> getCountries() { return countries; }
+    public String getCollectionName() { return collectionName; }
+
+    public List<Country> getCountriesInCollection() { return countriesInCollection; }
 
 }

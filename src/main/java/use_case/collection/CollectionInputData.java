@@ -1,14 +1,17 @@
 package use_case.collection;
 
-public class CollectionInputData {
-    private String collectionCreateOrDelete;
-    private String countryToAddRemove;
+import entity.Country;
+import java.util.*;
 
-    public CollectionInputData(String collectionCreateOrDelete, String countryToAddRemove) {
-        this.collectionCreateOrDelete = collectionCreateOrDelete;
-        this.countryToAddRemove = countryToAddRemove;
+public class CollectionInputData {
+    private final String collectionName;
+    private final List<Country> countriesToAdd;
+
+    public CollectionInputData(String collectionName, List<Country> countriesToAdd) {
+        this.collectionName = collectionName;
+        this.countriesToAdd = countriesToAdd;
     }
 
-    String getCollectionCreateOrDelete() { return collectionCreateOrDelete; }
-    String getCountryToAddRemove() { return countryToAddRemove; }
+    String getCollectionName() { return collectionName; }
+    List<Country> getCountriesToAdd() { return countriesToAdd; }
 }
