@@ -33,4 +33,8 @@ public class TakeQuizController {
     public void nextQuestion() {
         interactor.nextQuestion();
     }
+
+    public void timeExpired() {
+        interactor.timeExpired();
+    }
 }

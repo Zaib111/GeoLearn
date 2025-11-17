@@ -3,6 +3,8 @@ package use_case.quiz;
 import entity.Quiz;
 import entity.Question;
 
+import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TakeQuizInteractor implements TakeQuizInputBoundary{
@@ -31,7 +33,7 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
         TakeQuizStartResponseModel response = new TakeQuizStartResponseModel(
                 requestModel.getQuizType().getDisplayName(),
                 first.getPrompt(),
-                first.getOptions(),
+                shuffledOptions(first),
                 currentQuiz.getCurrentIndex(),
                 currentQuiz.getTotalQuestions(),
                 first.getMediaUrl()
@@ -89,7 +91,7 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
 
             TakeQuizQuestionResponseModel response = new TakeQuizQuestionResponseModel(
                     q.getPrompt(),
-                    q.getOptions(),
+                    shuffledOptions(q),
                     currentQuiz.getCurrentIndex(),
                     currentQuiz.getTotalQuestions(),
                     q.getMediaUrl()
@@ -97,5 +99,36 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
 
             presenter.presentQuestion(response);
         }
+    }
+
+    @Override
+    public void timeExpired() {
+        if (currentQuiz == null || currentQuiz.isFinished()) {
+            return;
+        }
+
+        Question currentQuestion = currentQuiz.getCurrentQuestion();
+        if (currentQuestion == null) {
+            return;
+        }
+
+        currentQuiz.answerCurrentQuestion("");
+
+        AnswerFeedbackResponseModel response = new AnswerFeedbackResponseModel(
+                "Time's up!",
+                currentQuestion.getCorrect(),
+                currentQuestion.getExplanation(),
+                currentQuiz.getScore(),
+                currentQuiz.getCurrentStreak(),
+                currentQuiz.getHighestStreak()
+        );
+
+        presenter.presentAnswerFeedback(response);
+    }
+
+    private List<String> shuffledOptions(Question q) {
+        List<String> shuffled = new ArrayList<>(q.getOptions());
+        Collections.shuffle(shuffled);
+        return shuffled;
     }
 }

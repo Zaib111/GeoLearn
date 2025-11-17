@@ -5,10 +5,18 @@ import adapters.TakeQuizController;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import javax.swing.Timer;
+import java.awt.Color;
 
 public class QuizPanel extends JPanel implements QuizView {
 
+    private static final int QUESTION_TIME_LIMIT_SECONDS = 30;
+
     private TakeQuizController controller;
+
+    private final JLabel timerLabel = new JLabel("", SwingConstants.CENTER);
+    private javax.swing.Timer countdownTimer;
+    private int remainingSeconds;
 
     private final JLabel quizTitleLabel = new JLabel("", SwingConstants.CENTER);
     private final JLabel progressLabel = new JLabel("", SwingConstants.CENTER);
@@ -24,26 +32,28 @@ public class QuizPanel extends JPanel implements QuizView {
     public QuizPanel() {
         setLayout(new BorderLayout());
 
-        // ---------- TOP: title + progress ----------
-        JPanel topPanel = new JPanel(new GridLayout(2, 1));
+        // Top of panel (containing title, progress, and timer)
+        JPanel topPanel = new JPanel(new GridLayout(3, 1));
         topPanel.add(quizTitleLabel);
         topPanel.add(progressLabel);
+        topPanel.add(timerLabel);
         add(topPanel, BorderLayout.NORTH);
 
-        // ---------- CENTER: prompt + options + (optional) image ----------
+        timerLabel.setText("Time: --");
+
+        // Centre of panel (containing the question and the options)
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(promptLabel, BorderLayout.NORTH);
 
         optionsPanel.setLayout(new GridLayout(0, 1));
         centerPanel.add(optionsPanel, BorderLayout.CENTER);
 
-        // imageLabel goes to the EAST (for flags); invisible by default
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         centerPanel.add(imageLabel, BorderLayout.EAST);
 
         add(centerPanel, BorderLayout.CENTER);
 
-        // ---------- SOUTH: type-in field + submit + next ----------
+        // South of panel (type-in box, submit and next)
         JPanel bottomPanel = new JPanel();
         bottomPanel.add(typeInField);
         bottomPanel.add(submitButton);
@@ -56,7 +66,7 @@ public class QuizPanel extends JPanel implements QuizView {
         nextButton.setVisible(false);
         imageLabel.setVisible(false);
 
-        // ---------- Listeners ----------
+        // Listeners
         submitButton.addActionListener(e -> {
             if (controller != null) {
                 controller.submitAnswer(typeInField.getText());
@@ -101,29 +111,61 @@ public class QuizPanel extends JPanel implements QuizView {
             typeInField.setVisible(false);
             submitButton.setVisible(false);
 
-            optionsPanel.setLayout(new GridLayout(options.size(), 1));
+            optionsPanel.removeAll();
+
+            optionsPanel.setLayout(new GridLayout(0, 1));
+
             for (String opt : options) {
                 JButton btn = new JButton(opt);
+
+                // No colors, no styling — default Swing look
                 btn.addActionListener(e -> {
                     if (controller != null) {
                         controller.submitAnswer(opt);
                     }
                 });
+
                 optionsPanel.add(btn);
             }
         }
 
-        // Next button only after feedback
         nextButton.setVisible(false);
 
-        // Handle optional image
+        // Optional image part
         if (mediaUrl != null && !mediaUrl.isEmpty()) {
             imageLabel.setText("[image: " + mediaUrl + "]"); // placeholder
             imageLabel.setVisible(true);
         }
 
+        startTimer(QUESTION_TIME_LIMIT_SECONDS);
+
+
         revalidate();
         repaint();
+    }
+
+    private void startTimer(int seconds) {
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
+
+        remainingSeconds = seconds;
+        timerLabel.setText("Time: " + remainingSeconds + "s");
+
+        countdownTimer = new javax.swing.Timer(1000, e -> {
+            remainingSeconds--;
+            if (remainingSeconds <= 0) {
+                countdownTimer.stop();
+                timerLabel.setText("Time: 0s");
+                if (controller != null) {
+                    controller.timeExpired();
+                }
+            } else {
+                timerLabel.setText("Time: " + remainingSeconds + "s");
+            }
+        });
+
+        countdownTimer.start();
     }
 
     @Override
@@ -133,6 +175,10 @@ public class QuizPanel extends JPanel implements QuizView {
                                    int score,
                                    int currentStreak,
                                    int highestStreak) {
+
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
 
         optionsPanel.removeAll();
         optionsPanel.setLayout(new GridLayout(0, 1));
@@ -159,6 +205,10 @@ public class QuizPanel extends JPanel implements QuizView {
                             int durationSeconds,
                             int highestStreak) {
 
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
+
         removeAll();
         setLayout(new GridLayout(4, 1));
 
@@ -169,5 +219,11 @@ public class QuizPanel extends JPanel implements QuizView {
 
         revalidate();
         repaint();
+    }
+
+    private void makeRounded(JButton btn) {
+        btn.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1, true));
+        btn.setOpaque(true);
+        btn.setContentAreaFilled(true);
     }
 }
