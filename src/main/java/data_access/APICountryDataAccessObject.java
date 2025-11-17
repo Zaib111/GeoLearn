@@ -190,4 +190,14 @@ public class APICountryDataAccessObject implements CountryDataAccessInterface {
         });
         return countries;
     }
+
+    @Override
+    public Country getCountry(String countryCode){
+        for(Country country: getCountries()){
+            if(country.getCode().equals(countryCode)){
+                return country;
+            }
+        }
+        return null;
+    }
 }
