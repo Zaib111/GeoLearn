@@ -1,4 +1,6 @@
 package entity;
 
-public class QuestionType {
+public enum QuestionType {
+    MCQ,
+    TYPE_IN
 }
