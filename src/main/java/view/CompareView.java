@@ -3,7 +3,6 @@ package view;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class CompareView {
@@ -37,6 +36,7 @@ public class CompareView {
             countriesPanel.setLayout(new GridLayout(5, 2, 10, 10));
 
             String[] countryOptions = {"Canada", "USA"};
+            @SuppressWarnings("unchecked")
             JComboBox<String>[] countryComboBoxes = new JComboBox[5];
 
             for (int i = 0; i < 5; i++) {
