@@ -65,6 +65,10 @@ public class Question {
         return explanation;
     }
 
+    public String getMediaUrl() {
+        return mediaUrl;
+    }
+
     @Override
     public String toString() {
         return "Question{" +
