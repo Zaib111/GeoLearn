@@ -2,6 +2,8 @@ package view;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -122,7 +124,7 @@ public class CountryTableView {
             Country country = countryDisplayData.get(i);
             data[i][0] = country.getName();
             data[i][1] = country.getRegion();
-            data[i][2] = country.getSubregion();
+            data[i][2] = country.getSubregion().orElse("");
             data[i][3] = String.format("%,d", country.getPopulation());
             data[i][4] = String.format("%,.2f", country.getAreaKm2());
             data[i][5] = String.format("%.2f", country.getPopulation() / country.getAreaKm2());
@@ -132,14 +134,19 @@ public class CountryTableView {
         table.setAutoCreateRowSorter(true);
         table.setFillsViewportHeight(true);
 
+        TableRowSorter<TableModel> sorter = (TableRowSorter<TableModel>) table.getRowSorter();
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
+        sorter.sort();
+
         // Remove old table if exists
         if (currentTableScrollPane != null) {
             panel.remove(currentTableScrollPane); // panel must be a class field
         }
 
-        // Add new table
+        // Create new table in scroll pane
         currentTableScrollPane = new JScrollPane(table);
         currentTableScrollPane.setPreferredSize(new Dimension(800, 300));
+        currentTableScrollPane.setBorder(new EmptyBorder(40, 0, 20, 0));
         panel.add(currentTableScrollPane);
 
         // Refresh display

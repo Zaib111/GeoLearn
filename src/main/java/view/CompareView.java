@@ -85,5 +85,4 @@ public class CompareView {
             frame.setVisible(true);
         });
     }
-public class CompareView {
 }
