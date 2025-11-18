@@ -58,7 +58,7 @@ public class APICountryDataAccessObject implements CountryDataAccessInterface {
                     .url(url)
                     .method("GET", null)
                     .build();
-             Response response;
+            Response response;
             try {
                 response = client.newCall(request).execute();
 
