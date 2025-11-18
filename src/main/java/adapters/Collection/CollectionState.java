@@ -21,7 +21,6 @@ public class CollectionState {
         return countriesToAdd;
     }
 
-
     public void setCollectionName(String collectionName) {
         this.collectionName = collectionName;
     }
