@@ -8,6 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import use_case.country.CountryDataAccessInterface;
+import use_case.compare.CompareDataAccessInterface;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class APICountryDataAccessObject implements CountryDataAccessInterface {
+public class APICountryDataAccessObject implements CountryDataAccessInterface, CompareDataAccessInterface {
     private final OkHttpClient client;
     private final String apiBase;
 
