@@ -42,35 +42,6 @@
             <version>3.4.0</version>
         </dependency>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.geotools</groupId>
-      <artifactId>gt-shapefile</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.geotools</groupId>
-      <artifactId>gt-swing</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.geotools</groupId>
-      <artifactId>gt-main</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-      <version>4.9.3</version>
-    </dependency>
-    <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json</artifactId>
-      <version>20210307</version>
-    </dependency>
-  </dependencies>
         <!-- org.json for JSON parsing -->
         <dependency>
             <groupId>org.json</groupId>
@@ -105,6 +76,12 @@
             <groupId>org.geotools</groupId>
             <artifactId>gt-main</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-epsg-hsql</artifactId>
+        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -160,5 +137,4 @@
         </plugins>
     </build>
 </project>
-
 
