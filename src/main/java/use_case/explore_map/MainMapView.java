@@ -33,6 +33,7 @@ public class MainMapView extends JFrame {
 
     private static final double MIN_ZOOM_SCALE = 0.1;  // Maximum zoom out
     private static final double MAX_ZOOM_SCALE = 50.0; // Maximum zoom in
+    private static final int MAX_ZOOM_IN_LEVELS = 5;   // Maximum zoom in levels
 
     private JMapPane mapPane;
     private MapContent mapContent;
@@ -50,6 +51,9 @@ public class MainMapView extends JFrame {
 
     // Timer to debounce hover updates and ensure single-threaded graphics operations
     private javax.swing.Timer hoverUpdateTimer;
+
+    // Current zoom level, starts at 0 (default view)
+    private int currentZoomLevel = 0;
 
     public MainMapView() {
         initializeFactories();
@@ -200,7 +204,13 @@ public class MainMapView extends JFrame {
             @Override
             public void componentResized(ComponentEvent e) {
                 if (mapPane != null && mapContent != null) {
-                    SwingUtilities.invokeLater(() -> mapPane.repaint());
+                    // Auto-fit the map to the window size when resized
+                    SwingUtilities.invokeLater(() -> {
+                        ReferencedEnvelope bounds = mapContent.getMaxBounds();
+                        if (bounds != null) {
+                            mapPane.setDisplayArea(bounds);
+                        }
+                    });
                 }
             }
         });
@@ -210,6 +220,14 @@ public class MainMapView extends JFrame {
         SwingUtilities.invokeLater(() -> {
             validate();
             repaint();
+
+            // Auto-fit the map to window size after loading
+            if (mapPane != null && mapContent != null) {
+                ReferencedEnvelope bounds = mapContent.getMaxBounds();
+                if (bounds != null) {
+                    mapPane.setDisplayArea(bounds);
+                }
+            }
         });
     }
 
@@ -493,8 +511,8 @@ public class MainMapView extends JFrame {
     }
 
     private void zoomIn() {
-        if (mapPane == null) {
-            return;
+        if (mapPane == null || currentZoomLevel >= MAX_ZOOM_IN_LEVELS) {
+            return; // Prevent zooming in beyond the maximum level
         }
 
         ReferencedEnvelope currentBounds = mapPane.getDisplayArea();
@@ -506,16 +524,8 @@ public class MainMapView extends JFrame {
         double width = currentBounds.getWidth() * zoomFactor;
         double height = currentBounds.getHeight() * zoomFactor;
 
-        ReferencedEnvelope fullBounds = mapContent.getMaxBounds();
-        if (fullBounds != null) {
-            double fullWidth = fullBounds.getWidth();
-            if (width < fullWidth / MAX_ZOOM_SCALE) {
-                return;
-            }
-        }
-
-        double centerX = currentBounds.getMedian(0);
-        double centerY = currentBounds.getMedian(1);
+        double centerX = currentBounds.getCenterX();
+        double centerY = currentBounds.getCenterY();
 
         ReferencedEnvelope newBounds = new ReferencedEnvelope(
             centerX - width / 2,
@@ -526,11 +536,14 @@ public class MainMapView extends JFrame {
         );
 
         SwingUtilities.invokeLater(() -> mapPane.setDisplayArea(newBounds));
+
+        // Increment zoom level
+        currentZoomLevel++;
     }
 
     private void zoomOut() {
-        if (mapPane == null) {
-            return;
+        if (mapPane == null || currentZoomLevel <= 0) {
+            return; // Prevent zooming out beyond the default view
         }
 
         ReferencedEnvelope currentBounds = mapPane.getDisplayArea();
@@ -542,16 +555,8 @@ public class MainMapView extends JFrame {
         double width = currentBounds.getWidth() * zoomFactor;
         double height = currentBounds.getHeight() * zoomFactor;
 
-        ReferencedEnvelope fullBounds = mapContent.getMaxBounds();
-        if (fullBounds != null) {
-            double fullWidth = fullBounds.getWidth();
-            if (width > fullWidth / MIN_ZOOM_SCALE) {
-                return;
-            }
-        }
-
-        double centerX = currentBounds.getMedian(0);
-        double centerY = currentBounds.getMedian(1);
+        double centerX = currentBounds.getCenterX();
+        double centerY = currentBounds.getCenterY();
 
         ReferencedEnvelope newBounds = new ReferencedEnvelope(
             centerX - width / 2,
@@ -562,6 +567,9 @@ public class MainMapView extends JFrame {
         );
 
         SwingUtilities.invokeLater(() -> mapPane.setDisplayArea(newBounds));
+
+        // Decrement zoom level
+        currentZoomLevel--;
     }
 
     private void resetView() {
@@ -573,6 +581,9 @@ public class MainMapView extends JFrame {
         if (bounds != null) {
             SwingUtilities.invokeLater(() -> mapPane.setDisplayArea(bounds));
         }
+
+        // Reset zoom level to default
+        currentZoomLevel = 0;
     }
 
     public static void main(String[] args) {
