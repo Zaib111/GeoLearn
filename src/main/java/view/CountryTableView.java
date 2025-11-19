@@ -2,6 +2,7 @@ package view;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
@@ -125,12 +126,26 @@ public class CountryTableView {
             data[i][0] = country.getName();
             data[i][1] = country.getRegion();
             data[i][2] = country.getSubregion().orElse("");
-            data[i][3] = String.format("%,d", country.getPopulation());
-            data[i][4] = String.format("%,.2f", country.getAreaKm2());
-            data[i][5] = String.format("%.2f", country.getPopulation() / country.getAreaKm2());
+//            data[i][3] = String.format("%,d", country.getPopulation());
+//            data[i][4] = String.format("%,.2f", country.getAreaKm2());
+//            data[i][5] = String.format("%.2f", country.getPopulation() / country.getAreaKm2());
+            data[i][3] = country.getPopulation();
+            data[i][4] = country.getAreaKm2();
+            data[i][5] = country.getPopulation() / country.getAreaKm2();
         }
 
-        JTable table = new JTable(data, columnNames);
+        TableModel model = new DefaultTableModel(data, columnNames) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return switch (columnIndex) {
+                    case 3 -> Long.class;    // population
+                    case 4 -> Double.class;  // area
+                    case 5 -> Double.class;  // density
+                    default -> String.class;
+                };
+            }
+        };
+        JTable table = new JTable(model);
         table.setAutoCreateRowSorter(true);
         table.setFillsViewportHeight(true);
 
