@@ -44,9 +44,12 @@ public class MainMapView extends JFrame {
     private Style defaultStyle;
     private SimpleFeature hoveredFeature;
 
-    // Basic synchronization for style updates
+    // Basic synchronization for style updates - enhanced for Graphics2D thread safety
     private final Object styleLock = new Object();
     private volatile boolean isUpdatingStyle = false;
+
+    // Timer to debounce hover updates and ensure single-threaded graphics operations
+    private javax.swing.Timer hoverUpdateTimer;
 
     public MainMapView() {
         initializeFactories();
@@ -271,13 +274,20 @@ public class MainMapView extends JFrame {
 
             // Only update if feature actually changed to reduce style update frequency
             if (feature != hoveredFeature) {
-                synchronized (styleLock) {
-                    if (isUpdatingStyle) {
-                        return; // Double-check after acquiring lock
-                    }
-                    hoveredFeature = feature;
-                    updateHoverDisplaySynchronized();
+                hoveredFeature = feature;
+
+                // Cancel any pending update
+                if (hoverUpdateTimer != null && hoverUpdateTimer.isRunning()) {
+                    hoverUpdateTimer.stop();
                 }
+
+                // Schedule update on EDT with debouncing to prevent multiple Graphics2D access
+                hoverUpdateTimer = new javax.swing.Timer(50, e -> {
+                    // This executes on EDT - safe for Graphics2D operations
+                    SwingUtilities.invokeLater(() -> updateHoverDisplayOnEDT());
+                });
+                hoverUpdateTimer.setRepeats(false);
+                hoverUpdateTimer.start();
             }
         } catch (Exception e) {
             System.err.println("Error handling mouse move: " + e.getMessage());
@@ -309,12 +319,6 @@ public class MainMapView extends JFrame {
         }
 
         return null;
-    }
-
-    private void updateHoverDisplay() {
-        synchronized (styleLock) {
-            updateHoverDisplaySynchronized();
-        }
     }
 
     private void updateHoverDisplaySynchronized() {
@@ -359,6 +363,48 @@ public class MainMapView extends JFrame {
         }
     }
 
+    private void updateHoverDisplayOnEDT() {
+        // This method ensures ALL graphics operations happen on EDT only
+        if (mapContent == null || featureLayer == null || isUpdatingStyle) {
+            return;
+        }
+
+        isUpdatingStyle = true;
+        try {
+            // Clear existing hover layer if present
+            if (hoverLayer != null) {
+                mapContent.removeLayer(hoverLayer);
+                hoverLayer = null;
+            }
+
+            // Create new hover layer if a feature is hovered
+            if (hoveredFeature != null) {
+                SimpleFeatureType featureType = featureSource.getSchema();
+                SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(featureType);
+
+                // Copy the hovered feature to the new layer
+                featureBuilder.init(hoveredFeature);
+                SimpleFeature hoverFeature = featureBuilder.buildFeature(null);
+
+                MemoryFeatureCollection collection = new MemoryFeatureCollection(featureType);
+                collection.add(hoverFeature);
+
+                hoverLayer = new FeatureLayer(collection, createHoverStyle());
+                mapContent.addLayer(hoverLayer);
+            }
+
+            // Direct repaint - we're already on EDT
+            if (mapPane != null) {
+                mapPane.repaint();
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error updating hover display: " + e.getMessage());
+        } finally {
+            isUpdatingStyle = false;
+        }
+    }
+
     private Style createHoverStyle() {
         try {
             // RED borders only - keeps the light blue fill
@@ -390,12 +436,15 @@ public class MainMapView extends JFrame {
     }
 
     private void clearHover() {
-        synchronized (styleLock) {
-            if (hoveredFeature != null && !isUpdatingStyle) {
-                hoveredFeature = null;
-                updateHoverDisplaySynchronized();
-            }
+        hoveredFeature = null;
+
+        // Cancel any pending updates
+        if (hoverUpdateTimer != null && hoverUpdateTimer.isRunning()) {
+            hoverUpdateTimer.stop();
         }
+
+        // Ensure clear happens on EDT
+        SwingUtilities.invokeLater(() -> updateHoverDisplayOnEDT());
     }
 
     private void handleMouseWheel(MapMouseEvent ev) {
