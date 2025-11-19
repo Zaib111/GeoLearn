@@ -2,6 +2,7 @@ package use_case.explore_map;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.*;
@@ -35,15 +36,31 @@ public class MainMapView extends JFrame {
     private static final double MAX_ZOOM_SCALE = 50.0; // Maximum zoom in
     private static final int MAX_ZOOM_IN_LEVELS = 5;   // Maximum zoom in levels
 
+    // Interaction modes
+    public enum InteractionMode {
+        PAN,        // Default mode - pan and hover
+        ZOOM,       // Zoom mode - click to zoom in
+        SELECT      // Selection mode - click to select countries
+    }
+
     private JMapPane mapPane;
     private MapContent mapContent;
     private FeatureLayer featureLayer;
     private FeatureLayer hoverLayer;  // Overlay layer for hover effects
+    private FeatureLayer selectedLayer; // Layer for selected countries
     private SimpleFeatureSource featureSource;
     private StyleFactory styleFactory;
     private FilterFactory filterFactory;
     private Style defaultStyle;
     private SimpleFeature hoveredFeature;
+    private SimpleFeature selectedFeature;
+
+    // Interaction mode and cursor management
+    private InteractionMode currentMode = InteractionMode.PAN;
+    private Cursor defaultCursor;
+    private Cursor zoomCursor;
+    private Cursor selectCursor;
+    private JButton panButton, zoomButton, selectButton;
 
     // Basic synchronization for style updates - enhanced for Graphics2D thread safety
     private final Object styleLock = new Object();
@@ -57,12 +74,87 @@ public class MainMapView extends JFrame {
 
     public MainMapView() {
         initializeFactories();
+        createCustomCursors();
         setupFrame();
     }
 
     private void initializeFactories() {
         styleFactory = CommonFactoryFinder.getStyleFactory();
         filterFactory = CommonFactoryFinder.getFilterFactory();
+    }
+
+    private void createCustomCursors() {
+        // Create default cursor
+        defaultCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
+
+        // Create magnifying glass cursor for zoom mode
+        zoomCursor = createMagnifyingGlassCursor();
+
+        // Create selection cursor for country selection
+        selectCursor = createSelectionCursor();
+    }
+
+    private Cursor createMagnifyingGlassCursor() {
+        try {
+            // Create a magnifying glass icon
+            BufferedImage cursorImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = cursorImage.createGraphics();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            // Draw magnifying glass
+            g2d.setColor(Color.BLACK);
+            g2d.setStroke(new BasicStroke(2.0f));
+
+            // Glass circle
+            g2d.drawOval(4, 4, 16, 16);
+
+            // Handle
+            g2d.drawLine(18, 18, 28, 28);
+
+            // Plus sign inside for zoom in
+            g2d.setStroke(new BasicStroke(1.5f));
+            g2d.setColor(new Color(0, 120, 0));
+            g2d.drawLine(12, 8, 12, 16);  // Vertical line
+            g2d.drawLine(8, 12, 16, 12);  // Horizontal line
+
+            g2d.dispose();
+
+            return Toolkit.getDefaultToolkit().createCustomCursor(
+                cursorImage, new java.awt.Point(12, 12), "ZoomCursor");
+        } catch (Exception e) {
+            System.err.println("Failed to create zoom cursor: " + e.getMessage());
+            return Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR);
+        }
+    }
+
+    private Cursor createSelectionCursor() {
+        try {
+            // Create a selection/pointing hand cursor
+            BufferedImage cursorImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = cursorImage.createGraphics();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            // Draw hand pointer
+            g2d.setColor(Color.BLACK);
+            g2d.setStroke(new BasicStroke(2.0f));
+
+            // Simple pointer arrow
+            int[] xPoints = {8, 8, 12, 16, 20, 16, 12};
+            int[] yPoints = {24, 8, 8, 12, 8, 16, 16};
+            g2d.fillPolygon(xPoints, yPoints, 7);
+
+            g2d.setColor(Color.WHITE);
+            g2d.setStroke(new BasicStroke(1.0f));
+            g2d.drawPolygon(xPoints, yPoints, 7);
+
+            g2d.dispose();
+
+            return Toolkit.getDefaultToolkit().createCustomCursor(
+                cursorImage, new java.awt.Point(8, 8), "SelectCursor");
+        } catch (Exception e) {
+            System.err.println("Failed to create select cursor: " + e.getMessage());
+            return Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
+        }
     }
 
     private void setupFrame() {
@@ -92,10 +184,25 @@ public class MainMapView extends JFrame {
         JButton resetButton = new JButton("Reset View");
         resetButton.addActionListener(e -> resetView());
 
+        // Mode buttons
+        panButton = new JButton("Pan Mode");
+        panButton.addActionListener(e -> setInteractionMode(InteractionMode.PAN));
+
+        zoomButton = new JButton("Zoom Mode");
+        zoomButton.addActionListener(e -> setInteractionMode(InteractionMode.ZOOM));
+
+        selectButton = new JButton("Select Mode");
+        selectButton.addActionListener(e -> setInteractionMode(InteractionMode.SELECT));
+
         panel.add(loadButton);
+        panel.add(new JSeparator(SwingConstants.VERTICAL));
         panel.add(zoomInButton);
         panel.add(zoomOutButton);
         panel.add(resetButton);
+        panel.add(new JSeparator(SwingConstants.VERTICAL));
+        panel.add(panButton);
+        panel.add(zoomButton);
+        panel.add(selectButton);
 
         return panel;
     }
@@ -166,6 +273,7 @@ public class MainMapView extends JFrame {
         mapPane.addMouseListener(new MapMouseListener() {
             @Override
             public void onMouseClicked(MapMouseEvent ev) {
+                handleMouseClick(ev);
             }
 
             @Override
@@ -216,6 +324,10 @@ public class MainMapView extends JFrame {
         });
 
         add(mapPane, BorderLayout.CENTER);
+
+        // Initialize cursor and mode buttons after map is loaded
+        updateCursor();
+        updateModeButtons();
 
         SwingUtilities.invokeLater(() -> {
             validate();
@@ -279,6 +391,11 @@ public class MainMapView extends JFrame {
     }
 
     private void handleMouseMove(MapMouseEvent ev) {
+        // Only show hover effects in PAN and SELECT modes
+        if (currentMode == InteractionMode.ZOOM) {
+            return;
+        }
+
         // Prevent concurrent style updates
         if (isUpdatingStyle) {
             return;
@@ -302,7 +419,7 @@ public class MainMapView extends JFrame {
                 // Schedule update on EDT with debouncing to prevent multiple Graphics2D access
                 hoverUpdateTimer = new javax.swing.Timer(50, e -> {
                     // This executes on EDT - safe for Graphics2D operations
-                    SwingUtilities.invokeLater(() -> updateHoverDisplayOnEDT());
+                    SwingUtilities.invokeLater(this::updateHoverDisplayOnEDT);
                 });
                 hoverUpdateTimer.setRepeats(false);
                 hoverUpdateTimer.start();
@@ -337,48 +454,6 @@ public class MainMapView extends JFrame {
         }
 
         return null;
-    }
-
-    private void updateHoverDisplaySynchronized() {
-        if (mapContent == null || featureLayer == null) {
-            return;
-        }
-
-        isUpdatingStyle = true;
-        try {
-            // Clear existing hover layer if present
-            if (hoverLayer != null) {
-                mapContent.removeLayer(hoverLayer);
-                hoverLayer = null;
-            }
-
-            // Create new hover layer if a feature is hovered
-            if (hoveredFeature != null) {
-                SimpleFeatureType featureType = featureSource.getSchema();
-                SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(featureType);
-
-                // Copy the hovered feature to the new layer
-                featureBuilder.init(hoveredFeature);
-                SimpleFeature hoverFeature = featureBuilder.buildFeature(null);
-
-                MemoryFeatureCollection collection = new MemoryFeatureCollection(featureType);
-                collection.add(hoverFeature);
-
-                hoverLayer = new FeatureLayer(collection, createHoverStyle());
-                mapContent.addLayer(hoverLayer);
-            }
-
-            // Simple repaint without additional synchronization
-            SwingUtilities.invokeLater(() -> {
-                if (mapPane != null) {
-                    mapPane.repaint();
-                }
-                isUpdatingStyle = false;
-            });
-        } catch (Exception e) {
-            isUpdatingStyle = false;
-            System.err.println("Error updating hover display: " + e.getMessage());
-        }
     }
 
     private void updateHoverDisplayOnEDT() {
@@ -425,14 +500,14 @@ public class MainMapView extends JFrame {
 
     private Style createHoverStyle() {
         try {
-            // RED borders only - keeps the light blue fill
+            // RED borders for hover
             org.geotools.api.style.Stroke redStroke = styleFactory.createStroke(
                 filterFactory.literal(Color.RED),
                 filterFactory.literal(3.0)
             );
 
             Fill fill = styleFactory.createFill(
-                filterFactory.literal(new Color(200, 220, 240, 255))
+                filterFactory.literal(new Color(255, 200, 200, 150))
             );
 
             PolygonSymbolizer symbolizer = styleFactory.createPolygonSymbolizer(
@@ -462,7 +537,7 @@ public class MainMapView extends JFrame {
         }
 
         // Ensure clear happens on EDT
-        SwingUtilities.invokeLater(() -> updateHoverDisplayOnEDT());
+        SwingUtilities.invokeLater(this::updateHoverDisplayOnEDT);
     }
 
     private void handleMouseWheel(MapMouseEvent ev) {
@@ -584,6 +659,225 @@ public class MainMapView extends JFrame {
 
         // Reset zoom level to default
         currentZoomLevel = 0;
+    }
+
+    private void setInteractionMode(InteractionMode mode) {
+        currentMode = mode;
+
+        // Clear any existing hover/selection when changing modes
+        clearHover();
+        if (mode != InteractionMode.SELECT) {
+            clearSelection();
+        }
+
+        // Update cursor and button states
+        updateCursor();
+        updateModeButtons();
+    }
+
+    private void updateCursor() {
+        if (mapPane == null) {
+            return; // Map not loaded yet
+        }
+
+        Cursor cursor;
+        switch (currentMode) {
+            case ZOOM:
+                cursor = zoomCursor;
+                break;
+            case SELECT:
+                cursor = selectCursor;
+                break;
+            case PAN:
+            default:
+                cursor = defaultCursor;
+                break;
+        }
+        mapPane.setCursor(cursor);
+    }
+
+    private void updateModeButtons() {
+        if (panButton == null || zoomButton == null || selectButton == null) {
+            return; // Buttons not initialized yet
+        }
+
+        // Update button appearance to show current mode
+        panButton.setEnabled(currentMode != InteractionMode.PAN);
+        zoomButton.setEnabled(currentMode != InteractionMode.ZOOM);
+        selectButton.setEnabled(currentMode != InteractionMode.SELECT);
+
+        // Optional: Change button background color to indicate active mode
+        panButton.setBackground(currentMode == InteractionMode.PAN ? Color.LIGHT_GRAY : null);
+        zoomButton.setBackground(currentMode == InteractionMode.ZOOM ? Color.LIGHT_GRAY : null);
+        selectButton.setBackground(currentMode == InteractionMode.SELECT ? Color.LIGHT_GRAY : null);
+    }
+
+    private void handleMouseClick(MapMouseEvent ev) {
+        switch (currentMode) {
+            case ZOOM:
+                // Zoom in at the clicked point
+                zoomAtPoint(ev);
+                break;
+            case SELECT:
+                // Select feature on click
+                selectFeatureAtMouseEvent(ev);
+                break;
+            case PAN:
+            default:
+                // PAN mode uses default map pane behavior (dragging to pan)
+                break;
+        }
+    }
+
+    private void zoomAtPoint(MapMouseEvent ev) {
+        if (mapPane == null || currentZoomLevel >= MAX_ZOOM_IN_LEVELS) {
+            return; // Prevent zooming in beyond the maximum level
+        }
+
+        ReferencedEnvelope currentBounds = mapPane.getDisplayArea();
+        if (currentBounds == null) {
+            return;
+        }
+
+        double zoomFactor = 0.8;
+        double width = currentBounds.getWidth() * zoomFactor;
+        double height = currentBounds.getHeight() * zoomFactor;
+
+        // Use clicked point as center
+        org.geotools.geometry.Position2D clickPos = ev.getWorldPos();
+        double centerX = clickPos.x;
+        double centerY = clickPos.y;
+
+        ReferencedEnvelope newBounds = new ReferencedEnvelope(
+            centerX - width / 2,
+            centerX + width / 2,
+            centerY - height / 2,
+            centerY + height / 2,
+            currentBounds.getCoordinateReferenceSystem()
+        );
+
+        SwingUtilities.invokeLater(() -> mapPane.setDisplayArea(newBounds));
+
+        // Increment zoom level
+        currentZoomLevel++;
+    }
+
+    private void selectFeatureAtMouseEvent(MapMouseEvent ev) {
+        org.geotools.geometry.Position2D worldPos = ev.getWorldPos();
+        Coordinate coord = new Coordinate(worldPos.x, worldPos.y);
+
+        SimpleFeature feature = getFeatureAtPosition(coord);
+
+        if (feature != null) {
+            // Feature found under mouse click
+            setSelectedFeature(feature);
+        } else {
+            // Clicked on empty space - clear selection
+            clearSelection();
+        }
+    }
+
+    private void setSelectedFeature(SimpleFeature feature) {
+        selectedFeature = feature;
+
+        // Update style of the selected feature
+        updateSelectedFeatureStyle();
+
+        // Print country name if available
+        try {
+            Object nameAttr = feature.getAttribute("NAME");
+            if (nameAttr != null) {
+                System.out.println("Selected country: " + nameAttr.toString());
+            }
+        } catch (Exception e) {
+            System.out.println("Selected feature: " + feature.getID());
+        }
+    }
+
+    private void updateSelectedFeatureStyle() {
+        if (mapContent == null || featureLayer == null) {
+            return;
+        }
+
+        try {
+            // Clear existing selected layer if present
+            if (selectedLayer != null) {
+                mapContent.removeLayer(selectedLayer);
+                selectedLayer = null;
+            }
+
+            // Create new selected layer for the currently selected feature
+            if (selectedFeature != null) {
+                SimpleFeatureType featureType = featureSource.getSchema();
+                SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(featureType);
+
+                // Copy the selected feature to the new layer
+                featureBuilder.init(selectedFeature);
+                SimpleFeature selectFeature = featureBuilder.buildFeature(null);
+
+                MemoryFeatureCollection collection = new MemoryFeatureCollection(featureType);
+                collection.add(selectFeature);
+
+                selectedLayer = new FeatureLayer(collection, createSelectedStyle());
+                mapContent.addLayer(selectedLayer);
+            }
+
+            // Repaint map to show the updated selection
+            SwingUtilities.invokeLater(() -> {
+                if (mapPane != null) {
+                    mapPane.repaint();
+                }
+            });
+        } catch (Exception e) {
+            System.err.println("Error updating selected feature style: " + e.getMessage());
+        }
+    }
+
+    private Style createSelectedStyle() {
+        try {
+            // BLUE fill with thick BLACK borders for selected features
+            Fill blueFill = styleFactory.createFill(
+                filterFactory.literal(new Color(100, 149, 237, 180))
+            );
+
+            org.geotools.api.style.Stroke blackStroke = styleFactory.createStroke(
+                filterFactory.literal(Color.BLACK),
+                filterFactory.literal(3.0)
+            );
+
+            PolygonSymbolizer symbolizer = styleFactory.createPolygonSymbolizer(
+                blackStroke, blueFill, null
+            );
+
+            Rule rule = styleFactory.createRule();
+            rule.symbolizers().add(symbolizer);
+
+            FeatureTypeStyle fts = styleFactory.createFeatureTypeStyle(rule);
+            Style style = styleFactory.createStyle();
+            style.featureTypeStyles().add(fts);
+
+            return style;
+        } catch (Exception e) {
+            System.err.println("Error creating selected style: " + e.getMessage());
+            return defaultStyle;
+        }
+    }
+
+    private void clearSelection() {
+        selectedFeature = null;
+
+        // Clear the selected layer if it exists
+        if (selectedLayer != null) {
+            mapContent.removeLayer(selectedLayer);
+            selectedLayer = null;
+        }
+
+        // Repaint map to remove the selection
+        SwingUtilities.invokeLater(() -> {
+            if (mapPane != null) {
+                mapPane.repaint();
+            }
+        });
     }
 
     public static void main(String[] args) {
