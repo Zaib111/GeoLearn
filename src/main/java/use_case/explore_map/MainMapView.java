@@ -22,6 +22,9 @@ import org.geotools.swing.event.MapMouseEvent;
 import org.geotools.swing.event.MapMouseListener;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
+import org.geotools.data.memory.MemoryFeatureCollection;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.api.feature.simple.SimpleFeatureType;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
@@ -34,11 +37,16 @@ public class MainMapView extends JFrame {
     private JMapPane mapPane;
     private MapContent mapContent;
     private FeatureLayer featureLayer;
+    private FeatureLayer hoverLayer;  // Overlay layer for hover effects
     private SimpleFeatureSource featureSource;
     private StyleFactory styleFactory;
     private FilterFactory filterFactory;
     private Style defaultStyle;
     private SimpleFeature hoveredFeature;
+
+    // Basic synchronization for style updates
+    private final Object styleLock = new Object();
+    private volatile boolean isUpdatingStyle = false;
 
     public MainMapView() {
         initializeFactories();
@@ -58,7 +66,6 @@ public class MainMapView extends JFrame {
 
         setLayout(new BorderLayout());
 
-        // Add control panel
         JPanel controlPanel = createControlPanel();
         add(controlPanel, BorderLayout.NORTH);
     }
@@ -126,48 +133,40 @@ public class MainMapView extends JFrame {
     }
 
     private void loadMapFromFile(File file) throws IOException {
-        // Clean up existing map
         if (mapContent != null) {
             mapContent.dispose();
         }
 
-        // Load the shapefile
         FileDataStore store = FileDataStoreFinder.getDataStore(file);
         featureSource = store.getFeatureSource();
 
-        // Create styles
         defaultStyle = createDefaultStyle();
 
-        // Create map content
         mapContent = new MapContent();
         mapContent.setTitle("World Map");
 
         featureLayer = new FeatureLayer(featureSource, defaultStyle);
         mapContent.addLayer(featureLayer);
 
-        // Create or update map pane
         if (mapPane != null) {
             remove(mapPane);
         }
 
         mapPane = new JMapPane(mapContent);
         mapPane.setBackground(Color.WHITE);
+        mapPane.setDoubleBuffered(true);
 
-        // Add mouse listener for hover effect
         mapPane.addMouseListener(new MapMouseListener() {
             @Override
             public void onMouseClicked(MapMouseEvent ev) {
-                // Can be used for country selection
             }
 
             @Override
             public void onMouseDragged(MapMouseEvent ev) {
-                // Default drag behavior
             }
 
             @Override
             public void onMouseEntered(MapMouseEvent ev) {
-                // Not needed
             }
 
             @Override
@@ -182,12 +181,10 @@ public class MainMapView extends JFrame {
 
             @Override
             public void onMousePressed(MapMouseEvent ev) {
-                // Not needed
             }
 
             @Override
             public void onMouseReleased(MapMouseEvent ev) {
-                // Not needed
             }
 
             @Override
@@ -196,63 +193,62 @@ public class MainMapView extends JFrame {
             }
         });
 
-        // Add component listener for window resize
         mapPane.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 if (mapPane != null && mapContent != null) {
-                    mapPane.repaint();
+                    SwingUtilities.invokeLater(() -> mapPane.repaint());
                 }
             }
         });
 
         add(mapPane, BorderLayout.CENTER);
-        validate();
-        repaint();
+
+        SwingUtilities.invokeLater(() -> {
+            validate();
+            repaint();
+        });
     }
 
     private Style createDefaultStyle() {
-        // Create polygon symbolizer with light blue fill
-        org.geotools.api.style.Stroke stroke = styleFactory.createStroke(
-            filterFactory.literal(Color.DARK_GRAY),
-            filterFactory.literal(1)
-        );
+        try {
+            org.geotools.api.style.Stroke stroke = styleFactory.createStroke(
+                filterFactory.literal(Color.BLACK),
+                filterFactory.literal(1.0)
+            );
 
-        Fill fill = styleFactory.createFill(
-            filterFactory.literal(new Color(173, 216, 230))
-        );
+            Fill fill = styleFactory.createFill(
+                filterFactory.literal(new Color(200, 220, 240, 255))
+            );
 
-        PolygonSymbolizer symbolizer = styleFactory.createPolygonSymbolizer(
-            stroke, fill, "geometry"
-        );
+            PolygonSymbolizer symbolizer = styleFactory.createPolygonSymbolizer(
+                stroke, fill, null
+            );
 
-        Rule rule = styleFactory.createRule();
-        rule.symbolizers().add(symbolizer);
+            Rule rule = styleFactory.createRule();
+            rule.symbolizers().add(symbolizer);
 
-        FeatureTypeStyle fts = styleFactory.createFeatureTypeStyle(rule);
-        Style style = styleFactory.createStyle();
-        style.featureTypeStyles().add(fts);
+            FeatureTypeStyle fts = styleFactory.createFeatureTypeStyle(rule);
+            Style style = styleFactory.createStyle();
+            style.featureTypeStyles().add(fts);
 
-        return style;
+            return style;
+        } catch (Exception e) {
+            System.err.println("Error creating default style: " + e.getMessage());
+            e.printStackTrace();
+            return createBasicFallbackStyle();
+        }
     }
 
-    private Style createHoverStyle() {
-        // Create polygon symbolizer with red fill for hover
+    private Style createBasicFallbackStyle() {
         org.geotools.api.style.Stroke stroke = styleFactory.createStroke(
-            filterFactory.literal(Color.BLACK),
-            filterFactory.literal(2)
+            filterFactory.literal(Color.GRAY),
+            filterFactory.literal(0.5)
         );
 
-        Fill fill = styleFactory.createFill(
-            filterFactory.literal(new Color(255, 0, 0, 180)) // Red with transparency
-        );
-
-        PolygonSymbolizer symbolizer = styleFactory.createPolygonSymbolizer(
-            stroke, fill, "geometry"
-        );
-
+        LineSymbolizer lineSymbolizer = styleFactory.createLineSymbolizer(stroke, null);
         Rule rule = styleFactory.createRule();
-        rule.symbolizers().add(symbolizer);
+        rule.symbolizers().add(lineSymbolizer);
 
         FeatureTypeStyle fts = styleFactory.createFeatureTypeStyle(rule);
         Style style = styleFactory.createStyle();
@@ -262,17 +258,26 @@ public class MainMapView extends JFrame {
     }
 
     private void handleMouseMove(MapMouseEvent ev) {
+        // Prevent concurrent style updates
+        if (isUpdatingStyle) {
+            return;
+        }
+
         try {
-            // Convert screen coordinates to world coordinates
             org.geotools.geometry.Position2D worldPos = ev.getWorldPos();
             Coordinate coord = new Coordinate(worldPos.x, worldPos.y);
 
-            // Find the feature at this position
             SimpleFeature feature = getFeatureAtPosition(coord);
 
+            // Only update if feature actually changed to reduce style update frequency
             if (feature != hoveredFeature) {
-                hoveredFeature = feature;
-                updateHoverDisplay();
+                synchronized (styleLock) {
+                    if (isUpdatingStyle) {
+                        return; // Double-check after acquiring lock
+                    }
+                    hoveredFeature = feature;
+                    updateHoverDisplaySynchronized();
+                }
             }
         } catch (Exception e) {
             System.err.println("Error handling mouse move: " + e.getMessage());
@@ -307,71 +312,89 @@ public class MainMapView extends JFrame {
     }
 
     private void updateHoverDisplay() {
+        synchronized (styleLock) {
+            updateHoverDisplaySynchronized();
+        }
+    }
+
+    private void updateHoverDisplaySynchronized() {
         if (mapContent == null || featureLayer == null) {
             return;
         }
 
-        // Update the layer style based on hover
-        if (hoveredFeature != null) {
-            // Apply combined style showing both default and hover
-            Style combinedStyle = createCombinedStyle();
-            featureLayer.setStyle(combinedStyle);
-        } else {
-            featureLayer.setStyle(defaultStyle);
-        }
+        isUpdatingStyle = true;
+        try {
+            // Clear existing hover layer if present
+            if (hoverLayer != null) {
+                mapContent.removeLayer(hoverLayer);
+                hoverLayer = null;
+            }
 
-        mapPane.repaint();
+            // Create new hover layer if a feature is hovered
+            if (hoveredFeature != null) {
+                SimpleFeatureType featureType = featureSource.getSchema();
+                SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(featureType);
+
+                // Copy the hovered feature to the new layer
+                featureBuilder.init(hoveredFeature);
+                SimpleFeature hoverFeature = featureBuilder.buildFeature(null);
+
+                MemoryFeatureCollection collection = new MemoryFeatureCollection(featureType);
+                collection.add(hoverFeature);
+
+                hoverLayer = new FeatureLayer(collection, createHoverStyle());
+                mapContent.addLayer(hoverLayer);
+            }
+
+            // Simple repaint without additional synchronization
+            SwingUtilities.invokeLater(() -> {
+                if (mapPane != null) {
+                    mapPane.repaint();
+                }
+                isUpdatingStyle = false;
+            });
+        } catch (Exception e) {
+            isUpdatingStyle = false;
+            System.err.println("Error updating hover display: " + e.getMessage());
+        }
     }
 
-    private Style createCombinedStyle() {
-        // This creates a style that shows default countries + highlighted hover country
-        // For simplicity, we'll just use the default style with hover overlay
-        // In a more advanced implementation, you'd use filters
+    private Style createHoverStyle() {
+        try {
+            // RED borders only - keeps the light blue fill
+            org.geotools.api.style.Stroke redStroke = styleFactory.createStroke(
+                filterFactory.literal(Color.RED),
+                filterFactory.literal(3.0)
+            );
 
-        // Default layer
-        org.geotools.api.style.Stroke defaultStroke = styleFactory.createStroke(
-            filterFactory.literal(Color.DARK_GRAY),
-            filterFactory.literal(1)
-        );
-        Fill defaultFill = styleFactory.createFill(
-            filterFactory.literal(new Color(173, 216, 230))
-        );
-        PolygonSymbolizer defaultSymbolizer = styleFactory.createPolygonSymbolizer(
-            defaultStroke, defaultFill, "geometry"
-        );
+            Fill fill = styleFactory.createFill(
+                filterFactory.literal(new Color(200, 220, 240, 255))
+            );
 
-        Rule defaultRule = styleFactory.createRule();
-        defaultRule.symbolizers().add(defaultSymbolizer);
+            PolygonSymbolizer symbolizer = styleFactory.createPolygonSymbolizer(
+                redStroke, fill, null
+            );
 
-        // Hover layer (on top)
-        org.geotools.api.style.Stroke hoverStroke = styleFactory.createStroke(
-            filterFactory.literal(Color.BLACK),
-            filterFactory.literal(2)
-        );
-        Fill hoverFill = styleFactory.createFill(
-            filterFactory.literal(new Color(255, 0, 0, 180))
-        );
-        PolygonSymbolizer hoverSymbolizer = styleFactory.createPolygonSymbolizer(
-            hoverStroke, hoverFill, "geometry"
-        );
+            Rule rule = styleFactory.createRule();
+            rule.symbolizers().add(symbolizer);
 
-        Rule hoverRule = styleFactory.createRule();
-        hoverRule.symbolizers().add(hoverSymbolizer);
+            FeatureTypeStyle fts = styleFactory.createFeatureTypeStyle(rule);
+            Style style = styleFactory.createStyle();
+            style.featureTypeStyles().add(fts);
 
-        FeatureTypeStyle fts = styleFactory.createFeatureTypeStyle(
-            defaultRule, hoverRule
-        );
-
-        Style style = styleFactory.createStyle();
-        style.featureTypeStyles().add(fts);
-
-        return style;
+            return style;
+        } catch (Exception e) {
+            System.err.println("Error creating hover style: " + e.getMessage());
+            return defaultStyle;
+        }
     }
 
     private void clearHover() {
-        if (hoveredFeature != null) {
-            hoveredFeature = null;
-            updateHoverDisplay();
+        synchronized (styleLock) {
+            if (hoveredFeature != null && !isUpdatingStyle) {
+                hoveredFeature = null;
+                updateHoverDisplaySynchronized();
+            }
         }
     }
 
@@ -380,33 +403,31 @@ public class MainMapView extends JFrame {
             return;
         }
 
-        // Get current display area
         ReferencedEnvelope currentBounds = mapPane.getDisplayArea();
         if (currentBounds == null) {
             return;
         }
 
-        // Calculate zoom factor
         double zoomFactor = ev.getWheelAmount() > 0 ? 1.2 : 0.8;
 
-        // Calculate new bounds
         double width = currentBounds.getWidth();
         double height = currentBounds.getHeight();
         double newWidth = width * zoomFactor;
         double newHeight = height * zoomFactor;
 
-        // Check zoom limits
         ReferencedEnvelope fullBounds = mapContent.getMaxBounds();
         if (fullBounds != null) {
-            double currentScale = fullBounds.getWidth() / width;
-            double newScale = currentScale / zoomFactor;
+            double fullWidth = fullBounds.getWidth();
 
-            if (newScale < MIN_ZOOM_SCALE || newScale > MAX_ZOOM_SCALE) {
-                return; // Outside zoom limits
+            if (newWidth < fullWidth / MAX_ZOOM_SCALE) {
+                return;
+            }
+
+            if (newWidth > fullWidth / MIN_ZOOM_SCALE) {
+                return;
             }
         }
 
-        // Center on mouse position
         org.geotools.geometry.Position2D mousePos = ev.getWorldPos();
         double centerX = mousePos.x;
         double centerY = mousePos.y;
@@ -419,7 +440,7 @@ public class MainMapView extends JFrame {
             currentBounds.getCoordinateReferenceSystem()
         );
 
-        mapPane.setDisplayArea(newBounds);
+        SwingUtilities.invokeLater(() -> mapPane.setDisplayArea(newBounds));
     }
 
     private void zoomIn() {
@@ -435,6 +456,15 @@ public class MainMapView extends JFrame {
         double zoomFactor = 0.8;
         double width = currentBounds.getWidth() * zoomFactor;
         double height = currentBounds.getHeight() * zoomFactor;
+
+        ReferencedEnvelope fullBounds = mapContent.getMaxBounds();
+        if (fullBounds != null) {
+            double fullWidth = fullBounds.getWidth();
+            if (width < fullWidth / MAX_ZOOM_SCALE) {
+                return;
+            }
+        }
+
         double centerX = currentBounds.getMedian(0);
         double centerY = currentBounds.getMedian(1);
 
@@ -446,7 +476,7 @@ public class MainMapView extends JFrame {
             currentBounds.getCoordinateReferenceSystem()
         );
 
-        mapPane.setDisplayArea(newBounds);
+        SwingUtilities.invokeLater(() -> mapPane.setDisplayArea(newBounds));
     }
 
     private void zoomOut() {
@@ -462,6 +492,15 @@ public class MainMapView extends JFrame {
         double zoomFactor = 1.25;
         double width = currentBounds.getWidth() * zoomFactor;
         double height = currentBounds.getHeight() * zoomFactor;
+
+        ReferencedEnvelope fullBounds = mapContent.getMaxBounds();
+        if (fullBounds != null) {
+            double fullWidth = fullBounds.getWidth();
+            if (width > fullWidth / MIN_ZOOM_SCALE) {
+                return;
+            }
+        }
+
         double centerX = currentBounds.getMedian(0);
         double centerY = currentBounds.getMedian(1);
 
@@ -473,7 +512,7 @@ public class MainMapView extends JFrame {
             currentBounds.getCoordinateReferenceSystem()
         );
 
-        mapPane.setDisplayArea(newBounds);
+        SwingUtilities.invokeLater(() -> mapPane.setDisplayArea(newBounds));
     }
 
     private void resetView() {
@@ -483,11 +522,15 @@ public class MainMapView extends JFrame {
 
         ReferencedEnvelope bounds = mapContent.getMaxBounds();
         if (bounds != null) {
-            mapPane.setDisplayArea(bounds);
+            SwingUtilities.invokeLater(() -> mapPane.setDisplayArea(bounds));
         }
     }
 
     public static void main(String[] args) {
+        System.setProperty("sun.java2d.d3d", "false");
+        System.setProperty("sun.java2d.noddraw", "true");
+        System.setProperty("sun.java2d.opengl", "false");
+
         SwingUtilities.invokeLater(() -> {
             MainMapView view = new MainMapView();
             view.setVisible(true);
