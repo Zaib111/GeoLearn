@@ -16,14 +16,14 @@ public class CollectionPresenter implements CollectionOutputBoundary {
     @Override
     public void prepareSuccessView(CollectionOutputData outputData) {
         collectionViewModel.getState().setCollectionName(outputData.getCollectionName());
-        collectionViewModel.getState().setCountries(outputData.getCountriesInCollection());
-        collectionViewModel.getState().setError(null);
-        collectionViewModel.firePropertyChange("collection");
+        collectionViewModel.getState().setCountriesToAdd(outputData.getCountriesInCollection());
+        collectionViewModel.getState().setCollectionError(null);
+        collectionViewModel.firePropertyChange();
     }
 
     @Override
     public void prepareFailView(String errorMessage) {
-        collectionViewModel.getState().setError(errorMessage);
-        collectionViewModel.firePropertyChange("collection");
+        collectionViewModel.getState().setCollectionError(errorMessage);
+        collectionViewModel.firePropertyChange();
     }
 }
