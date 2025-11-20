@@ -11,12 +11,7 @@ import use_case.country.CountryDataAccessInterface;
 import use_case.compare.CompareDataAccessInterface;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class APICountryDataAccessObject implements CountryDataAccessInterface, CompareDataAccessInterface {
     private final OkHttpClient client;
@@ -31,7 +26,7 @@ public class APICountryDataAccessObject implements CountryDataAccessInterface, C
     public List<Country> getCountries() {
         List<Country> countries = new ArrayList<>();
 
-        List<String> countryCodes = new ArrayList<>();
+        Set<String> countryCodes = new HashSet<>();
         Map<String, String> nameMap = new HashMap<>();
         Map<String, String> capitalMap = new HashMap<>();
         Map<String, String> regionMap = new HashMap<>();

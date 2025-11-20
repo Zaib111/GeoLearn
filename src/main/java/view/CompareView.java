@@ -17,7 +17,6 @@ public class CompareView {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // --------- Load country data using existing DAO ---------
             APICountryDataAccessObject dao = new APICountryDataAccessObject();
             List<Country> countries = dao.getCountries();
 

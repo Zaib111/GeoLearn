@@ -76,6 +76,12 @@
             <groupId>org.geotools</groupId>
             <artifactId>gt-main</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-epsg-hsql</artifactId>
+        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -131,5 +137,4 @@
         </plugins>
     </build>
 </project>
-
 
