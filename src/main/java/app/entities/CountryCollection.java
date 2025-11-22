@@ -1,9 +1,9 @@
 package app.entities;
 
-import lombok.Getter;
-
 import java.util.List;
 import java.util.UUID;
+
+import lombok.Getter;
 
 @Getter
 public class CountryCollection {
