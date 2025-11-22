@@ -36,7 +36,7 @@ public class FilterCountriesInteractor implements FilterCountriesInputBoundary {
     }
 
     private static boolean matchesSubregion(Country country, String subregion) {
-        return subregion.equals(country.getSubregion()) || subregion.equals("Any");
+        return subregion.equals(country.getSubregion().orElse(null)) || subregion.equals("Any");
     }
 
     private static boolean matchesRegion(Country country, String region) {

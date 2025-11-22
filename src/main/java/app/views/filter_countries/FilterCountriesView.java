@@ -4,12 +4,16 @@ import app.controllers.FilterCountriesController;
 import app.entities.Country;
 import app.views.AbstractView;
 import app.views.ViewModel;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -39,7 +43,7 @@ public class FilterCountriesView extends AbstractView {
         HashMap<String, String[]> subregionHashMap = createSubregionHashMap();
 
         searchField = new JTextField(15);
-        regionComboBox = new JComboBox<>(new String[]{"Any", "Asia", "North America", "South America", "Africa", "Europe", "Oceania"});
+        regionComboBox = new JComboBox<>(new String[]{"Any", "Africa", "Americas", "Antarctic", "Asia", "Europe", "Oceania"});
         regionComboBox.setPreferredSize(new Dimension(150, regionComboBox.getPreferredSize().height));
         subregionComboBox = new JComboBox<>();
         subregionComboBox.setPreferredSize(new Dimension(200, subregionComboBox.getPreferredSize().height));
@@ -103,10 +107,10 @@ public class FilterCountriesView extends AbstractView {
     private HashMap<String, String[]> createSubregionHashMap(){
         HashMap<String, String[]> subregionHashMap = new HashMap<>();
         subregionHashMap.put("Any", new String[]{"Any"});
-        subregionHashMap.put("Asia", new String[]{"Any", "Central Asia", "Eastern Asia", "South-eastern Asia", "Southern Asia", "Western Asia"});
-        subregionHashMap.put("North America", new String[]{"Any", "Northern America", "Central America", "Caribbean"});
-        subregionHashMap.put("South America", new String[]{"Any"});
         subregionHashMap.put("Africa", new String[]{"Any", "Eastern Africa", "Middle Africa", "Northern Africa", "Southern Africa", "Western Africa"});
+        subregionHashMap.put("Americas", new String[]{"Any", "Northern America", "Caribbean", "Central America", "South America"});
+        subregionHashMap.put("Antarctic", new String[]{"Any"});
+        subregionHashMap.put("Asia", new String[]{"Any", "Central Asia", "Eastern Asia", "South-eastern Asia", "Southern Asia", "Western Asia"});
         subregionHashMap.put("Europe", new String[]{"Any", "Eastern Europe", "Northern Europe", "Southern Europe", "Western Europe"});
         subregionHashMap.put("Oceania", new String[]{"Any", "Australia and New Zealand", "Melanesia", "Micronesia", "Polynesia"});
 
@@ -131,22 +135,26 @@ public class FilterCountriesView extends AbstractView {
             Country country = countryDisplayData.get(i);
             data[i][0] = country.getName();
             data[i][1] = country.getRegion();
-            data[i][2] = country.getSubregion().orElse("");
-            data[i][3] = String.format("%,d", country.getPopulation());
-            data[i][4] = String.format("%,.2f", country.getAreaKm2());
-            data[i][5] = String.format("%.2f", country.getPopulation() / country.getAreaKm2());
+            data[i][2] = country.getSubregion().orElse("N/A");
+            data[i][3] = country.getPopulation();
+            data[i][4] = country.getAreaKm2();
+            data[i][5] = country.getPopulation() / country.getAreaKm2();
         }
 
-        JTable table = new JTable(data, columnNames);
-        table.setAutoCreateRowSorter(true);
-        table.setFillsViewportHeight(true);
+        JTable table = getFormattedTable(data, columnNames);
 
-        // Remove old table if exists
+        TableRowSorter<DefaultTableModel> sorter = (TableRowSorter<DefaultTableModel>) table.getRowSorter();
+        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
+        sorter.setSortKeys(sortKeys);
+        sorter.sort();
+
+        // Remove old table pane if exists
         if (currentTableScrollPane != null) {
             this.remove(currentTableScrollPane); // panel must be a class field
         }
 
-        // Add new table
+        // Add new table pane
         currentTableScrollPane = new JScrollPane(table);
         currentTableScrollPane.setPreferredSize(new Dimension(750, 300));
         this.add(currentTableScrollPane);
@@ -154,6 +162,29 @@ public class FilterCountriesView extends AbstractView {
         // Refresh display
         this.revalidate();
         this.repaint();
+    }
+
+    @NotNull
+    private static JTable getFormattedTable(Object[][] data, String[] columnNames) {
+        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                switch(columnIndex) {
+                    case 0: return String.class;  // Name
+                    case 1: return String.class;  // Region
+                    case 2: return String.class;  // Subregion
+                    case 3: return Long.class;    // Population
+                    case 4: return Double.class;  // Area
+                    case 5: return Double.class;  // Population Density
+                    default: return Object.class;
+                }
+            }
+        };
+
+        JTable table = new JTable(model);
+        table.setAutoCreateRowSorter(true);
+        table.setFillsViewportHeight(true);
+        return table;
     }
 
 
