@@ -14,7 +14,7 @@ public class SettingsPresenter implements SettingsOutputBoundary {
 
     @Override
     public void getSettingsSuccess(UserSettingsData userSettingsDto) {
-        SettingsState state = new SettingsState();
+        final SettingsState state = new SettingsState();
         state.setUsername(userSettingsDto.getUsername());
         state.setSuccessMessage(null);
         state.setErrorMessage(null);
@@ -22,28 +22,12 @@ public class SettingsPresenter implements SettingsOutputBoundary {
     }
 
     @Override
-    public void getSettingsFailure(String errorMessage) {
-        SettingsState state = new SettingsState();
-        state.setUsername("");
-        state.setSuccessMessage(null);
-        state.setErrorMessage(errorMessage);
-        settingsViewModel.updateState(state);
-    }
-
-    @Override
     public void updateUserSettingsSuccess(UserSettingsData userSettingsDto) {
-        SettingsState state = new SettingsState();
+        final SettingsState state = new SettingsState();
         state.setUsername(userSettingsDto.getUsername());
         state.setSuccessMessage("Settings saved successfully!");
         state.setErrorMessage(null);
         settingsViewModel.updateState(state);
     }
 
-    @Override
-    public void updateUserSettingsFailure(String errorMessage) {
-        SettingsState state = settingsViewModel.getState();
-        state.setSuccessMessage(null);
-        state.setErrorMessage("Failed to save settings: " + errorMessage);
-        settingsViewModel.updateState(state);
-    }
 }

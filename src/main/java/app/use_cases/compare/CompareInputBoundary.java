@@ -3,16 +3,20 @@ package app.use_cases.compare;
 import java.util.List;
 
 /**
- * Input boundary for the Compare Countries use case.
- * Implemented by the CompareInteractor and called by the CompareController.
+ * The CompareInputBoundary interface defines the input methods for the country comparison use case.
+ *
+ * <p>
+ * Implementations should handle loading available countries and executing a comparison based on selected country names.
  */
 public interface CompareInputBoundary {
+    /**
+     * Loads the available countries for comparison.
+     */
+    void loadAvailableCountries();
 
     /**
-     * Execute the compare use case for the given list of selected country names.
-     *
-     * @param selectedCountryNames names of the countries selected by the user,
-     *                             in the order they should be compared
+     * Executes the comparison for the selected country names.
+     * @param selectedCountryNames the names of the countries to compare
      */
     void execute(List<String> selectedCountryNames);
 }
