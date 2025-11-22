@@ -2,10 +2,7 @@ package adapters.ExploreMap;
 import adapters.ViewModel;
 import use_case.explore_map.ExploreMapOutputBoundary;
 import use_case.explore_map.ExploreMapOutputData;
-/**
- * Presenter for the Explore Map use case.
- * Simplified to only handle data operations.
- */
+
 public class ExploreMapPresenter implements ExploreMapOutputBoundary {
     private final ViewModel<ExploreMapState> viewModel;
     public ExploreMapPresenter(ViewModel<ExploreMapState> viewModel) {
