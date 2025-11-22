@@ -1,10 +1,10 @@
 package app.use_cases.compare;
 
-import app.entities.Country;
-import lombok.Getter;
-
 import java.util.Collections;
 import java.util.List;
+
+import app.entities.Country;
+import lombok.Getter;
 
 @Getter
 public class CompareOutputData {
