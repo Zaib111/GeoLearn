@@ -30,6 +30,12 @@ import app.views.filter_countries.FilterCountriesView;
 import app.views.home.HomeView;
 import app.views.settings.SettingsState;
 import app.views.settings.SettingsView;
+import app.controllers.CompareController;
+import app.presenters.ComparePresenter;
+import app.use_cases.compare.CompareInteractor;
+import app.views.compare.CompareView;
+import app.use_cases.compare.CompareViewModel;
+
 
 
 public class Main {
