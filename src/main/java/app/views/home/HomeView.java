@@ -44,6 +44,10 @@ public class HomeView extends JPanel {
                 viewKey = "compare_countries";
             }
 
+            if (viewKey.equals("world_map")) {
+                viewKey = "explore_map";
+            }
+
             final String finalViewKey = viewKey;
             buttons.put(viewKey, button);
 
