@@ -8,33 +8,18 @@ import lombok.NoArgsConstructor;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * UI state for the Compare Countries view.
- * <p>
- * This is updated by the presenter and read by the view.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class CompareState {
 
-    /**
-     * The list of countries selected by the user for comparison, in the order chosen.
-     */
-    private List<Country> selectedCountries = Collections.emptyList();
+    private List<String> countryNames = Collections.emptyList();
 
-    /**
-     * Table data representing country comparison attributes.
-     */
-    private Object[][] comparisonTableData = new Object[0][0];
-
-    /**
-     * Column headers for comparisonTableData.
-     */
     private String[] columnHeaders = new String[0];
 
-    /**
-     * Error message to show to the user if something goes wrong.
-     */
-    private String errorMessage;
+    private Object[][] comparisonTableData = new Object[0][0];
+
+    private List<Country> selectedCountries = Collections.emptyList();
+
+    private String errorMessage = null;
 }

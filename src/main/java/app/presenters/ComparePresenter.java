@@ -18,99 +18,116 @@ public class ComparePresenter implements CompareOutputBoundary {
     }
 
     @Override
+    public void prepareCountriesList(List<String> countryNames) {
+        // Make a sorted copy so dropdowns are alphabetical
+        List<String> sortedNames = new ArrayList<>(countryNames);
+        sortedNames.sort(String::compareToIgnoreCase);
+
+        // Preserve any existing state (comparison results etc.)
+        CompareState oldState = viewModel.getState();
+
+        CompareState newState = new CompareState(
+                sortedNames,                          // countryNames (sorted)
+                oldState.getColumnHeaders(),          // keep existing headers
+                oldState.getComparisonTableData(),    // keep existing table
+                oldState.getSelectedCountries(),      // keep existing selected countries
+                null                                  // clear error
+        );
+
+        viewModel.updateState(newState);
+    }
+
+    @Override
     public void prepareSuccessView(CompareOutputData outputData) {
-        CompareState state = viewModel.getState();
-        List<Country> selectedCountries = outputData.getSelectedCountries();
-        int numCountries = selectedCountries.size();
+        List<Country> countries = outputData.getSelectedCountries();
+        int num = countries.size();
 
-        String[] columnHeaders = new String[numCountries + 1];
-        columnHeaders[0] = "Attribute";
-
-        for (int i = 0; i < numCountries; i++) {
-            columnHeaders[i + 1] = safeString(selectedCountries.get(i).getName());
+        List<String> colHeaders = new ArrayList<>();
+        colHeaders.add("Attribute");
+        for (Country c : countries) {
+            colHeaders.add(c.getName());
         }
 
         String[] attributes = {
-                "Name",
-                "Capital",
-                "Region",
-                "Subregion",
-                "Population",
-                "Area (km²)",
-                "Density (people/km²)",
-                "Languages",
-                "Currencies"
+                "Name", "Capital", "Region", "Subregion",
+                "Population", "Area (km²)", "Density (people/km²)",
+                "Languages", "Currencies"
         };
 
-        int rows = attributes.length;
-        Object[][] tableData = new Object[rows][numCountries + 1];
+        Object[][] table = new Object[attributes.length][num + 1];
 
-        for (int r = 0; r < rows; r++) {
-            tableData[r][0] = attributes[r];
+        for (int r = 0; r < attributes.length; r++) {
+            table[r][0] = attributes[r];
 
-            for (int c = 0; c < numCountries; c++) {
-                Country country = selectedCountries.get(c);
-                Object value;
+            for (int c = 0; c < num; c++) {
+                Country country = countries.get(c);
+                Object val;
 
-                switch (attributes[r]) {
+                String attr = attributes[r];
+                switch (attr) {
                     case "Name":
-                        value = safeString(country.getName());
+                        val = country.getName();
                         break;
                     case "Capital":
-                        value = country.getCapital().orElse("N/A");
+                        val = country.getCapital().orElse("N/A");
                         break;
                     case "Region":
-                        value = safeString(country.getRegion());
+                        val = country.getRegion();
                         break;
                     case "Subregion":
-                        value = country.getSubregion().orElse("N/A");
+                        val = country.getSubregion().orElse("N/A");
                         break;
                     case "Population":
-                        value = country.getPopulation();
+                        val = country.getPopulation();
                         break;
                     case "Area (km²)":
-                        value = String.format("%.2f", country.getAreaKm2());
+                        val = String.format("%.2f", country.getAreaKm2());
                         break;
                     case "Density (people/km²)":
-                        double density = country.getAreaKm2() > 0 ?
-                                (double) country.getPopulation() / country.getAreaKm2() : 0.0;
-                        value = String.format("%.2f", density);
+                        double area = country.getAreaKm2();
+                        long pop = country.getPopulation();
+                        double density = area > 0 ? (double) pop / area : 0.0;
+                        val = String.format("%.2f", density);
                         break;
                     case "Languages":
-                        value = listCSV(country.getLanguages());
+                        val = String.join(", ", country.getLanguages());
                         break;
                     case "Currencies":
-                        value = listCSV(country.getCurrencies());
+                        val = String.join(", ", country.getCurrencies());
                         break;
                     default:
-                        value = "";
+                        val = "";
                 }
 
-                tableData[r][c + 1] = value;
+                table[r][c + 1] = val;
             }
         }
 
-        state.setSelectedCountries(selectedCountries);
-        state.setColumnHeaders(columnHeaders);
-        state.setComparisonTableData(tableData);
-        state.setErrorMessage(null);
+        CompareState oldState = viewModel.getState();
+
+        CompareState newState = new CompareState(
+                oldState.getCountryNames(),               // keep full country list
+                colHeaders.toArray(new String[0]),        // new headers
+                table,                                    // new table
+                countries,                                // selected countries
+                null                                      // clear error
+        );
+
+        viewModel.updateState(newState);
     }
 
     @Override
     public void prepareFailView(String errorMessage) {
-        CompareState state = viewModel.getState();
+        CompareState oldState = viewModel.getState();
 
-        state.setSelectedCountries(new ArrayList<>());
-        state.setColumnHeaders(new String[0]);
-        state.setComparisonTableData(new Object[0][0]);
-        state.setErrorMessage(errorMessage);
-    }
+        CompareState newState = new CompareState(
+                oldState.getCountryNames(),
+                oldState.getColumnHeaders(),
+                oldState.getComparisonTableData(),
+                oldState.getSelectedCountries(),
+                errorMessage
+        );
 
-    private String safeString(Object obj) {
-        return obj == null ? "" : obj.toString();
-    }
-
-    private String listCSV(List<String> list) {
-        return (list == null || list.isEmpty()) ? "N/A" : String.join(", ", list);
+        viewModel.updateState(newState);
     }
 }
