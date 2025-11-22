@@ -1,12 +1,12 @@
 package app.views.collection;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import app.entities.CountryCollection;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
