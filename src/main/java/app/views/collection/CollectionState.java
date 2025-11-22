@@ -13,4 +13,5 @@ import java.util.List;
 @AllArgsConstructor
 public class CollectionState {
     private List<CountryCollection> allCollections = new ArrayList<>();
+    private String errorMessage;
 }

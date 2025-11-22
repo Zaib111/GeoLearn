@@ -10,6 +10,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -126,16 +128,50 @@ public class CollectionView extends AbstractView {
         String collectionName = collectionNameField.getText().trim();
         String countriesInput = countriesField.getText().trim();
 
-        // Parse countries from comma-separated input
-        List<Country> countries = new ArrayList<>();
-        String[] countryNames = countriesInput.split(",");
-        for (String countryName : countryNames) {
-            String trimmedName = countryName.trim();
-            countries.add(new Country("AAA", trimmedName, null, "", null, 0, 0.0, null, "", null, null, null));
+        if (collectionName.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please enter a collection name.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
         }
 
-        collectionController.addCollection(collectionName, countries);
-        collectionController.fetchAllCollections();
+        if (countriesInput.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please enter at least one country name.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        // Parse countries from comma-separated input
+        List<String> countryNames = new ArrayList<>();
+        String[] countryNamesArray = countriesInput.split(",");
+        for (String countryName : countryNamesArray) {
+            String trimmedName = countryName.trim();
+            if (!trimmedName.isEmpty()) {
+                countryNames.add(trimmedName);
+            }
+        }
+
+        if (countryNames.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please enter at least one valid country name.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        collectionController.addCollection(collectionName, countryNames);
+        // Clear input fields on successful creation (will be done via state update)
+        collectionNameField.setText("");
+        countriesField.setText("");
     }
 
     @Override
@@ -191,28 +227,43 @@ public class CollectionView extends AbstractView {
         ));
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Collection name
+        // Collection name with rename button
+        JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        namePanel.setBackground(Color.WHITE);
         JLabel nameLabel = new JLabel(collection.getCollectionName());
         nameLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        panel.add(nameLabel);
+        namePanel.add(nameLabel);
+        
+        JButton renameButton = new JButton("Rename");
+        renameButton.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        renameButton.addActionListener(e -> handleRenameCollection(collection));
+        namePanel.add(renameButton);
+        
+        panel.add(namePanel);
         panel.add(Box.createVerticalStrut(5));
 
-        // Display countries
+        // Display countries with flags and stats
         List<Country> countries = collection.getCountries();
         if (countries != null && !countries.isEmpty()) {
-            String countriesText = countries.stream()
-                    .map(Country::getName)
-                    .collect(Collectors.joining(", "));
-
-            JTextArea countriesLabel = new JTextArea(countriesText);
-            countriesLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-            countriesLabel.setWrapStyleWord(true);
-            countriesLabel.setLineWrap(true);
-            countriesLabel.setEditable(false);
-            countriesLabel.setBackground(Color.WHITE);
-            countriesLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            panel.add(countriesLabel);
+            // Create a panel to hold country cards
+            JPanel countriesPanel = new JPanel();
+            countriesPanel.setLayout(new BoxLayout(countriesPanel, BoxLayout.Y_AXIS));
+            countriesPanel.setBackground(Color.WHITE);
+            
+            for (Country country : countries) {
+                JPanel countryCard = createCountryCard(country);
+                countriesPanel.add(countryCard);
+                countriesPanel.add(Box.createVerticalStrut(5));
+            }
+            
+            JScrollPane countriesScroll = new JScrollPane(countriesPanel);
+            countriesScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+            countriesScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+            countriesScroll.setPreferredSize(new Dimension(450, Math.min(200, countries.size() * 80)));
+            countriesScroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+            countriesScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            panel.add(countriesScroll);
         } else {
             JLabel emptyLabel = new JLabel("No countries in this collection");
             emptyLabel.setFont(new Font("SansSerif", Font.ITALIC, 12));
@@ -220,6 +271,230 @@ public class CollectionView extends AbstractView {
             emptyLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             panel.add(emptyLabel);
         }
+        
+        panel.add(Box.createVerticalStrut(5));
+        
+        // Action buttons panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttonPanel.setBackground(Color.WHITE);
+        
+        JButton editButton = new JButton("Edit");
+        editButton.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        editButton.addActionListener(e -> handleEditCollection(collection));
+        buttonPanel.add(editButton);
+        
+        JButton deleteButton = new JButton("Delete");
+        deleteButton.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        deleteButton.setForeground(Color.RED);
+        deleteButton.addActionListener(e -> handleDeleteCollection(collection));
+        buttonPanel.add(deleteButton);
+        
+        panel.add(buttonPanel);
+        
         return panel;
+    }
+    
+    private void handleRenameCollection(CountryCollection collection) {
+        String newName = JOptionPane.showInputDialog(
+                this,
+                "Enter new collection name:",
+                "Rename Collection",
+                JOptionPane.QUESTION_MESSAGE
+        );
+        
+        if (newName != null && !newName.trim().isEmpty()) {
+            collectionController.renameCollection(collection.getCollectionId(), newName.trim());
+        }
+    }
+    
+    private void handleEditCollection(CountryCollection collection) {
+        // Create a dialog for editing collection
+        JDialog editDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Edit Collection", true);
+        editDialog.setLayout(new BorderLayout(10, 10));
+        editDialog.setSize(500, 400);
+        
+        // Center the dialog
+        editDialog.setLocationRelativeTo(this);
+        
+        // Current countries display
+        JPanel currentPanel = new JPanel(new BorderLayout());
+        currentPanel.setBorder(BorderFactory.createTitledBorder("Current Countries"));
+        JTextArea currentCountries = new JTextArea();
+        currentCountries.setEditable(false);
+        currentCountries.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        
+        List<Country> countries = collection.getCountries();
+        if (countries != null && !countries.isEmpty()) {
+            String countriesText = countries.stream()
+                    .map(Country::getName)
+                    .collect(Collectors.joining("\n"));
+            currentCountries.setText(countriesText);
+        }
+        
+        JScrollPane currentScroll = new JScrollPane(currentCountries);
+        currentScroll.setPreferredSize(new Dimension(400, 150));
+        currentPanel.add(currentScroll, BorderLayout.CENTER);
+        
+        // Input panel
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
+        inputPanel.setBorder(BorderFactory.createTitledBorder("Add/Remove Countries"));
+        
+        JLabel addLabel = new JLabel("Countries to add (comma-separated):");
+        JTextField addField = new JTextField(30);
+        
+        JLabel removeLabel = new JLabel("Countries to remove (comma-separated):");
+        JTextField removeField = new JTextField(30);
+        
+        inputPanel.add(addLabel);
+        inputPanel.add(addField);
+        inputPanel.add(Box.createVerticalStrut(10));
+        inputPanel.add(removeLabel);
+        inputPanel.add(removeField);
+        
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JButton saveButton = new JButton("Save");
+        JButton cancelButton = new JButton("Cancel");
+        
+        saveButton.addActionListener(e -> {
+            List<String> toAdd = parseCountryNames(addField.getText());
+            List<String> toRemove = parseCountryNames(removeField.getText());
+            
+            if (!toAdd.isEmpty() || !toRemove.isEmpty()) {
+                collectionController.editCollection(collection.getCollectionId(), toAdd, toRemove);
+                editDialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(
+                        editDialog,
+                        "Please enter countries to add or remove.",
+                        "No Changes",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            }
+        });
+        
+        cancelButton.addActionListener(e -> editDialog.dispose());
+        
+        buttonPanel.add(saveButton);
+        buttonPanel.add(cancelButton);
+        
+        editDialog.add(currentPanel, BorderLayout.NORTH);
+        editDialog.add(inputPanel, BorderLayout.CENTER);
+        editDialog.add(buttonPanel, BorderLayout.SOUTH);
+        
+        editDialog.setVisible(true);
+    }
+    
+    private void handleDeleteCollection(CountryCollection collection) {
+        int option = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to delete the collection \"" + collection.getCollectionName() + "\"?",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+        
+        if (option == JOptionPane.YES_OPTION) {
+            collectionController.deleteCollection(collection.getCollectionId());
+        }
+    }
+    
+    private List<String> parseCountryNames(String input) {
+        List<String> countryNames = new ArrayList<>();
+        if (input != null && !input.trim().isEmpty()) {
+            String[] names = input.split(",");
+            for (String name : names) {
+                String trimmed = name.trim();
+                if (!trimmed.isEmpty()) {
+                    countryNames.add(trimmed);
+                }
+            }
+        }
+        return countryNames;
+    }
+    
+    private JPanel createCountryCard(Country country) {
+        JPanel card = new JPanel(new BorderLayout(10, 5));
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+                new EmptyBorder(5, 5, 5, 5)
+        ));
+        card.setBackground(Color.WHITE);
+        
+        // Flag image
+        ImageIcon flagIcon = loadFlag(country, 60, 40);
+        JLabel flagLabel;
+        if (flagIcon != null) {
+            flagLabel = new JLabel(flagIcon);
+        } else {
+            flagLabel = new JLabel("No flag");
+            flagLabel.setForeground(Color.GRAY);
+        }
+        flagLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        flagLabel.setVerticalAlignment(SwingConstants.CENTER);
+        
+        JPanel flagPanel = new JPanel(new BorderLayout());
+        flagPanel.setBackground(Color.WHITE);
+        flagPanel.add(flagLabel, BorderLayout.CENTER);
+        flagPanel.setPreferredSize(new Dimension(70, 50));
+        
+        // Country info panel
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setBackground(Color.WHITE);
+        
+        // Country name
+        JLabel nameLabel = new JLabel(country.getName());
+        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
+        nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        infoPanel.add(nameLabel);
+        
+        // Basic stats
+        DecimalFormat formatter = new DecimalFormat("#,###");
+        
+        JPanel statsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        statsPanel.setBackground(Color.WHITE);
+        statsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        // Capital
+        if (country.getCapital().isPresent()) {
+            JLabel capitalLabel = new JLabel("Capital: " + country.getCapital().get());
+            capitalLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
+            capitalLabel.setForeground(Color.DARK_GRAY);
+            statsPanel.add(capitalLabel);
+        }
+        
+        // Population
+        JLabel popLabel = new JLabel(" | Pop: " + formatter.format(country.getPopulation()));
+        popLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        popLabel.setForeground(Color.DARK_GRAY);
+        statsPanel.add(popLabel);
+        
+        // Area
+        if (country.getAreaKm2() > 0) {
+            JLabel areaLabel = new JLabel(" | Area: " + formatter.format(country.getAreaKm2()) + " km²");
+            areaLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
+            areaLabel.setForeground(Color.DARK_GRAY);
+            statsPanel.add(areaLabel);
+        }
+        
+        infoPanel.add(Box.createVerticalStrut(3));
+        infoPanel.add(statsPanel);
+        
+        card.add(flagPanel, BorderLayout.WEST);
+        card.add(infoPanel, BorderLayout.CENTER);
+        
+        return card;
+    }
+    
+    private ImageIcon loadFlag(Country country, int width, int height) {
+        try {
+            Image img = new ImageIcon(new URL(country.getFlagUrl())).getImage()
+                    .getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            return new ImageIcon(img);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface CollectionOutputBoundary {
     void prepareCollectionsView(List<CountryCollection> collections);
+    void prepareErrorView(String errorMessage);
 }
