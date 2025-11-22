@@ -2,6 +2,7 @@ package app.data_access;
 
 import app.entities.Country;
 import app.use_cases.country.CountryDataAccessInterface;
+import app.use_cases.compare.CompareDataAccessInterface;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -12,7 +13,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.*;
 
-public class APICountryDataAccessObject implements CountryDataAccessInterface {
+public class APICountryDataAccessObject implements CountryDataAccessInterface, CompareDataAccessInterface {
     private final OkHttpClient client;
     private final String apiBase;
 
