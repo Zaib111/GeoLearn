@@ -1,4 +1,4 @@
-package use_case.explore_map;
+package app.use_cases.explore_map;
 
 /**
  * Input data for changing the interaction mode.
@@ -18,4 +18,3 @@ public class ExploreMapModeInputData {
         return mode;
     }
 }
-

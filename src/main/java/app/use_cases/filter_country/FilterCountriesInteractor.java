@@ -16,7 +16,7 @@ public class FilterCountriesInteractor implements FilterCountriesInputBoundary {
     }
 
     @Override
-    public void execute(FilterCountriesInputData inputData) {
+    public void filterCountries(FilterCountriesInputData inputData) {
         List<Country> allCountries = dataAccess.getCountries();
         List<Country> filteredCountries = new ArrayList<>();
 
@@ -36,7 +36,7 @@ public class FilterCountriesInteractor implements FilterCountriesInputBoundary {
     }
 
     private static boolean matchesSubregion(Country country, String subregion) {
-        return subregion.equals(country.getSubregion()) || subregion.equals("Any");
+        return subregion.equals(country.getSubregion().orElse(null)) || subregion.equals("Any");
     }
 
     private static boolean matchesRegion(Country country, String region) {

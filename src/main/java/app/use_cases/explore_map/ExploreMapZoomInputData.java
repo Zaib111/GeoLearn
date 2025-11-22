@@ -1,4 +1,4 @@
-package use_case.explore_map;
+package app.use_cases.explore_map;
 
 /**
  * Input data for zoom operations.
@@ -26,4 +26,3 @@ public class ExploreMapZoomInputData {
         return isZoomIn;
     }
 }
-

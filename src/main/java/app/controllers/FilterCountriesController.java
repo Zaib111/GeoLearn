@@ -4,10 +4,10 @@ import app.use_cases.filter_country.FilterCountriesInputBoundary;
 import app.use_cases.filter_country.FilterCountriesInputData;
 
 public class FilterCountriesController {
-    private final FilterCountriesInputBoundary interactor;
+    private final FilterCountriesInputBoundary filterCountriesInputBoundary;
 
-    public FilterCountriesController(FilterCountriesInputBoundary interactor) {
-        this.interactor = interactor;
+    public FilterCountriesController(FilterCountriesInputBoundary filterCountriesInputBoundary) {
+        this.filterCountriesInputBoundary = filterCountriesInputBoundary;
     }
 
     public void filterCountries(String searchTerm, String region, String subregion) {
@@ -15,6 +15,6 @@ public class FilterCountriesController {
         FilterCountriesInputData inputData = new FilterCountriesInputData(searchTerm, region, subregion);
 
         // Call the use case
-        interactor.execute(inputData);
+        filterCountriesInputBoundary.filterCountries(inputData);
     }
 }

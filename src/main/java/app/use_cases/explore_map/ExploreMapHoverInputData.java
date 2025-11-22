@@ -1,4 +1,4 @@
-package use_case.explore_map;
+package app.use_cases.explore_map;
 
 /**
  * Input data for hovering over a feature on the map.
@@ -20,4 +20,3 @@ public class ExploreMapHoverInputData {
         return y;
     }
 }
-

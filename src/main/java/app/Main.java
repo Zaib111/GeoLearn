@@ -1,25 +1,36 @@
 package app;
 
 import app.controllers.CollectionController;
+import app.controllers.CompareController;
 import app.controllers.ExploreMapController;
+import app.controllers.FilterCountriesController;
 import app.controllers.SettingsController;
 import app.data_access.APICountryDataAccessObject;
 import app.data_access.ExploreMapDataAccessObject;
 import app.data_access.UserDataInMemoryDataAccessObject;
 import app.presenters.CollectionPresenter;
+import app.presenters.ComparePresenter;
 import app.presenters.ExploreMapPresenter;
+import app.presenters.FilterCountriesPresenter;
 import app.presenters.SettingsPresenter;
 import app.use_cases.collection.CollectionInteractor;
+import app.use_cases.compare.CompareInteractor;
+import app.use_cases.compare.CompareViewModel;
 import app.use_cases.explore_map.ExploreMapInteractor;
+import app.use_cases.filter_country.FilterCountriesInteractor;
 import app.use_cases.settings.SettingsInteractor;
 import app.views.ViewModel;
 import app.views.collection.CollectionState;
 import app.views.collection.CollectionView;
+import app.views.compare.CompareView;
 import app.views.explore_map.ExploreMapState;
 import app.views.explore_map.ExploreMapView;
+import app.views.filter_countries.FilterCountriesState;
+import app.views.filter_countries.FilterCountriesView;
 import app.views.home.HomeView;
 import app.views.settings.SettingsState;
 import app.views.settings.SettingsView;
+
 
 public class Main {
     public static void main(String[] args) {
@@ -33,10 +44,18 @@ public class Main {
         HomeView homeView = new HomeView(navigator);
         masterFrame.registerView(homeView, "home");
 
+        // Setup Compare Module
+        CompareViewModel compareViewModel = new CompareViewModel();
+        ComparePresenter comparePresenter = new ComparePresenter(compareViewModel);
+        CompareInteractor compareInteractor = new CompareInteractor(countryDataAPI, comparePresenter);
+        CompareController compareController = new CompareController(compareInteractor);
+        CompareView compareView = new CompareView(compareViewModel, compareController, navigator);
+        masterFrame.registerView(compareView, "compare_countries");
+
         // Setup Collection Module
         ViewModel<CollectionState> collectionViewModel = new ViewModel<>(new CollectionState());
         CollectionPresenter collectionPresenter = new CollectionPresenter(collectionViewModel);
-        CollectionInteractor collectionInteractor = new CollectionInteractor(inMemoryUserDataStorage, collectionPresenter);
+        CollectionInteractor collectionInteractor = new CollectionInteractor(inMemoryUserDataStorage, collectionPresenter, countryDataAPI);
         CollectionController collectionController = new CollectionController(collectionInteractor);
         CollectionView collectionView = new CollectionView(collectionViewModel, collectionController);
         masterFrame.registerView(collectionView, "collection");
@@ -48,6 +67,14 @@ public class Main {
         SettingsController settingsController = new SettingsController(settingsInteractor);
         SettingsView settingsView = new SettingsView(settingsViewModel, settingsController);
         masterFrame.registerView(settingsView, "settings");
+
+        // Setup Filter Country Module
+        ViewModel<FilterCountriesState> filterCountriesViewModel = new ViewModel<>(new FilterCountriesState());
+        FilterCountriesPresenter filterCountriesPresenter = new FilterCountriesPresenter(filterCountriesViewModel);
+        FilterCountriesInteractor filterCountriesInteractor = new FilterCountriesInteractor(countryDataAPI, filterCountriesPresenter);
+        FilterCountriesController filterCountriesController = new FilterCountriesController(filterCountriesInteractor);
+        FilterCountriesView filterCountriesView = new FilterCountriesView(filterCountriesViewModel, filterCountriesController);
+        masterFrame.registerView(filterCountriesView, "filter_countries");
 
         // Setup Explore Map Module
         ViewModel<ExploreMapState> exploreMapViewModel = new ViewModel<>(new ExploreMapState());

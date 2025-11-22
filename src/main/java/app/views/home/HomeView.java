@@ -27,18 +27,24 @@ public class HomeView extends JPanel {
 
         // Create buttons for each view
         buttons = new HashMap<>();
-        String[] viewNames = {"World Map", "Country Table", "Compare", "Quiz", "Collections", "Settings"};
+        String[] viewNames = {"World Map", "Filter Countries", "Compare", "Quiz", "Collections", "Settings"};
 
         for (String viewName : viewNames) {
             JButton button = new JButton(viewName);
             button.setAlignmentX(Component.CENTER_ALIGNMENT);
             button.setMaximumSize(new Dimension(200, 40));
 
-            // Convert display name to view key
+            // Convert display name to view key (handle "Collections" -> "collection")
             String viewKey = viewName.toLowerCase().replace(" ", "_");
             if (viewKey.equals("collections")) {
                 viewKey = "collection";
-            } else if (viewKey.equals("world_map")) {
+            }
+
+            if (viewKey.equals("compare")) {
+                viewKey = "compare_countries";
+            }
+
+            if (viewKey.equals("world_map")) {
                 viewKey = "explore_map";
             }
 
