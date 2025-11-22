@@ -1,7 +1,9 @@
-package app.views.country_table;
+package app.views.filter_countries;
 
 import app.controllers.FilterCountriesController;
 import app.entities.Country;
+import app.views.AbstractView;
+import app.views.ViewModel;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -12,26 +14,23 @@ import java.util.HashMap;
 import java.util.List;
 
 // View for when user wants to view table of sorted + filtered countries
-public class CountryTableView {
+public class FilterCountriesView extends AbstractView {
     private JTextField searchField;
     private JComboBox<String> regionComboBox;
     private JComboBox<String> subregionComboBox;
-    private FilterCountriesController controller;
-    private JPanel panel;
-    private JFrame frame;
+    private FilterCountriesController filterCountriesController;
     private JScrollPane currentTableScrollPane;
 
-    public CountryTableView() {
-        // app.Main panel
-        panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+    public FilterCountriesView(ViewModel<FilterCountriesState> filterCountriesViewModel, FilterCountriesController filterCountriesController) {
+        super(filterCountriesViewModel);
+
+        this.filterCountriesController = filterCountriesController;
 
         // Heading
         JLabel heading = new JLabel("Filter Countries");
         heading.setFont(new Font("Dialog", Font.BOLD, 24));
         heading.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panel.add(heading);
+        this.add(heading);
 
         // Filter panel
         JPanel filterPanel = new JPanel();
@@ -67,7 +66,7 @@ public class CountryTableView {
         filterPanel.add(new JLabel("Subregion"));
         filterPanel.add(subregionComboBox);
 
-        panel.add(filterPanel);
+        this.add(filterPanel);
 
         // Submit button
         JButton submitButton = new JButton("Submit");
@@ -80,15 +79,25 @@ public class CountryTableView {
             }
         });
 
-        panel.add(submitButton);
+        this.add(submitButton);
+    }
 
-        // Make frame
-        frame = new JFrame("Country Table View");
+    @Override
+    public void onViewOpened() {
+//        filterCountriesController.filterCountries("", "Any", "Any");
+        this.revalidate();
+        this.repaint();
+    }
 
-        frame.setContentPane(panel);
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setVisible(true);
+    @Override
+    public void onViewClosed() {
+
+    }
+
+    public void onStateChange(Object oldState, Object newState) {
+        FilterCountriesState filterCountriesState = (FilterCountriesState) newState;
+
+        displayCountries(filterCountriesState.getFilteredCountries());
     }
 
     private HashMap<String, String[]> createSubregionHashMap(){
@@ -109,7 +118,7 @@ public class CountryTableView {
         String region = (String) regionComboBox.getSelectedItem();
         String subregion = (String) subregionComboBox.getSelectedItem();
 
-        controller.filterCountries(search, region, subregion);
+        filterCountriesController.filterCountries(search, region, subregion);
 
     }
 
@@ -122,7 +131,7 @@ public class CountryTableView {
             Country country = countryDisplayData.get(i);
             data[i][0] = country.getName();
             data[i][1] = country.getRegion();
-            data[i][2] = country.getSubregion();
+            data[i][2] = country.getSubregion().orElse("");
             data[i][3] = String.format("%,d", country.getPopulation());
             data[i][4] = String.format("%,.2f", country.getAreaKm2());
             data[i][5] = String.format("%.2f", country.getPopulation() / country.getAreaKm2());
@@ -134,25 +143,18 @@ public class CountryTableView {
 
         // Remove old table if exists
         if (currentTableScrollPane != null) {
-            panel.remove(currentTableScrollPane); // panel must be a class field
+            this.remove(currentTableScrollPane); // panel must be a class field
         }
 
         // Add new table
         currentTableScrollPane = new JScrollPane(table);
-        currentTableScrollPane.setPreferredSize(new Dimension(800, 300));
-        panel.add(currentTableScrollPane);
+        currentTableScrollPane.setPreferredSize(new Dimension(750, 300));
+        this.add(currentTableScrollPane);
 
         // Refresh display
-        panel.revalidate();
-        panel.repaint();
-        frame.pack(); // frame must be a class field
+        this.revalidate();
+        this.repaint();
     }
 
-    public void setController(FilterCountriesController controller) {
-        this.controller = controller;
-    }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(CountryTableView::new);
-    }
 }

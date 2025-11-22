@@ -1,16 +1,21 @@
 package app;
 
 import app.controllers.CollectionController;
+import app.controllers.FilterCountriesController;
 import app.controllers.SettingsController;
 import app.data_access.APICountryDataAccessObject;
 import app.data_access.UserDataInMemoryDataAccessObject;
 import app.presenters.CollectionPresenter;
+import app.presenters.FilterCountriesPresenter;
 import app.presenters.SettingsPresenter;
 import app.use_cases.collection.CollectionInteractor;
+import app.use_cases.filter_country.FilterCountriesInteractor;
 import app.use_cases.settings.SettingsInteractor;
 import app.views.ViewModel;
 import app.views.collection.CollectionState;
 import app.views.collection.CollectionView;
+import app.views.filter_countries.FilterCountriesState;
+import app.views.filter_countries.FilterCountriesView;
 import app.views.home.HomeView;
 import app.views.settings.SettingsState;
 import app.views.settings.SettingsView;
@@ -42,6 +47,15 @@ public class Main {
         SettingsController settingsController = new SettingsController(settingsInteractor);
         SettingsView settingsView = new SettingsView(settingsViewModel, settingsController);
         masterFrame.registerView(settingsView, "settings");
+
+        // Setup Filter Country Module
+        ViewModel<FilterCountriesState> filterCountriesViewModel = new ViewModel<>(new FilterCountriesState());
+        FilterCountriesPresenter filterCountriesPresenter = new FilterCountriesPresenter(filterCountriesViewModel);
+        FilterCountriesInteractor filterCountriesInteractor = new FilterCountriesInteractor(countryDataAPI, filterCountriesPresenter);
+        FilterCountriesController filterCountriesController = new FilterCountriesController(filterCountriesInteractor);
+        FilterCountriesView filterCountriesView = new FilterCountriesView(filterCountriesViewModel, filterCountriesController);
+        masterFrame.registerView(filterCountriesView, "filter_countries");
+
 
         // Start the application at Home View
         masterFrame.navigateTo("home");
