@@ -1,35 +1,65 @@
 package app;
 
-import adapters.TakeQuizController;
-import adapters.TakeQuizPresenter;
-import entity.QuestionType;
-import use_case.quiz.LocalQuestionRepository;
-import use_case.quiz.QuestionRepository;
-import use_case.quiz.TakeQuizInputBoundary;
-import use_case.quiz.TakeQuizOutputBoundary;
-import use_case.quiz.TakeQuizInteractor;
-import view.QuizPanel;
-
-import javax.swing.*;
+import app.controllers.CollectionController;
+import app.controllers.ExploreMapController;
+import app.controllers.SettingsController;
+import app.data_access.APICountryDataAccessObject;
+import app.data_access.ExploreMapDataAccessObject;
+import app.data_access.UserDataInMemoryDataAccessObject;
+import app.presenters.CollectionPresenter;
+import app.presenters.ExploreMapPresenter;
+import app.presenters.SettingsPresenter;
+import app.use_cases.collection.CollectionInteractor;
+import app.use_cases.explore_map.ExploreMapInteractor;
+import app.use_cases.settings.SettingsInteractor;
+import app.views.ViewModel;
+import app.views.collection.CollectionState;
+import app.views.collection.CollectionView;
+import app.views.explore_map.ExploreMapState;
+import app.views.explore_map.ExploreMapView;
+import app.views.home.HomeView;
+import app.views.settings.SettingsState;
+import app.views.settings.SettingsView;
 
 public class Main {
     public static void main(String[] args) {
-        final AppBuilder appBuilder = new AppBuilder();
-        appBuilder.build().setVisible(true);
+        MasterFrame masterFrame = new MasterFrame("GeoLearn");
+        Navigator navigator = new Navigator();
+        navigator.subscribeToNavigationEvents(masterFrame);
+        APICountryDataAccessObject countryDataAPI = new APICountryDataAccessObject();
+        UserDataInMemoryDataAccessObject inMemoryUserDataStorage = new UserDataInMemoryDataAccessObject();
 
-        JFrame frame = new JFrame("Geography Quiz");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 500);
-        QuizPanel quizPanel = new QuizPanel();
-        TakeQuizOutputBoundary presenter = new TakeQuizPresenter(quizPanel);
-        QuestionRepository repo = new LocalQuestionRepository();
-        TakeQuizInputBoundary interactor = new TakeQuizInteractor(repo, presenter);
-        TakeQuizController controller = new TakeQuizController(interactor);
-        quizPanel.setController(controller);
-        controller.startQuiz(entity.QuizType.CAPITALS,
-                QuestionType.MCQ,
-                5);
-        frame.add(quizPanel);
-        frame.setVisible(true);
+        // Setup Home Module
+        HomeView homeView = new HomeView(navigator);
+        masterFrame.registerView(homeView, "home");
+
+        // Setup Collection Module
+        ViewModel<CollectionState> collectionViewModel = new ViewModel<>(new CollectionState());
+        CollectionPresenter collectionPresenter = new CollectionPresenter(collectionViewModel);
+        CollectionInteractor collectionInteractor = new CollectionInteractor(inMemoryUserDataStorage, collectionPresenter);
+        CollectionController collectionController = new CollectionController(collectionInteractor);
+        CollectionView collectionView = new CollectionView(collectionViewModel, collectionController);
+        masterFrame.registerView(collectionView, "collection");
+
+        // Setup Settings Module
+        ViewModel<SettingsState> settingsViewModel = new ViewModel<>(new SettingsState());
+        SettingsPresenter settingsPresenter = new SettingsPresenter(settingsViewModel);
+        SettingsInteractor settingsInteractor = new SettingsInteractor(settingsPresenter, inMemoryUserDataStorage);
+        SettingsController settingsController = new SettingsController(settingsInteractor);
+        SettingsView settingsView = new SettingsView(settingsViewModel, settingsController);
+        masterFrame.registerView(settingsView, "settings");
+
+        // Setup Explore Map Module
+        ViewModel<ExploreMapState> exploreMapViewModel = new ViewModel<>(new ExploreMapState());
+        ExploreMapPresenter exploreMapPresenter = new ExploreMapPresenter(exploreMapViewModel);
+        ExploreMapDataAccessObject exploreMapDataAccess = new ExploreMapDataAccessObject();
+        ExploreMapInteractor exploreMapInteractor = new ExploreMapInteractor(exploreMapDataAccess, exploreMapPresenter);
+        ExploreMapController exploreMapController = new ExploreMapController(exploreMapInteractor);
+        ExploreMapView exploreMapView = new ExploreMapView(exploreMapViewModel);
+        exploreMapView.setController(exploreMapController);
+        masterFrame.registerView(exploreMapView, "explore_map");
+
+        // Start the application at Home View
+        masterFrame.navigateTo("home");
     }
 }

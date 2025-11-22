@@ -1,12 +1,12 @@
 package app;
 
-import adapters.ExploreMap.ExploreMapController;
-import adapters.ExploreMap.ExploreMapPresenter;
-import adapters.ExploreMap.ExploreMapViewModel;
-import adapters.ViewManagerModel;
-import data_access.ExploreMapDataAccessObject;
-import use_case.explore_map.ExploreMapInteractor;
-import view.ExploreMapView;
+import app.controllers.ExploreMapController;
+import app.presenters.ExploreMapPresenter;
+import app.views.explore_map.ExploreMapState;
+import app.data_access.ExploreMapDataAccessObject;
+import app.use_cases.explore_map.ExploreMapInteractor;
+import app.views.ViewModel;
+import app.views.explore_map.ExploreMapView;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -15,7 +15,9 @@ import javax.swing.SwingUtilities;
  * Demo application for the ExploreMap feature using Clean Architecture.
  */
 public final class ExploreMapDemo {
+    /** Width of the application frame. */
     private static final int FRAME_WIDTH = 1200;
+    /** Height of the application frame. */
     private static final int FRAME_HEIGHT = 800;
 
     private ExploreMapDemo() {
@@ -24,6 +26,7 @@ public final class ExploreMapDemo {
 
     /**
      * Main method to launch the ExploreMap demo application.
+     *
      * @param args command line arguments (not used)
      */
     public static void main(final String[] args) {
@@ -54,6 +57,7 @@ public final class ExploreMapDemo {
      * - Use Case Layer (Interactor)
      * - Interface Adapters Layer (Controller, Presenter, ViewModel)
      * - View Layer (UI)
+     *
      * @return the constructed ExploreMapView
      */
     private static ExploreMapView buildExploreMapUseCase() {
@@ -62,8 +66,7 @@ public final class ExploreMapDemo {
                 new ExploreMapDataAccessObject();
 
         // 2. Create the ViewModel (Interface Adapters Layer)
-        final ExploreMapViewModel viewModel = new ExploreMapViewModel();
-        final ViewManagerModel viewManagerModel = new ViewManagerModel();
+        final ViewModel<ExploreMapState> viewModel = new ViewModel<>(new ExploreMapState());
 
         // 3. Create the Presenter (Interface Adapters Layer)
         final ExploreMapPresenter presenter =
