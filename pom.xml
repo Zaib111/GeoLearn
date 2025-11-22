@@ -49,6 +49,14 @@
             <version>20230618</version>
         </dependency>
 
+        <!-- Lombok for reducing boilerplate code -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -81,6 +89,12 @@
             <groupId>org.geotools</groupId>
             <artifactId>gt-epsg-hsql</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>RELEASE</version>
+            <scope>provided</scope>
+        </dependency>
 
     </dependencies>
 
@@ -111,17 +125,24 @@
                     <release>${maven.compiler.release}</release>
                     <source>14</source>
                     <target>14</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.30</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
             <!-- Exec plugin to run the simple test runner:
-                 mvn -DskipTests exec:java -Dexec.mainClass=data_access.TestAPICountries -->
+                 mvn -DskipTests exec:java -Dexec.mainClass=app.data_access.TestAPICountries -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>data_access.TestAPICountries</mainClass>
+                    <mainClass>app.data_access.TestAPICountries</mainClass>
                 </configuration>
             </plugin>
 
@@ -137,4 +158,3 @@
         </plugins>
     </build>
 </project>
-
