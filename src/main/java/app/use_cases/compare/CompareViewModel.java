@@ -1,4 +1,11 @@
 package app.use_cases.compare;
 
-public class CompareViewModel {
+import app.views.ViewModel;
+import app.views.compare.CompareState;
+
+public class CompareViewModel extends ViewModel<CompareState> {
+
+    public CompareViewModel() {
+        super(new CompareState());
+    }
 }
