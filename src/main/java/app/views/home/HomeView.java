@@ -27,7 +27,7 @@ public class HomeView extends JPanel {
 
         // Create buttons for each view
         buttons = new HashMap<>();
-        String[] viewNames = {"World Map", "Country Table", "Compare", "Quiz", "Collections", "Settings"};
+        String[] viewNames = {"World Map", "Filter Countries", "Compare", "Quiz", "Collections", "Settings"};
 
         for (String viewName : viewNames) {
             JButton button = new JButton(viewName);

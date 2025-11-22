@@ -16,7 +16,7 @@ public class FilterCountriesInteractor implements FilterCountriesInputBoundary {
     }
 
     @Override
-    public void execute(FilterCountriesInputData inputData) {
+    public void filterCountries(FilterCountriesInputData inputData) {
         List<Country> allCountries = dataAccess.getCountries();
         List<Country> filteredCountries = new ArrayList<>();
 
