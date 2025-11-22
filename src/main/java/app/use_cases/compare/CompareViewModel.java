@@ -5,7 +5,6 @@ import app.views.compare.CompareState;
 
 /**
  * ViewModel for Compare Countries feature.
- *
  * Holds the UI state for the view and ensures updates trigger UI refresh.
  */
 public class CompareViewModel extends ViewModel<CompareState> {
