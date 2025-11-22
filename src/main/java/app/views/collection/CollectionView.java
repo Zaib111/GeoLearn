@@ -35,12 +35,12 @@ public class CollectionView extends AbstractView {
         setBorder(new EmptyBorder(20, 20, 20, 20));
 
         // Create main content panel
-        JPanel contentPanel = new JPanel();
+        final JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBackground(Color.WHITE);
 
         // Title
-        JLabel titleLabel = new JLabel("Collections");
+        final JLabel titleLabel = new JLabel("Collections");
         titleLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(titleLabel);
@@ -58,29 +58,29 @@ public class CollectionView extends AbstractView {
         ));
 
         // Collection name input
-        JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        final JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         namePanel.setBackground(Color.WHITE);
-        JLabel nameLabel = new JLabel("Collection Name:");
+        final JLabel nameLabel = new JLabel("Collection Name:");
         collectionNameField = new JTextField(20);
         namePanel.add(nameLabel);
         namePanel.add(collectionNameField);
         inputPanel.add(namePanel);
 
         // Countries input (comma-separated)
-        JPanel countriesInputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        final JPanel countriesInputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         countriesInputPanel.setBackground(Color.WHITE);
-        JLabel countriesLabel = new JLabel("Countries (comma-separated):");
+        final JLabel countriesLabel = new JLabel("Countries (comma-separated):");
         countriesField = new JTextField(30);
         countriesInputPanel.add(countriesLabel);
         countriesInputPanel.add(countriesField);
         inputPanel.add(countriesInputPanel);
 
         // Help text
-        JLabel helpLabel = new JLabel("Example: Canada, United States, Mexico");
+        final JLabel helpLabel = new JLabel("Example: Canada, United States, Mexico");
         helpLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
         helpLabel.setForeground(Color.GRAY);
         helpLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JPanel helpPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        final JPanel helpPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         helpPanel.setBackground(Color.WHITE);
         helpPanel.add(helpLabel);
         inputPanel.add(helpPanel);
@@ -88,7 +88,7 @@ public class CollectionView extends AbstractView {
         // Create button
         createButton = new JButton("Create Collection");
         createButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        final JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         buttonPanel.setBackground(Color.WHITE);
         buttonPanel.add(createButton);
         inputPanel.add(buttonPanel);
@@ -97,7 +97,7 @@ public class CollectionView extends AbstractView {
         contentPanel.add(Box.createVerticalStrut(10));
 
         // Collections display panel
-        JLabel collectionsTitle = new JLabel("Your Collections");
+        final JLabel collectionsTitle = new JLabel("Your Collections");
         collectionsTitle.setFont(new Font("SansSerif", Font.BOLD, 18));
         collectionsTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(collectionsTitle);
@@ -113,7 +113,7 @@ public class CollectionView extends AbstractView {
         collectionsScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         collectionsScrollPane.setPreferredSize(new Dimension(600, 300));
 
-        JPanel scrollPaneWrapper = new JPanel(new BorderLayout());
+        final JPanel scrollPaneWrapper = new JPanel(new BorderLayout());
         scrollPaneWrapper.setBackground(Color.WHITE);
         scrollPaneWrapper.add(collectionsScrollPane, BorderLayout.CENTER);
         contentPanel.add(scrollPaneWrapper);
@@ -273,7 +273,7 @@ public class CollectionView extends AbstractView {
         }
         
         panel.add(Box.createVerticalStrut(5));
-        
+
         // Action buttons panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setBackground(Color.WHITE);
@@ -322,7 +322,7 @@ public class CollectionView extends AbstractView {
         JTextArea currentCountries = new JTextArea();
         currentCountries.setEditable(false);
         currentCountries.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        
+
         List<Country> countries = collection.getCountries();
         if (countries != null && !countries.isEmpty()) {
             String countriesText = countries.stream()
@@ -342,10 +342,10 @@ public class CollectionView extends AbstractView {
         
         JLabel addLabel = new JLabel("Countries to add (comma-separated):");
         JTextField addField = new JTextField(30);
-        
+
         JLabel removeLabel = new JLabel("Countries to remove (comma-separated):");
         JTextField removeField = new JTextField(30);
-        
+
         inputPanel.add(addLabel);
         inputPanel.add(addField);
         inputPanel.add(Box.createVerticalStrut(10));
@@ -438,7 +438,7 @@ public class CollectionView extends AbstractView {
         flagPanel.setBackground(Color.WHITE);
         flagPanel.add(flagLabel, BorderLayout.CENTER);
         flagPanel.setPreferredSize(new Dimension(70, 50));
-        
+
         // Country info panel
         JPanel infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
