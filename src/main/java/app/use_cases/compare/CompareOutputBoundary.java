@@ -1,14 +1,12 @@
 package app.use_cases.compare;
 
+import java.util.List;
+
 public interface CompareOutputBoundary {
 
-    /**
-     * Called when comparison is successful.
-     */
+    void prepareCountriesList(List<String> countryNames);
+
     void prepareSuccessView(CompareOutputData outputData);
 
-    /**
-     * Called when validation or data retrieval fails.
-     */
     void prepareFailView(String errorMessage);
 }

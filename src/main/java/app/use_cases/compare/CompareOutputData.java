@@ -1,18 +1,18 @@
 package app.use_cases.compare;
 
 import app.entities.Country;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 
+import java.util.Collections;
 import java.util.List;
 
-@Data
-@AllArgsConstructor
+@Getter
 public class CompareOutputData {
 
-    /**
-     * The list of countries being compared,
-     * in the order the user selected them.
-     */
-    private List<Country> selectedCountries;
+    private final List<Country> selectedCountries;
+
+    public CompareOutputData(List<Country> selectedCountries) {
+        this.selectedCountries = Collections.unmodifiableList(selectedCountries);
+    }
+
 }

@@ -3,7 +3,6 @@ package app.views.compare;
 import app.Navigator;
 import app.controllers.CompareController;
 import app.entities.Country;
-import app.data_access.APICountryDataAccessObject;
 import app.use_cases.compare.CompareViewModel;
 import app.views.AbstractView;
 
@@ -11,17 +10,30 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+/**
+ * View for the Compare Countries feature.
+ *
+ * Same behavior and UI as the original version, but:
+ *  - No direct data access (no APICountryDataAccessObject here)
+ *  - All data comes from CompareViewModel / CompareState
+ *  - User actions are delegated to CompareController
+ */
 public class CompareView extends AbstractView {
 
     private final CompareViewModel viewModel;
     private final CompareController compareController;
     private final Navigator navigator;
+
+    private JComboBox<Integer> countComboBox;
+    @SuppressWarnings("unchecked")
+    private JComboBox<String>[] dropdowns = new JComboBox[5];
+    private JButton compareButton;
 
     public CompareView(CompareViewModel viewModel,
                        CompareController compareController,
@@ -35,27 +47,6 @@ public class CompareView extends AbstractView {
     }
 
     private void buildUI() {
-        APICountryDataAccessObject dao = new APICountryDataAccessObject();
-        List<Country> countries = dao.getCountries();
-
-        if (countries == null || countries.isEmpty()) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Could not load countries from API.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
-            return;
-        }
-
-        Map<String, Country> countryByName = new HashMap<>();
-        for (Country c : countries) {
-            countryByName.put(c.getName(), c);
-        }
-
-        String[] countryOptions = countryByName.keySet().toArray(new String[0]);
-        Arrays.sort(countryOptions);
-
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
@@ -68,49 +59,46 @@ public class CompareView extends AbstractView {
         JPanel countPanel = new JPanel();
         JLabel countLabel = new JLabel("Number of countries to compare:");
         Integer[] countChoices = {2, 3, 4, 5};
-        JComboBox<Integer> countComboBox = new JComboBox<>(countChoices);
+        countComboBox = new JComboBox<>(countChoices);
         countComboBox.setSelectedItem(2);
         countPanel.add(countLabel);
         countPanel.add(countComboBox);
         add(countPanel);
 
         JPanel countriesPanel = new JPanel(new GridLayout(5, 2, 10, 10));
-        @SuppressWarnings("unchecked")
-        JComboBox<String>[] dropdowns = new JComboBox[5];
-
         for (int i = 0; i < 5; i++) {
             JLabel label = new JLabel("Country " + (i + 1) + ":");
-            JComboBox<String> comboBox = new JComboBox<>(countryOptions);
+            JComboBox<String> comboBox = new JComboBox<>();
+            comboBox.setEnabled(false); // enabled once country list is loaded
             dropdowns[i] = comboBox;
             countriesPanel.add(label);
             countriesPanel.add(comboBox);
         }
         add(countriesPanel);
 
-        ActionListener updateVisible = e -> {
-            int count = (Integer) countComboBox.getSelectedItem();
-            for (int i = 0; i < dropdowns.length; i++) {
-                dropdowns[i].setEnabled(i < count);
-            }
-        };
-        updateVisible.actionPerformed(null);
-        countComboBox.addActionListener(updateVisible);
+        countComboBox.addActionListener(e -> updateVisibleDropdowns());
 
         add(Box.createRigidArea(new Dimension(0, 20)));
 
-        JButton compareButton = new JButton("Compare Countries");
+        compareButton = new JButton("Compare Countries");
         compareButton.setAlignmentX(CENTER_ALIGNMENT);
+        compareButton.setEnabled(false); // enabled once we have countries
         add(compareButton);
 
         compareButton.addActionListener(e -> {
             int count = (Integer) countComboBox.getSelectedItem();
-            List<Country> selected = new ArrayList<>();
+            List<String> selectedNames = new ArrayList<>();
             for (int i = 0; i < count; i++) {
                 String name = (String) dropdowns[i].getSelectedItem();
-                selected.add(countryByName.get(name));
+                if (name != null) {
+                    selectedNames.add(name);
+                }
             }
 
-            if (new HashSet<>(selected).size() < selected.size()) {
+            // Keep simple duplicate check in view (UX-friendly),
+            // but all core validation is also in interactor.
+            Set<String> unique = new HashSet<>(selectedNames);
+            if (unique.size() < selectedNames.size()) {
                 JOptionPane.showMessageDialog(
                         this,
                         "Each country must be unique.",
@@ -119,38 +107,106 @@ public class CompareView extends AbstractView {
                 return;
             }
 
-            if (selected.size() < 2) {
-                JOptionPane.showMessageDialog(this, "Pick at least two countries.");
+            if (selectedNames.size() < 2) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Pick at least two countries.",
+                        "Not enough countries",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            showComparisonWindow(selected);
+            // Delegate actual compare logic to use case
+            compareController.compareCountries(selectedNames);
         });
     }
 
+    private void updateVisibleDropdowns() {
+        int count = (Integer) countComboBox.getSelectedItem();
+        for (int i = 0; i < dropdowns.length; i++) {
+            dropdowns[i].setEnabled(i < count && dropdowns[i].getItemCount() > 0);
+        }
+    }
+
+    // ----------------- AbstractView lifecycle methods -----------------
+
     @Override
     public void onViewOpened() {
-        // Optional: could refresh dropdowns if state changes
+        // When the view opens, ask to load all countries
+        compareController.loadAvailableCountries();
     }
 
     @Override
     public void onViewClosed() {
-        // Optional: clear state if needed
+        // Optional: clear state if needed in future
     }
 
     @Override
     public void onStateChange(Object oldState, Object newState) {
-        // Future: update UI when CompareState updates
+        if (!(newState instanceof CompareState)) {
+            return;
+        }
+        CompareState state = (CompareState) newState;
+
+        // Show any errors from use case
+        if (state.getErrorMessage() != null && !state.getErrorMessage().isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    state.getErrorMessage(),
+                    "Compare Countries Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+
+        // Populate dropdowns with full country list
+        if (state.getCountryNames() != null && !state.getCountryNames().isEmpty()) {
+            updateDropdownOptions(state.getCountryNames());
+        }
+
+        // When comparison data is ready, show popup window like original code
+        if (state.getSelectedCountries() != null
+                && !state.getSelectedCountries().isEmpty()
+                && state.getColumnHeaders() != null
+                && state.getColumnHeaders().length > 0
+                && state.getComparisonTableData() != null
+                && state.getComparisonTableData().length > 0) {
+
+            showComparisonWindow(state);
+        }
     }
 
+    // ----------------- Helpers to update UI from state -----------------
 
-    // ------------------ COMPARISON WINDOW ------------------
-    private static void showComparisonWindow(List<Country> selectedCountries) {
+    private void updateDropdownOptions(List<String> countryNames) {
+        // Exactly like your old behavior: all countries in every dropdown
+        String[] options = countryNames.toArray(new String[0]);
+
+        for (JComboBox<String> comboBox : dropdowns) {
+            comboBox.removeAllItems();
+            for (String name : options) {
+                comboBox.addItem(name);
+            }
+        }
+
+        compareButton.setEnabled(true);
+        updateVisibleDropdowns();
+    }
+
+    /**
+     * Opens a new window showing flags (aligned above country columns)
+     * and a vertical attribute-by-country comparison table,
+     * using data from CompareState instead of recomputing.
+     */
+    private void showComparisonWindow(CompareState state) {
+        List<Country> selectedCountries = state.getSelectedCountries();
+        String[] colNames = state.getColumnHeaders();
+        Object[][] data = state.getComparisonTableData();
+
         int numCountries = selectedCountries.size();
 
         JPanel flagsPanel = new JPanel(new GridLayout(1, numCountries + 1, 10, 10));
         flagsPanel.setBorder(new EmptyBorder(10, 20, 10, 20));
-        flagsPanel.add(new JPanel()); // placeholder
+        flagsPanel.add(new JPanel()); // placeholder over "Attribute" column
 
         for (Country c : selectedCountries) {
             JPanel card = new JPanel();
@@ -162,6 +218,10 @@ public class CompareView extends AbstractView {
                     : new JLabel("No Flag Found", SwingConstants.CENTER));
 
             img.setAlignmentX(CENTER_ALIGNMENT);
+            if (flag == null) {
+                img.setForeground(Color.RED);
+                img.setFont(new Font("Dialog", Font.BOLD, 13));
+            }
             card.add(img);
 
             JLabel name = new JLabel(c.getName());
@@ -171,28 +231,6 @@ public class CompareView extends AbstractView {
             card.add(name);
 
             flagsPanel.add(card);
-        }
-
-        String[] attributes = {
-                "Name", "Capital", "Region", "Subregion",
-                "Population", "Area (km²)", "Density (people/km²)",
-                "Languages", "Currencies"
-        };
-
-        Object[][] data = new Object[attributes.length][numCountries + 1];
-        String[] colNames = new String[numCountries + 1];
-        colNames[0] = "Attribute";
-
-        for (int c = 0; c < numCountries; c++)
-            colNames[c + 1] = selectedCountries.get(c).getName();
-
-        for (int r = 0; r < attributes.length; r++)
-            data[r][0] = attributes[r];
-
-        for (int c = 0; c < numCountries; c++) {
-            Country ctry = selectedCountries.get(c);
-
-            fillRow(data, attributes, c, ctry);
         }
 
         JTable table = new JTable(data, colNames) {
@@ -225,30 +263,13 @@ public class CompareView extends AbstractView {
         frame.setVisible(true);
     }
 
-    private static void fillRow(Object[][] data, String[] attributes, int col, Country c) {
-        for (int r = 0; r < attributes.length; r++) {
-            switch (attributes[r]) {
-                case "Name": data[r][col + 1] = c.getName(); break;
-                case "Capital": data[r][col + 1] = c.getCapital().orElse("N/A"); break;
-                case "Region": data[r][col + 1] = c.getRegion(); break;
-                case "Subregion": data[r][col + 1] = c.getSubregion().orElse("N/A"); break;
-                case "Population": data[r][col + 1] = c.getPopulation(); break;
-                case "Area (km²)":
-                    data[r][col + 1] = String.format("%.2f", c.getAreaKm2()); break;
-                case "Density (people/km²)":
-                    data[r][col + 1] = c.getAreaKm2() > 0
-                            ? String.format("%.2f", (double) c.getPopulation() / c.getAreaKm2())
-                            : "0.00";
-                    break;
-                case "Languages": data[r][col + 1] = String.join(", ", c.getLanguages()); break;
-                case "Currencies": data[r][col + 1] = String.join(", ", c.getCurrencies()); break;
-            }
-        }
-    }
-
     private static ImageIcon loadFlag(Country c, int w, int h) {
         try {
-            Image img = new ImageIcon(new URL(c.getFlagUrl())).getImage()
+            String url = c.getFlagUrl();
+            if (url == null || url.isEmpty()) {
+                return null;
+            }
+            Image img = new ImageIcon(new URL(url)).getImage()
                     .getScaledInstance(w, h, Image.SCALE_SMOOTH);
             return new ImageIcon(img);
         } catch (Exception e) {

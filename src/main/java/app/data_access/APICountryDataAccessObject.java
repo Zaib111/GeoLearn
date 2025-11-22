@@ -168,18 +168,18 @@ public class APICountryDataAccessObject implements CountryDataAccessInterface, C
 
         countryCodes.forEach(countryCode -> {
             Country country = new Country(
-                countryCode,
-                nameMap.get(countryCode),
-                capitalMap.get(countryCode),
-                regionMap.get(countryCode),
-                subregionMap.get(countryCode),
-                populationMap.getOrDefault(countryCode, 0),
-                areaMap.getOrDefault(countryCode, 0.0),
-                bordersMap.getOrDefault(countryCode, new ArrayList<>()),
-                flagsMap.get(countryCode),
-                languagesMap.getOrDefault(countryCode, new ArrayList<>()),
-                currenciesMap.getOrDefault(countryCode, new ArrayList<>()),
-                timezonesMap.getOrDefault(countryCode, new ArrayList<>())
+                    countryCode,
+                    nameMap.get(countryCode),
+                    capitalMap.get(countryCode),
+                    regionMap.get(countryCode),
+                    subregionMap.get(countryCode),
+                    populationMap.getOrDefault(countryCode, 0),
+                    areaMap.getOrDefault(countryCode, 0.0),
+                    bordersMap.getOrDefault(countryCode, new ArrayList<>()),
+                    flagsMap.get(countryCode),
+                    languagesMap.getOrDefault(countryCode, new ArrayList<>()),
+                    currenciesMap.getOrDefault(countryCode, new ArrayList<>()),
+                    timezonesMap.getOrDefault(countryCode, new ArrayList<>())
             );
 
             countries.add(country);
@@ -195,5 +195,41 @@ public class APICountryDataAccessObject implements CountryDataAccessInterface, C
             }
         }
         return null;
+    }
+
+    // -------------------- ADDED FOR COMPARE USE CASE --------------------
+
+    @Override
+    public List<String> getAllCountryNames() {
+        List<Country> countries = getCountries();
+        List<String> names = new ArrayList<>();
+        for (Country c : countries) {
+            String name = c.getName();
+            if (name != null && !name.isEmpty()) {
+                names.add(name);
+            }
+        }
+        return names;
+    }
+
+    @Override
+    public List<Country> getCountriesByNames(List<String> names) {
+        List<Country> all = getCountries();
+        Map<String, Country> byName = new HashMap<>();
+        for (Country c : all) {
+            String name = c.getName();
+            if (name != null && !name.isEmpty()) {
+                byName.put(name, c);
+            }
+        }
+
+        List<Country> result = new ArrayList<>();
+        for (String name : names) {
+            Country match = byName.get(name);
+            if (match != null) {
+                result.add(match);
+            }
+        }
+        return result;
     }
 }

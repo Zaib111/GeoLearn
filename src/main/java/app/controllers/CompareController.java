@@ -6,13 +6,17 @@ import java.util.List;
 
 public class CompareController {
 
-    private final CompareInputBoundary compareUseCase;
+    private final CompareInputBoundary interactor;
 
-    public CompareController(CompareInputBoundary compareUseCase) {
-        this.compareUseCase = compareUseCase;
+    public CompareController(CompareInputBoundary interactor) {
+        this.interactor = interactor;
+    }
+
+    public void loadAvailableCountries() {
+        interactor.loadAvailableCountries();
     }
 
     public void compareCountries(List<String> selectedCountryNames) {
-        compareUseCase.execute(selectedCountryNames);
+        interactor.execute(selectedCountryNames);
     }
 }
