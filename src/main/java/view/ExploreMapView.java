@@ -62,9 +62,16 @@ public class ExploreMapView extends JPanel implements PropertyChangeListener {
     private Cursor defaultCursor, zoomCursor, selectCursor;
 
     // Enhanced synchronization for Graphics2D thread safety
-    private final Object styleLock = new Object();
     private volatile boolean isUpdatingStyle = false;
+    private volatile boolean isUpdatingZoom = false;
+    private volatile boolean isUpdatingSelection = false;
     private javax.swing.Timer hoverUpdateTimer;
+    private javax.swing.Timer zoomUpdateTimer;
+    private javax.swing.Timer selectionUpdateTimer;
+
+    // Track last hover to reduce unnecessary updates
+    private SimpleFeature lastHoveredFeature;
+    private SimpleFeature lastSelectedFeature;
 
     public ExploreMapView(ExploreMapViewModel viewModel) {
         this.viewModel = viewModel;
@@ -260,6 +267,22 @@ public class ExploreMapView extends JPanel implements PropertyChangeListener {
         mapPane = new JMapPane(mapContent);
         mapPane.setBackground(Color.WHITE);
         mapPane.setDoubleBuffered(true);
+
+        // CRITICAL: Configure renderer for single-threaded mode to prevent Graphics2D threading issues
+        try {
+            org.geotools.renderer.GTRenderer renderer = mapPane.getRenderer();
+            if (renderer instanceof org.geotools.renderer.lite.StreamingRenderer) {
+                org.geotools.renderer.lite.StreamingRenderer streamingRenderer =
+                    (org.geotools.renderer.lite.StreamingRenderer) renderer;
+
+                // Disable multi-threading in the renderer
+                java.util.Map<Object, Object> hints = new java.util.HashMap<>();
+                hints.put("renderingThreads", 1); // Single thread only
+                streamingRenderer.setRendererHints(hints);
+            }
+        } catch (Exception e) {
+            System.err.println("Warning: Could not configure single-threaded rendering: " + e.getMessage());
+        }
 
         mapPane.addMouseListener(new MapMouseListener() {
             @Override
@@ -493,6 +516,10 @@ public class ExploreMapView extends JPanel implements PropertyChangeListener {
             return;
         }
 
+        if (lastHoveredFeature != null && lastHoveredFeature.equals(viewModel.getState().getHoveredFeature())) {
+            return; // No change in hovered feature
+        }
+
         isUpdatingStyle = true;
         try {
             if (hoverLayer != null) {
@@ -516,6 +543,8 @@ public class ExploreMapView extends JPanel implements PropertyChangeListener {
                 mapContent.addLayer(hoverLayer);
             }
 
+            lastHoveredFeature = viewModel.getState().getHoveredFeature();
+
             if (mapPane != null) {
                 mapPane.repaint();
             }
@@ -527,18 +556,29 @@ public class ExploreMapView extends JPanel implements PropertyChangeListener {
     }
 
     private void updateSelectedDisplay() {
-        if (mapContent == null || featureLayer == null) {
+        if (mapContent == null || featureLayer == null || isUpdatingSelection) {
             return;
         }
+
+        ExploreMapState state = viewModel.getState();
+        SimpleFeature selectedFeature = state.getSelectedFeature();
+
+        // Check if selection actually changed to reduce unnecessary updates
+        if (lastSelectedFeature != null && lastSelectedFeature.equals(selectedFeature)) {
+            return; // No change in selected feature
+        }
+
+        if (!mapPane.isShowing()) {
+            return; // Don't update if map is not visible/ready
+        }
+
+        isUpdatingSelection = true;
 
         try {
             if (selectedLayer != null) {
                 mapContent.removeLayer(selectedLayer);
                 selectedLayer = null;
             }
-
-            ExploreMapState state = viewModel.getState();
-            SimpleFeature selectedFeature = state.getSelectedFeature();
 
             if (selectedFeature != null) {
                 org.geotools.api.feature.simple.SimpleFeatureType featureType = featureSource.getSchema();
@@ -557,13 +597,26 @@ public class ExploreMapView extends JPanel implements PropertyChangeListener {
                 }
             }
 
+            lastSelectedFeature = selectedFeature;
+
+            // Use invokeLater to ensure repaint happens on EDT when graphics context is ready
             SwingUtilities.invokeLater(() -> {
-                if (mapPane != null) {
-                    mapPane.repaint();
+                try {
+                    if (mapPane != null && mapPane.isShowing()) {
+                        mapPane.repaint();
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error repainting after selection: " + e.getMessage());
+                } finally {
+                    // Delay before allowing next selection update
+                    javax.swing.Timer resetTimer = new javax.swing.Timer(100, evt -> isUpdatingSelection = false);
+                    resetTimer.setRepeats(false);
+                    resetTimer.start();
                 }
             });
         } catch (Exception e) {
             System.err.println("Error updating selected feature style: " + e.getMessage());
+            isUpdatingSelection = false;
         }
     }
 
@@ -620,7 +673,7 @@ public class ExploreMapView extends JPanel implements PropertyChangeListener {
     }
 
     private void updateZoomDisplay() {
-        if (mapPane == null || mapContent == null) {
+        if (mapPane == null || mapContent == null || isUpdatingZoom) {
             return;
         }
 
@@ -629,26 +682,47 @@ public class ExploreMapView extends JPanel implements PropertyChangeListener {
 
         if (displayArea != null) {
             ReferencedEnvelope currentBounds = mapPane.getDisplayArea();
-            if (currentBounds == null) {
-                return;
+            if (currentBounds == null || !mapPane.isShowing()) {
+                return; // Don't update if map is not visible/ready
             }
 
-            int zoomLevel = state.getZoomLevel();
-            double zoomFactor = Math.pow(0.8, zoomLevel);
+            isUpdatingZoom = true;
 
-            double width = displayArea.getWidth() * zoomFactor;
-            double height = displayArea.getHeight() * zoomFactor;
+            try {
+                int zoomLevel = state.getZoomLevel();
+                double zoomFactor = Math.pow(0.8, zoomLevel);
 
-            double centerX = currentBounds.getCenterX();
-            double centerY = currentBounds.getCenterY();
+                double width = displayArea.getWidth() * zoomFactor;
+                double height = displayArea.getHeight() * zoomFactor;
 
-            ReferencedEnvelope newBounds = new ReferencedEnvelope(
-                centerX - width / 2, centerX + width / 2,
-                centerY - height / 2, centerY + height / 2,
-                currentBounds.getCoordinateReferenceSystem()
-            );
+                double centerX = currentBounds.getCenterX();
+                double centerY = currentBounds.getCenterY();
 
-            SwingUtilities.invokeLater(() -> mapPane.setDisplayArea(newBounds));
+                ReferencedEnvelope newBounds = new ReferencedEnvelope(
+                    centerX - width / 2, centerX + width / 2,
+                    centerY - height / 2, centerY + height / 2,
+                    currentBounds.getCoordinateReferenceSystem()
+                );
+
+                // Use invokeLater to ensure this happens on EDT when graphics context is ready
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        if (mapPane != null && mapPane.isShowing()) {
+                            mapPane.setDisplayArea(newBounds);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error setting display area: " + e.getMessage());
+                    } finally {
+                        // Delay before allowing next zoom update
+                        javax.swing.Timer resetTimer = new javax.swing.Timer(150, evt -> isUpdatingZoom = false);
+                        resetTimer.setRepeats(false);
+                        resetTimer.start();
+                    }
+                });
+            } catch (Exception e) {
+                System.err.println("Error in updateZoomDisplay: " + e.getMessage());
+                isUpdatingZoom = false;
+            }
         }
     }
 
@@ -672,6 +746,7 @@ public class ExploreMapView extends JPanel implements PropertyChangeListener {
         }
 
         if (mapPane != null && featureSource != null) {
+            // Debounced hover updates
             if (hoverUpdateTimer != null && hoverUpdateTimer.isRunning()) {
                 hoverUpdateTimer.stop();
             }
@@ -680,11 +755,25 @@ public class ExploreMapView extends JPanel implements PropertyChangeListener {
             hoverUpdateTimer.setRepeats(false);
             hoverUpdateTimer.start();
 
-            updateSelectedDisplay();
+            // Debounced selection updates
+            if (selectionUpdateTimer != null && selectionUpdateTimer.isRunning()) {
+                selectionUpdateTimer.stop();
+            }
+            selectionUpdateTimer = new javax.swing.Timer(75, e ->
+                SwingUtilities.invokeLater(this::updateSelectedDisplay));
+            selectionUpdateTimer.setRepeats(false);
+            selectionUpdateTimer.start();
         }
 
         if (mapPane != null) {
-            updateZoomDisplay();
+            // Debounced zoom updates
+            if (zoomUpdateTimer != null && zoomUpdateTimer.isRunning()) {
+                zoomUpdateTimer.stop();
+            }
+            zoomUpdateTimer = new javax.swing.Timer(100, e ->
+                SwingUtilities.invokeLater(this::updateZoomDisplay));
+            zoomUpdateTimer.setRepeats(false);
+            zoomUpdateTimer.start();
         }
 
         updateCursor();
