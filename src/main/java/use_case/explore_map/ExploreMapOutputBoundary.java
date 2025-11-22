@@ -2,6 +2,7 @@ package use_case.explore_map;
 
 /**
  * The output boundary for the Explore Map Use Case.
+ * Simplified to only include data operations.
  */
 public interface ExploreMapOutputBoundary {
     /**
@@ -11,28 +12,10 @@ public interface ExploreMapOutputBoundary {
     void prepareMapLoadedView(ExploreMapOutputData outputData);
 
     /**
-     * Prepares the view after zoom operation.
-     * @param outputData the output data
-     */
-    void prepareZoomView(ExploreMapOutputData outputData);
-
-    /**
      * Prepares the view after feature selection.
      * @param outputData the output data
      */
     void prepareFeatureSelectedView(ExploreMapOutputData outputData);
-
-    /**
-     * Prepares the view after feature hover.
-     * @param outputData the output data
-     */
-    void prepareFeatureHoverView(ExploreMapOutputData outputData);
-
-    /**
-     * Prepares the view after mode change.
-     * @param outputData the output data
-     */
-    void prepareModeChangedView(ExploreMapOutputData outputData);
 
     /**
      * Prepares the failure view for the Explore Map Use Case.
@@ -40,4 +23,3 @@ public interface ExploreMapOutputBoundary {
      */
     void prepareFailView(String errorMessage);
 }
-

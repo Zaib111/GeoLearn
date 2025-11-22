@@ -52,7 +52,7 @@ public class ExploreMapDemo {
         ViewManagerModel viewManagerModel = new ViewManagerModel();
 
         // 3. Create the Presenter (Interface Adapters Layer)
-        ExploreMapPresenter presenter = new ExploreMapPresenter(viewManagerModel, viewModel);
+        ExploreMapPresenter presenter = new ExploreMapPresenter(viewModel);
 
         // 4. Create the Interactor (Use Case Layer)
         ExploreMapInteractor interactor = new ExploreMapInteractor(dataAccess, presenter);
@@ -63,9 +63,7 @@ public class ExploreMapDemo {
         // 6. Create the View (UI Layer) and wire everything together
         ExploreMapView view = new ExploreMapView(viewModel);
         view.setController(controller);
-        view.setDataAccessObject(dataAccess);
 
         return view;
     }
 }
-

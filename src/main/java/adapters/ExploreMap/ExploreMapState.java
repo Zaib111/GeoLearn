@@ -1,20 +1,27 @@
 package adapters.ExploreMap;
 
+import org.geotools.api.data.SimpleFeatureSource;
 import org.geotools.api.feature.simple.SimpleFeature;
-import org.geotools.geometry.jts.ReferencedEnvelope;
 
 /**
  * State for the Explore Map view.
+ * This stores all the state for the map exploration feature.
  */
 public class ExploreMapState {
+    private SimpleFeatureSource featureSource;
     private SimpleFeature selectedFeature;
-    private SimpleFeature hoveredFeature;
-    private ReferencedEnvelope displayArea;
-    private int zoomLevel;
-    private String interactionMode = "PAN";
     private String selectedCountryName;
     private String errorMessage;
     private boolean mapLoaded = false;
+    private String interactionMode = "PAN"; // PAN, ZOOM, SELECT
+
+    public SimpleFeatureSource getFeatureSource() {
+        return featureSource;
+    }
+
+    public void setFeatureSource(SimpleFeatureSource featureSource) {
+        this.featureSource = featureSource;
+    }
 
     public SimpleFeature getSelectedFeature() {
         return selectedFeature;
@@ -22,38 +29,6 @@ public class ExploreMapState {
 
     public void setSelectedFeature(SimpleFeature selectedFeature) {
         this.selectedFeature = selectedFeature;
-    }
-
-    public SimpleFeature getHoveredFeature() {
-        return hoveredFeature;
-    }
-
-    public void setHoveredFeature(SimpleFeature hoveredFeature) {
-        this.hoveredFeature = hoveredFeature;
-    }
-
-    public ReferencedEnvelope getDisplayArea() {
-        return displayArea;
-    }
-
-    public void setDisplayArea(ReferencedEnvelope displayArea) {
-        this.displayArea = displayArea;
-    }
-
-    public int getZoomLevel() {
-        return zoomLevel;
-    }
-
-    public void setZoomLevel(int zoomLevel) {
-        this.zoomLevel = zoomLevel;
-    }
-
-    public String getInteractionMode() {
-        return interactionMode;
-    }
-
-    public void setInteractionMode(String interactionMode) {
-        this.interactionMode = interactionMode;
     }
 
     public String getSelectedCountryName() {
@@ -79,5 +54,12 @@ public class ExploreMapState {
     public void setMapLoaded(boolean mapLoaded) {
         this.mapLoaded = mapLoaded;
     }
-}
 
+    public String getInteractionMode() {
+        return interactionMode;
+    }
+
+    public void setInteractionMode(String interactionMode) {
+        this.interactionMode = interactionMode;
+    }
+}

@@ -2,23 +2,16 @@ package use_case.explore_map;
 
 import org.geotools.api.data.SimpleFeatureSource;
 import org.geotools.api.feature.simple.SimpleFeature;
-import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.locationtech.jts.geom.Coordinate;
 
 /**
  * Interactor for the Explore Map use case.
+ * Only handles data operations - no UI state management.
  */
 public class ExploreMapInteractor implements ExploreMapInputBoundary {
-    private static final int MAX_ZOOM_IN_LEVELS = 5;
 
     private final ExploreMapDataAccessInterface dataAccess;
     private final ExploreMapOutputBoundary presenter;
-
-    private SimpleFeature currentSelectedFeature;
-    private SimpleFeature currentHoveredFeature;
-    private int currentZoomLevel = 0;
-    private String currentMode = "PAN";
-    private ReferencedEnvelope currentDisplayArea;
 
     public ExploreMapInteractor(ExploreMapDataAccessInterface dataAccess,
                                 ExploreMapOutputBoundary presenter) {
@@ -32,12 +25,8 @@ public class ExploreMapInteractor implements ExploreMapInputBoundary {
             SimpleFeatureSource featureSource = dataAccess.loadShapefile(inputData.getShapefilePath());
             dataAccess.setFeatureSource(featureSource);
 
-            ReferencedEnvelope maxBounds = dataAccess.getMaxBounds();
-            currentDisplayArea = maxBounds;
-            currentZoomLevel = 0;
-
             ExploreMapOutputData outputData = new ExploreMapOutputData(
-                null, null, maxBounds, 0, currentMode, null
+                featureSource, null, null
             );
             presenter.prepareMapLoadedView(outputData);
         } catch (Exception e) {
@@ -46,109 +35,23 @@ public class ExploreMapInteractor implements ExploreMapInputBoundary {
     }
 
     @Override
-    public void zoomIn(ExploreMapZoomInputData inputData) {
-        if (currentZoomLevel >= MAX_ZOOM_IN_LEVELS) {
-            return;
-        }
-
-        currentZoomLevel++;
-
-        ExploreMapOutputData outputData = new ExploreMapOutputData(
-            currentSelectedFeature, currentHoveredFeature,
-            currentDisplayArea, currentZoomLevel, currentMode,
-            getSelectedCountryName()
-        );
-        presenter.prepareZoomView(outputData);
-    }
-
-    @Override
-    public void zoomOut() {
-        if (currentZoomLevel <= 0) {
-            return;
-        }
-
-        currentZoomLevel--;
-
-        ExploreMapOutputData outputData = new ExploreMapOutputData(
-            currentSelectedFeature, currentHoveredFeature,
-            currentDisplayArea, currentZoomLevel, currentMode,
-            getSelectedCountryName()
-        );
-        presenter.prepareZoomView(outputData);
-    }
-
-    @Override
-    public void resetView() {
-        currentZoomLevel = 0;
-        currentDisplayArea = dataAccess.getMaxBounds();
-
-        ExploreMapOutputData outputData = new ExploreMapOutputData(
-            currentSelectedFeature, currentHoveredFeature,
-            currentDisplayArea, currentZoomLevel, currentMode,
-            getSelectedCountryName()
-        );
-        presenter.prepareZoomView(outputData);
-    }
-
-    @Override
     public void selectFeature(ExploreMapSelectInputData inputData) {
-        Coordinate coord = new Coordinate(inputData.getX(), inputData.getY());
-        currentSelectedFeature = dataAccess.getFeatureAtPosition(coord);
-
-        ExploreMapOutputData outputData = new ExploreMapOutputData(
-            currentSelectedFeature, currentHoveredFeature,
-            currentDisplayArea, currentZoomLevel, currentMode,
-            getSelectedCountryName()
-        );
-        presenter.prepareFeatureSelectedView(outputData);
-    }
-
-    @Override
-    public void hoverFeature(ExploreMapHoverInputData inputData) {
         Coordinate coord = new Coordinate(inputData.getX(), inputData.getY());
         SimpleFeature feature = dataAccess.getFeatureAtPosition(coord);
 
-        if (feature != currentHoveredFeature) {
-            currentHoveredFeature = feature;
-
-            ExploreMapOutputData outputData = new ExploreMapOutputData(
-                currentSelectedFeature, currentHoveredFeature,
-                currentDisplayArea, currentZoomLevel, currentMode,
-                getSelectedCountryName()
-            );
-            presenter.prepareFeatureHoverView(outputData);
-        }
-    }
-
-    @Override
-    public void changeMode(ExploreMapModeInputData inputData) {
-        currentMode = inputData.getMode().name();
-
-        if (!currentMode.equals("PAN") && !currentMode.equals("SELECT")) {
-            currentHoveredFeature = null;
-        }
-
-        if (!currentMode.equals("SELECT")) {
-            currentSelectedFeature = null;
+        String countryName = null;
+        if (feature != null) {
+            try {
+                Object nameAttr = feature.getAttribute("NAME");
+                countryName = nameAttr != null ? nameAttr.toString() : feature.getID();
+            } catch (Exception e) {
+                countryName = feature.getID();
+            }
         }
 
         ExploreMapOutputData outputData = new ExploreMapOutputData(
-            currentSelectedFeature, currentHoveredFeature,
-            currentDisplayArea, currentZoomLevel, currentMode,
-            getSelectedCountryName()
+            null, feature, countryName
         );
-        presenter.prepareModeChangedView(outputData);
-    }
-
-    private String getSelectedCountryName() {
-        if (currentSelectedFeature == null) {
-            return null;
-        }
-        try {
-            Object nameAttr = currentSelectedFeature.getAttribute("NAME");
-            return nameAttr != null ? nameAttr.toString() : currentSelectedFeature.getID();
-        } catch (Exception e) {
-            return currentSelectedFeature.getID();
-        }
+        presenter.prepareFeatureSelectedView(outputData);
     }
 }
