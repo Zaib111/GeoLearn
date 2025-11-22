@@ -1,7 +1,7 @@
 package app.data_access;
 
 import app.entities.CountryCollection;
-import app.use_cases.collection.CollectionUserDataAccessInterface;
+import app.use_cases.collection.CollectionDataAccessInterface;
 import app.use_cases.settings.SettingsDataAccessInterface;
 import app.use_cases.settings.UserSettingsData;
 
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserDataInMemoryDataAccessObject implements SettingsDataAccessInterface, CollectionUserDataAccessInterface {
+public class UserDataInMemoryDataAccessObject implements SettingsDataAccessInterface, CollectionDataAccessInterface {
     UserSettingsData currentSettings = new UserSettingsData();
     List<CountryCollection> collections = new ArrayList<>();
 

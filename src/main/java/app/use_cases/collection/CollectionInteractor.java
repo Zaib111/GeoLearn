@@ -8,12 +8,12 @@ import java.util.*;
 import java.util.Optional;
 
 public class CollectionInteractor implements CollectionInputBoundary {
-    private CollectionUserDataAccessInterface userDataAccessObject;
+    private CollectionDataAccessInterface userDataAccessObject;
     private CollectionOutputBoundary collectionPresenter;
     private CountryDataAccessInterface countryDataAccess;
 
     public CollectionInteractor(
-            CollectionUserDataAccessInterface userDataAccessObject,
+            CollectionDataAccessInterface userDataAccessObject,
             CollectionOutputBoundary collectionPresenter,
             CountryDataAccessInterface countryDataAccess
     ) {
