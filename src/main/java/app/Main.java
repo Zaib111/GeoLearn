@@ -19,6 +19,12 @@ import app.views.filter_countries.FilterCountriesView;
 import app.views.home.HomeView;
 import app.views.settings.SettingsState;
 import app.views.settings.SettingsView;
+import app.controllers.CompareController;
+import app.presenters.ComparePresenter;
+import app.use_cases.compare.CompareInteractor;
+import app.views.compare.CompareView;
+import app.use_cases.compare.CompareViewModel;
+
 
 public class Main {
     public static void main(String[] args) {
@@ -31,6 +37,14 @@ public class Main {
         // Setup Home Module
         HomeView homeView = new HomeView(navigator);
         masterFrame.registerView(homeView, "home");
+
+        // Setup Compare Module
+        CompareViewModel compareViewModel = new CompareViewModel();
+        ComparePresenter comparePresenter = new ComparePresenter(compareViewModel);
+        CompareInteractor compareInteractor = new CompareInteractor(countryDataAPI, comparePresenter);
+        CompareController compareController = new CompareController(compareInteractor);
+        CompareView compareView = new CompareView(compareViewModel, compareController, navigator);
+        masterFrame.registerView(compareView, "compare_countries");
 
         // Setup Collection Module
         ViewModel<CollectionState> collectionViewModel = new ViewModel<>(new CollectionState());
