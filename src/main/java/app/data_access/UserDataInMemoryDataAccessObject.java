@@ -7,6 +7,8 @@ import app.use_cases.settings.UserSettingsData;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class UserDataInMemoryDataAccessObject implements SettingsDataAccessInterface, CollectionUserDataAccessInterface {
     UserSettingsData currentSettings = new UserSettingsData();
@@ -30,5 +32,27 @@ public class UserDataInMemoryDataAccessObject implements SettingsDataAccessInter
     @Override
     public List<CountryCollection> getAllCollections() {
         return new ArrayList<>(collections);
+    }
+
+    @Override
+    public Optional<CountryCollection> getCollectionById(UUID collectionId) {
+        return collections.stream()
+                .filter(c -> c.getCollectionId().equals(collectionId))
+                .findFirst();
+    }
+
+    @Override
+    public void deleteCollection(UUID collectionId) {
+        collections.removeIf(c -> c.getCollectionId().equals(collectionId));
+    }
+
+    @Override
+    public void updateCollection(CountryCollection updatedCollection) {
+        for (int i = 0; i < collections.size(); i++) {
+            if (collections.get(i).getCollectionId().equals(updatedCollection.getCollectionId())) {
+                collections.set(i, updatedCollection);
+                return;
+            }
+        }
     }
 }

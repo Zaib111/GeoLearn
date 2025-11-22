@@ -1,6 +1,5 @@
 package app.use_cases.collection;
 
-import app.entities.Country;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -10,5 +9,5 @@ import java.util.List;
 @AllArgsConstructor
 public class AddCollectionRequestData {
     private final String collectionName;
-    private final List<Country> countriesToAdd;
+    private final List<String> countryNames;
 }

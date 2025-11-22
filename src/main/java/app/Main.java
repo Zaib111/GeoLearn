@@ -49,7 +49,7 @@ public class Main {
         // Setup Collection Module
         ViewModel<CollectionState> collectionViewModel = new ViewModel<>(new CollectionState());
         CollectionPresenter collectionPresenter = new CollectionPresenter(collectionViewModel);
-        CollectionInteractor collectionInteractor = new CollectionInteractor(inMemoryUserDataStorage, collectionPresenter);
+        CollectionInteractor collectionInteractor = new CollectionInteractor(inMemoryUserDataStorage, collectionPresenter, countryDataAPI);
         CollectionController collectionController = new CollectionController(collectionInteractor);
         CollectionView collectionView = new CollectionView(collectionViewModel, collectionController);
         masterFrame.registerView(collectionView, "collection");
