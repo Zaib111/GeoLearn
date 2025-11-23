@@ -17,11 +17,12 @@ import org.json.JSONObject;
 import app.entities.Country;
 import app.use_cases.compare.CompareDataAccessInterface;
 import app.use_cases.country.CountryDataAccessInterface;
+import app.use_cases.detail.DetailDataAccessInterface;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class APICountryDataAccessObject implements CountryDataAccessInterface, CompareDataAccessInterface {
+public class APICountryDataAccessObject implements CountryDataAccessInterface, CompareDataAccessInterface, DetailDataAccessInterface {
     private static final String FIELD_NAME = "name";
     private static final String FIELD_CAPITAL = "capital";
     private static final String FIELD_REGION = "region";
@@ -257,10 +258,10 @@ public class APICountryDataAccessObject implements CountryDataAccessInterface, C
     }
 
     @Override
-    public Country getCountry(String countryCode) {
+    public Country getCountryByName(String countryName) {
         Country result = null;
         for (Country country : getCountries()) {
-            if (country.getCode().equals(countryCode)) {
+            if (country.getName().equals(countryName)) {
                 result = country;
                 break;
             }
