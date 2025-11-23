@@ -15,6 +15,7 @@ public class ExploreMapController {
 
     /**
      * Constructor for ExploreMapController.
+     *
      * @param interactor the use case interactor
      */
     public ExploreMapController(final ExploreMapInputBoundary interactor) {
@@ -23,6 +24,7 @@ public class ExploreMapController {
 
     /**
      * Load a map from a shapefile.
+     *
      * @param shapefilePath the path to the shapefile
      */
     public void loadMap(final String shapefilePath) {
@@ -32,13 +34,14 @@ public class ExploreMapController {
     }
 
     /**
-     * Select a feature at the given coordinates.
-     * @param x the x coordinate
-     * @param y the y coordinate
+     * Select a feature at the given screen coordinates.
+     *
+     * @param screenX the x coordinate on the screen
+     * @param screenY the y coordinate on the screen
      */
-    public void selectFeature(final double x, final double y) {
+    public void selectFeature(final double screenX, final double screenY) {
         final ExploreMapSelectInputData inputData =
-                new ExploreMapSelectInputData(x, y);
+                new ExploreMapSelectInputData(screenX, screenY);
         interactor.selectFeature(inputData);
     }
 }
