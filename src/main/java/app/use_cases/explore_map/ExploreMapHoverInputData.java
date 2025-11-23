@@ -4,19 +4,19 @@ package app.use_cases.explore_map;
  * Input data for hovering over a feature on the map.
  */
 public class ExploreMapHoverInputData {
-    private final double x;
-    private final double y;
+    private final double screenX;
+    private final double screenY;
 
-    public ExploreMapHoverInputData(double x, double y) {
-        this.x = x;
-        this.y = y;
+    public ExploreMapHoverInputData(double screenX, double screenY) {
+        this.screenX = screenX;
+        this.screenY = screenY;
     }
 
-    public double getX() {
-        return x;
+    public double getScreenX() {
+        return screenX;
     }
 
-    public double getY() {
-        return y;
+    public double getScreenY() {
+        return screenY;
     }
 }
