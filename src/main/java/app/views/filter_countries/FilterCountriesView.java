@@ -13,6 +13,8 @@ import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -148,6 +150,50 @@ public class FilterCountriesView extends AbstractView {
         sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
         sorter.setSortKeys(sortKeys);
         sorter.sort();
+
+        // Hyperlink implementation
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Only handle double-clicks to distinguish from single selection
+                if (e.getClickCount() == 1) {
+                    Point point = e.getPoint();
+                    int viewRow = table.rowAtPoint(point);
+                    int viewColumn = table.columnAtPoint(point);
+
+                    // Check if the click was on a valid row and in the "Name" column (index 0)
+                    if (viewRow >= 0 && viewColumn == 0) {
+
+                        // 1. Get the model row index (accounts for sorting/filtering)
+                        int modelRow = table.convertRowIndexToModel(viewRow);
+
+                        // 2. Retrieve the original Country object from the data list
+                        // This works because the model row index corresponds to the index in countryDisplayData
+                        Country clickedCountry = countryDisplayData.get(modelRow);
+                        String countryName = clickedCountry.getName();
+
+                        // 3. Use the controller to trigger the navigation to the DetailView
+                        // NOTE: This assumes filterCountriesController has a method openCountryDetails(String name)
+                        // which handles the routing to the DetailView.
+                        filterCountriesController.openCountryDetails(countryName);
+                    }
+                }
+            }
+        });
+
+        // Changes cursor to indicate clickable item to User
+        table.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                Point point = e.getPoint();
+                int viewColumn = table.columnAtPoint(point);
+                if (viewColumn == 0) { // Check if it's the Name column
+                    table.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                } else {
+                    table.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                }
+            }
+        });
 
         // Remove old table pane if exists
         if (currentTableScrollPane != null) {

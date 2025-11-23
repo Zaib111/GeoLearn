@@ -16,6 +16,8 @@ import app.presenters.SettingsPresenter;
 import app.use_cases.collection.CollectionInteractor;
 import app.use_cases.compare.CompareInteractor;
 import app.use_cases.compare.CompareViewModel;
+import app.use_cases.detail.DetailDataAccessInterface;
+import app.use_cases.detail.DetailInteractor;
 import app.use_cases.explore_map.ExploreMapInteractor;
 import app.use_cases.filter_country.FilterCountriesInteractor;
 import app.use_cases.settings.SettingsInteractor;
@@ -124,7 +126,7 @@ public class Main {
                 new FilterCountriesPresenter(filterCountriesViewModel);
         final FilterCountriesInteractor filterCountriesInteractor =
                 new FilterCountriesInteractor(countryDataApi,
-                        filterCountriesPresenter);
+                        filterCountriesPresenter, countryDataApi);
         final FilterCountriesController filterCountriesController =
                 new FilterCountriesController(filterCountriesInteractor);
         final FilterCountriesView filterCountriesView =
