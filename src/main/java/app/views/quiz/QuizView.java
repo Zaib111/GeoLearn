@@ -8,6 +8,8 @@ import app.views.ViewModel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 import javax.swing.table.DefaultTableModel;
 
@@ -263,35 +265,26 @@ public class QuizView extends AbstractView {
             optionsPanel.removeAll();
             optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
 
-
             for (String opt : options) {
                 JButton btn = new JButton(opt);
 
-                // --- modern rounded button styling ---
-                btn.setBorder(new RoundedBorder(12));
-                btn.setFocusPainted(false);
-                btn.setBackground(new Color(230, 230, 255));
-                btn.setPreferredSize(new Dimension(250, 40)); // narrower buttons
-                btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 16f));
+                // 🔹 Style the button (rounded + hover + press)
+                styleAnswerButton(btn);
 
-                // action listener
                 btn.addActionListener(e -> {
                     if (controller != null) {
                         controller.submitAnswer(opt);
                     }
                 });
 
-                // wrapper panel centers the button
+                // Center the button and add spacing between them
                 JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
-
-                // spacing between buttons
                 wrapper.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+                wrapper.setOpaque(false);  // let parent background show
 
                 wrapper.add(btn);
                 optionsPanel.add(wrapper);
             }
-
-
         }
 
         nextButton.setVisible(false);
@@ -633,4 +626,58 @@ public class QuizView extends AbstractView {
             return;
         }
     }
+
+    /**
+     * Apply consistent styling + hover/press effects to answer buttons.
+     */
+    private void styleAnswerButton(JButton btn) {
+        // Base colours
+        Color normalBg = new Color(230, 230, 255);
+        Color hoverBg  = new Color(210, 210, 245);
+        Color pressedBg = new Color(190, 190, 235);
+
+        btn.setBorder(new RoundedBorder(12));
+        btn.setFocusPainted(false);
+        btn.setBackground(normalBg);
+        btn.setOpaque(true);
+        btn.setPreferredSize(new Dimension(250, 40));
+        btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 16f));
+
+        // Hover (4)
+        btn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (btn.isEnabled()) {
+                    btn.setBackground(hoverBg);
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (btn.isEnabled()) {
+                    btn.setBackground(normalBg);
+                }
+            }
+        });
+
+        // Press "animation" + active look (5, 7)
+        btn.getModel().addChangeListener(e -> {
+            ButtonModel model = (ButtonModel) e.getSource();
+            if (!btn.isEnabled()) {
+                return;
+            }
+
+            if (model.isPressed()) {
+                // While button is pressed
+                btn.setBackground(pressedBg);
+            } else if (model.isRollover()) {
+                // Hover but not pressed
+                btn.setBackground(hoverBg);
+            } else {
+                // Default
+                btn.setBackground(normalBg);
+            }
+        });
+    }
+
 }
