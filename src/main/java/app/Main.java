@@ -45,6 +45,8 @@ public class Main {
         final Navigator navigator = new Navigator(masterFrame);
         final APICountryDataAccessObject countryDataApi =
                 new APICountryDataAccessObject();
+        // Call getCountries to load cache at startup
+        countryDataApi.getCountries();
         final UserDataInMemoryDataAccessObject inMemoryUserDataStorage =
                 new UserDataInMemoryDataAccessObject();
 
