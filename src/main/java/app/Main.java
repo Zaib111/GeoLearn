@@ -18,6 +18,8 @@ import app.presenters.TakeQuizPresenter;
 import app.use_cases.collection.CollectionInteractor;
 import app.use_cases.compare.CompareInteractor;
 import app.use_cases.compare.CompareViewModel;
+import app.use_cases.detail.DetailDataAccessInterface;
+import app.use_cases.detail.DetailInteractor;
 import app.use_cases.explore_map.ExploreMapInteractor;
 import app.use_cases.filter_country.FilterCountriesInteractor;
 import app.use_cases.settings.SettingsInteractor;
@@ -30,6 +32,8 @@ import app.views.ViewModel;
 import app.views.collection.CollectionState;
 import app.views.collection.CollectionView;
 import app.views.compare.CompareView;
+import app.views.detail.DetailState;
+import app.views.detail.DetailView;
 import app.views.explore_map.ExploreMapState;
 import app.views.explore_map.ExploreMapView;
 import app.views.filter_countries.FilterCountriesState;
@@ -63,8 +67,9 @@ public class Main {
         setupCollectionModule(masterFrame, inMemoryUserDataStorage,
                 countryDataApi);
         setupSettingsModule(masterFrame, inMemoryUserDataStorage);
-        setupFilterCountriesModule(masterFrame, countryDataApi);
+        setupFilterCountriesModule(masterFrame, countryDataApi, navigator);
         setupExploreMapModule(masterFrame);
+        setupDetailModule(masterFrame);
         setupQuizModule(masterFrame, countryDataApi, inMemoryUserDataStorage);
 
         navigator.navigateTo("home");
@@ -128,7 +133,8 @@ public class Main {
 
     private static void setupFilterCountriesModule(
             MasterFrame masterFrame,
-            APICountryDataAccessObject countryDataApi) {
+            APICountryDataAccessObject countryDataApi,
+            Navigator navigator) {
         final ViewModel<FilterCountriesState> filterCountriesViewModel =
                 new ViewModel<>(new FilterCountriesState());
         final FilterCountriesPresenter filterCountriesPresenter =
@@ -140,7 +146,7 @@ public class Main {
                 new FilterCountriesController(filterCountriesInteractor);
         final FilterCountriesView filterCountriesView =
                 new FilterCountriesView(filterCountriesViewModel,
-                        filterCountriesController);
+                        filterCountriesController, navigator);
         masterFrame.registerView(filterCountriesView, "filter_countries");
     }
 
@@ -162,6 +168,21 @@ public class Main {
         masterFrame.registerView(exploreMapView, "explore_map");
     }
 
+    private static void setupDetailModule(MasterFrame masterFrame) {
+        final ViewModel<DetailState> detailViewModel =
+                new ViewModel<>(new DetailState());
+        final DetailPresenter detailPresenter =
+                new DetailPresenter(detailViewModel);
+        final DetailDataAccessInterface dataAccessInterface =
+                new APICountryDataAccessObject();
+        final DetailInteractor detailInteractor =
+                new DetailInteractor(dataAccessInterface, detailPresenter);
+        final DetailController detailController =
+                new DetailController(detailInteractor);
+        final DetailView detailView =
+                new DetailView(detailViewModel, detailController);
+        masterFrame.registerView(detailView, "country_details");
+      
     private static void setupQuizModule(
             MasterFrame masterFrame,
             APICountryDataAccessObject countryDataApi,

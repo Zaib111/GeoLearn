@@ -183,8 +183,8 @@ public class ExploreMapView extends AbstractView {
     }
 
     @Override
-    public void onViewOpened() {
-        // Hook for future open-time behavior if needed.
+    public void onViewOpened(String param) {
+        // Initialize view when opened
     }
 
     @Override

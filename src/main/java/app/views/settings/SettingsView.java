@@ -139,7 +139,7 @@ public class SettingsView extends AbstractView {
     }
 
     @Override
-    public void onViewOpened() {
+    public void onViewOpened(String param) {
         settingsController.fetchSettings();
     }
 

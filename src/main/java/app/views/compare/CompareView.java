@@ -131,7 +131,7 @@ public class CompareView extends AbstractView {
     // ----------------- AbstractView lifecycle methods -----------------
 
     @Override
-    public void onViewOpened() {
+    public void onViewOpened(String param) {
         // When the view opens, ask to load all countries
         compareController.loadAvailableCountries();
     }
