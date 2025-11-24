@@ -1,8 +1,17 @@
 package app.use_cases.filter_country;
 
+import app.controllers.DetailController;
 import app.data_access.APICountryDataAccessObject;
 import app.entities.Country;
+import app.presenters.DetailPresenter;
+import app.use_cases.detail.DetailDataAccessInterface;
+import app.use_cases.detail.DetailInteractor;
+import app.views.ViewModel;
+import app.views.detail.DetailState;
+import app.views.detail.DetailView;
 
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +34,7 @@ public class FilterCountriesInteractor implements FilterCountriesInputBoundary {
         String subregion = inputData.getSubregion();
 
         for (Country country : allCountries) {
-            if(matchesSearch(country, searchTerm) && matchesRegion(country, region) && matchesSubregion(country, subregion)) {
+            if (matchesSearch(country, searchTerm) && matchesRegion(country, region) && matchesSubregion(country, subregion)) {
                 filteredCountries.add(country);
             }
         }

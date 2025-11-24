@@ -1,5 +1,6 @@
 package app.views.filter_countries;
 
+import app.Navigator;
 import app.controllers.FilterCountriesController;
 import app.entities.Country;
 import app.views.AbstractView;
@@ -13,6 +14,8 @@ import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,11 +27,13 @@ public class FilterCountriesView extends AbstractView {
     private JComboBox<String> subregionComboBox;
     private FilterCountriesController filterCountriesController;
     private JScrollPane currentTableScrollPane;
+    private Navigator navigator;
 
-    public FilterCountriesView(ViewModel<FilterCountriesState> filterCountriesViewModel, FilterCountriesController filterCountriesController) {
+    public FilterCountriesView(ViewModel<FilterCountriesState> filterCountriesViewModel, FilterCountriesController filterCountriesController, Navigator navigator) {
         super(filterCountriesViewModel);
 
         this.filterCountriesController = filterCountriesController;
+        this.navigator = navigator;
 
         // Heading
         JLabel heading = new JLabel("Filter Countries");
@@ -87,7 +92,7 @@ public class FilterCountriesView extends AbstractView {
     }
 
     @Override
-    public void onViewOpened() {
+    public void onViewOpened(String param) {
         this.revalidate();
         this.repaint();
     }
@@ -177,6 +182,45 @@ public class FilterCountriesView extends AbstractView {
             sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
             sorter.setSortKeys(sortKeys);
             sorter.sort();
+
+            // Remove old table pane if exists
+            if (currentTableScrollPane != null) {
+                this.remove(currentTableScrollPane); // panel must be a class field
+            }
+
+            // Hyperlink implementation
+            table.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getClickCount() == 1) {
+                        Point point = e.getPoint();
+                        int viewRow = table.rowAtPoint(point);
+                        int viewColumn = table.columnAtPoint(point);
+
+                        // Check if the click was on a valid row and in the "Name" column (index 0)
+                        if (viewRow >= 0 && viewColumn == 0) {
+                            int modelRow = table.convertRowIndexToModel(viewRow);
+                            Country clickedCountry = countryDisplayData.get(modelRow);
+                            String countryName = clickedCountry.getName();
+                            navigator.navigateTo("country_details", countryName);
+                        }
+                    }
+                }
+            });
+
+            // Changes cursor to indicate clickable item to User
+            table.addMouseMotionListener(new MouseAdapter() {
+                @Override
+                public void mouseMoved(MouseEvent e) {
+                    Point point = e.getPoint();
+                    int viewColumn = table.columnAtPoint(point);
+                    if (viewColumn == 0) { // Check if it's the Name column
+                        table.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                    } else {
+                        table.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                    }
+                }
+            });
 
             // Remove old table pane if exists
             if (currentTableScrollPane != null) {
