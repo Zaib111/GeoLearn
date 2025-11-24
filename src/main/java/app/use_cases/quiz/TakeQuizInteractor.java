@@ -7,18 +7,34 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Interactor for the Take Quiz use case.
+ *
+ * <p>This class implements TakeQuizInputBoundary and the following functions:
+ * <ul>
+ *     <li>selecting questions from a QuestionRepository</li>
+ *     <li>tracking score, streaks, and timing via the Quiz entity</li>
+ *     <li>evaluating answers and preparing response models for the presenter</li>
+ * </ul>
+ */
 public class TakeQuizInteractor implements TakeQuizInputBoundary{
     private final QuestionRepository questionRepo;
     private final TakeQuizOutputBoundary presenter;
 
     private Quiz currentQuiz;
 
+    /**
+     * Creates a new TakeQuizInteractor.
+     */
     public TakeQuizInteractor(QuestionRepository questionRepo,
                              TakeQuizOutputBoundary presenter) {
         this.questionRepo = questionRepo;
         this.presenter = presenter;
     }
 
+    /**
+     * Starts a quiz session using the parameters in the request model.
+     */
     @Override
     public void startQuiz(TakeQuizStartRequestModel requestModel) {
         List<Question> questions = questionRepo.getQuestionsForQuiz(
@@ -26,7 +42,8 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
                 requestModel.getQuestionType(),
                 requestModel.getNumberOfQuestions()
         );
-        currentQuiz = new Quiz(requestModel.getQuizType(),questions);
+
+        currentQuiz = new Quiz(requestModel.getQuizType(), questions);
 
         Question first = currentQuiz.getQuestions().get(0);
 
@@ -42,6 +59,9 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
         presenter.prepareQuizStart(response);
     }
 
+    /**
+     * Submits the user's answer for the current question.
+     */
     @Override
     public void submitAnswer(SubmitAnswerRequestModel requestModel){
         if (currentQuiz == null || currentQuiz.isFinished()) {
@@ -70,6 +90,9 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
         presenter.presentAnswerFeedback(response);
     }
 
+    /**
+     * Advances the quiz to the next question, or ends the quiz if there are no more.
+     */
     @Override
     public void nextQuestion(){
         if (currentQuiz == null) {
@@ -101,6 +124,9 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
         }
     }
 
+    /**
+     * Handles the case when the countdown timer expires.
+     */
     @Override
     public void timeExpired() {
         if (currentQuiz == null || currentQuiz.isFinished()) {
@@ -125,7 +151,9 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
 
         presenter.presentAnswerFeedback(response);
     }
-
+    /**
+     * Returns a shuffled copy of the question's options.
+     */
     private List<String> shuffledOptions(Question q) {
         List<String> shuffled = new ArrayList<>(q.getOptions());
         Collections.shuffle(shuffled);
