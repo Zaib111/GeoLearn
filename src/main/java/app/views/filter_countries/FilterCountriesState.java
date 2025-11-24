@@ -13,4 +13,5 @@ import java.util.List;
 @AllArgsConstructor
 public class FilterCountriesState {
     private List<Country> filteredCountries = Collections.emptyList();
+    // no need for getters/setters as we use lombok
 }
