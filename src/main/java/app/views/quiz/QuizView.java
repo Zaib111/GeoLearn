@@ -602,7 +602,7 @@ public class QuizView extends AbstractView {
      * Called when the quiz view becomes visible. Restores selection mode.
      */
     @Override
-    public void onViewOpened() {
+    public void onViewOpened(String param) {
         resetToSelection();
     }
 
