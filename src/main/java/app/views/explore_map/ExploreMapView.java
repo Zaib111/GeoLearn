@@ -25,8 +25,6 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.geotools.api.data.SimpleFeatureSource;
 import org.geotools.api.feature.simple.SimpleFeature;
 import org.geotools.api.filter.FilterFactory;
@@ -56,6 +54,8 @@ import org.locationtech.jts.geom.Point;
 import app.controllers.ExploreMapController;
 import app.views.AbstractView;
 import app.views.ViewModel;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * View for the Explore Map use case following Clean Architecture.
