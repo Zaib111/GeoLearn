@@ -63,7 +63,7 @@ public class Main {
         setupSettingsModule(masterFrame, inMemoryUserDataStorage);
         setupFilterCountriesModule(masterFrame, countryDataApi);
         setupExploreMapModule(masterFrame);
-        setupQuizModule(masterFrame, countryDataApi);
+        setupQuizModule(masterFrame, countryDataApi, inMemoryUserDataStorage);
 
         navigator.navigateTo("home");
     }
@@ -162,7 +162,8 @@ public class Main {
 
     private static void setupQuizModule(
             MasterFrame masterFrame,
-            APICountryDataAccessObject countryDataApi) {
+            APICountryDataAccessObject countryDataApi,
+            UserDataInMemoryDataAccessObject userDataStorage) {
         // ViewModel for the quiz screen
         final QuizViewModel quizViewModel = new QuizViewModel();
 
@@ -179,7 +180,7 @@ public class Main {
 
         // Interactor (quiz business logic)
         final TakeQuizInteractor takeQuizInteractor =
-                new TakeQuizInteractor(questionRepository, quizPresenter);
+                new TakeQuizInteractor(questionRepository, userDataStorage, quizPresenter);
 
         // Controller (view → use case)
         final TakeQuizController takeQuizController =

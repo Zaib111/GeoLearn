@@ -1,7 +1,9 @@
 package app.use_cases.quiz;
 
 import app.entities.Question;
+import app.entities.QuestionType;
 import app.entities.Quiz;
+import app.entities.QuizHistoryEntry;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +22,9 @@ import java.util.List;
 public class TakeQuizInteractor implements TakeQuizInputBoundary{
     private final QuestionRepository questionRepo;
     private final TakeQuizOutputBoundary presenter;
+    private final QuizHistoryDataAccessInterface historyGateway;
+
+    private QuestionType  currentQuestionType;
 
     private Quiz currentQuiz;
 
@@ -27,8 +32,10 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
      * Creates a new TakeQuizInteractor.
      */
     public TakeQuizInteractor(QuestionRepository questionRepo,
+                             QuizHistoryDataAccessInterface historyGateway,
                              TakeQuizOutputBoundary presenter) {
         this.questionRepo = questionRepo;
+        this.historyGateway = historyGateway;
         this.presenter = presenter;
     }
 
@@ -37,6 +44,8 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
      */
     @Override
     public void startQuiz(TakeQuizStartRequestModel requestModel) {
+        currentQuestionType = requestModel.getQuestionType();
+
         List<Question> questions = questionRepo.getQuestionsForQuiz(
                 requestModel.getQuizType(),
                 requestModel.getQuestionType(),
@@ -108,6 +117,16 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
                     currentQuiz.getDurationPlayed(),
                     currentQuiz.getHighestStreak()
             );
+            QuizHistoryEntry entry = new QuizHistoryEntry(
+                    currentQuiz.getQuizType(),
+                    currentQuestionType,
+                    currentQuiz.getTotalQuestions(),
+                    currentQuiz.getScore(),
+                    currentQuiz.getDurationPlayed(),
+                    currentQuiz.getHighestStreak(),
+                    java.time.LocalDateTime.now()
+            );
+            historyGateway.saveQuizAttempt(entry);
             presenter.presentQuizEnd(endResponse);
         } else {
             Question q = currentQuiz.getCurrentQuestion();
