@@ -1,10 +1,20 @@
 package app;
 
-import app.controllers.*;
+import app.controllers.CollectionController;
+import app.controllers.CompareController;
+import app.controllers.ExploreMapController;
+import app.controllers.FilterCountriesController;
+import app.controllers.SettingsController;
+import app.controllers.TakeQuizController;
 import app.data_access.APICountryDataAccessObject;
 import app.data_access.ExploreMapDataAccessObject;
 import app.data_access.UserDataInMemoryDataAccessObject;
-import app.presenters.*;
+import app.presenters.CollectionPresenter;
+import app.presenters.ComparePresenter;
+import app.presenters.ExploreMapPresenter;
+import app.presenters.FilterCountriesPresenter;
+import app.presenters.SettingsPresenter;
+import app.presenters.TakeQuizPresenter;
 import app.use_cases.collection.CollectionInteractor;
 import app.use_cases.compare.CompareInteractor;
 import app.use_cases.compare.CompareViewModel;
@@ -13,6 +23,11 @@ import app.use_cases.detail.DetailInteractor;
 import app.use_cases.explore_map.ExploreMapInteractor;
 import app.use_cases.filter_country.FilterCountriesInteractor;
 import app.use_cases.settings.SettingsInteractor;
+import app.use_cases.quiz.LocalQuestionRepository;
+import app.use_cases.quiz.QuestionRepository;
+import app.use_cases.quiz.TakeQuizInteractor;
+import app.use_cases.quiz.TakeQuizOutputBoundary;
+import app.use_cases.quiz.QuizViewModel;
 import app.views.ViewModel;
 import app.views.collection.CollectionState;
 import app.views.collection.CollectionView;
@@ -26,6 +41,7 @@ import app.views.filter_countries.FilterCountriesView;
 import app.views.home.HomeView;
 import app.views.settings.SettingsState;
 import app.views.settings.SettingsView;
+import app.views.quiz.QuizView;
 
 /**
  * Main entry point for the GeoLearn application.
@@ -41,6 +57,8 @@ public class Main {
         final Navigator navigator = new Navigator(masterFrame);
         final APICountryDataAccessObject countryDataApi =
                 new APICountryDataAccessObject();
+        // Call getCountries to load cache at startup
+        countryDataApi.getCountries();
         final UserDataInMemoryDataAccessObject inMemoryUserDataStorage =
                 new UserDataInMemoryDataAccessObject();
 
@@ -52,6 +70,7 @@ public class Main {
         setupFilterCountriesModule(masterFrame, countryDataApi, navigator);
         setupExploreMapModule(masterFrame);
         setupDetailModule(masterFrame);
+        setupQuizModule(masterFrame, countryDataApi, inMemoryUserDataStorage);
 
         navigator.navigateTo("home");
     }
@@ -163,5 +182,37 @@ public class Main {
         final DetailView detailView =
                 new DetailView(detailViewModel, detailController);
         masterFrame.registerView(detailView, "country_details");
+      
+    private static void setupQuizModule(
+            MasterFrame masterFrame,
+            APICountryDataAccessObject countryDataApi,
+            UserDataInMemoryDataAccessObject userDataStorage) {
+        // ViewModel for the quiz screen
+        final QuizViewModel quizViewModel = new QuizViewModel();
+
+        // Swing view for the quiz screen
+        final QuizView quizView = new QuizView(quizViewModel);
+
+        // Presenter (use case → view)
+        final TakeQuizOutputBoundary quizPresenter =
+                new TakeQuizPresenter(quizView);
+
+        // Question repository (manual questions for now)
+        final QuestionRepository questionRepository =
+                new LocalQuestionRepository(countryDataApi);
+
+        // Interactor (quiz business logic)
+        final TakeQuizInteractor takeQuizInteractor =
+                new TakeQuizInteractor(questionRepository, userDataStorage, quizPresenter);
+
+        // Controller (view → use case)
+        final TakeQuizController takeQuizController =
+                new TakeQuizController(takeQuizInteractor);
+
+        // Hook controller into the view
+        quizView.setController(takeQuizController);
+
+        // Register the quiz view so HomeView can navigate to it
+        masterFrame.registerView(quizView, "quiz");
     }
 }

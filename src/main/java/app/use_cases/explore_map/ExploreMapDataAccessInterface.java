@@ -1,11 +1,11 @@
 package app.use_cases.explore_map;
 
+import java.io.IOException;
+
 import org.geotools.api.data.SimpleFeatureSource;
 import org.geotools.api.feature.simple.SimpleFeature;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.locationtech.jts.geom.Coordinate;
-
-import java.io.IOException;
 
 /**
  * Data Access Interface for the Explore Map use case.
