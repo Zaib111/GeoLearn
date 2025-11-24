@@ -36,6 +36,7 @@ public class APICountryDataAccessObject implements CountryDataAccessInterface, C
 
     private final OkHttpClient client;
     private final String apiBase;
+    private List<Country> cachedCountries = null;
 
     public APICountryDataAccessObject() {
         this.client = new OkHttpClient().newBuilder().build();
@@ -44,6 +45,9 @@ public class APICountryDataAccessObject implements CountryDataAccessInterface, C
 
     @Override
     public List<Country> getCountries() {
+        if (cachedCountries != null) {
+            return cachedCountries;
+        }
         final List<Country> countries = new ArrayList<>();
         final CountryDataMaps dataMaps = new CountryDataMaps();
 
@@ -69,6 +73,7 @@ public class APICountryDataAccessObject implements CountryDataAccessInterface, C
             final Country country = createCountry(countryCode, dataMaps);
             countries.add(country);
         });
+        cachedCountries = countries;
         return countries;
     }
 
