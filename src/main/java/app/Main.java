@@ -2,6 +2,7 @@ package app;
 
 import app.controllers.CollectionController;
 import app.controllers.CompareController;
+import app.controllers.DetailController;
 import app.controllers.ExploreMapController;
 import app.controllers.FilterCountriesController;
 import app.controllers.SettingsController;
@@ -11,6 +12,7 @@ import app.data_access.ExploreMapDataAccessObject;
 import app.data_access.UserDataInMemoryDataAccessObject;
 import app.presenters.CollectionPresenter;
 import app.presenters.ComparePresenter;
+import app.presenters.DetailPresenter;
 import app.presenters.ExploreMapPresenter;
 import app.presenters.FilterCountriesPresenter;
 import app.presenters.SettingsPresenter;
@@ -182,7 +184,8 @@ public class Main {
         final DetailView detailView =
                 new DetailView(detailViewModel, detailController);
         masterFrame.registerView(detailView, "country_details");
-      
+    }
+
     private static void setupQuizModule(
             MasterFrame masterFrame,
             APICountryDataAccessObject countryDataApi,
