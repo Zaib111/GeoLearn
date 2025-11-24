@@ -17,7 +17,7 @@ public class DetailPresenter implements DetailOutputBoundary{
     }*/
 
     @Override
-    public void prepareDetailView(DetailOutputData detailOutputData) {
+    public void prepareDetailSuccessView(DetailOutputData detailOutputData) {
         DetailState state = detailViewModel.getState();
         state.setCountryCode(detailOutputData.getCountryCode());
         state.setCountryName(detailOutputData.getCountryName());
@@ -31,6 +31,14 @@ public class DetailPresenter implements DetailOutputBoundary{
         state.setLanguages(detailOutputData.getLanguages());
         state.setCurrencies(detailOutputData.getCurrencies());
         state.setTimezones(detailOutputData.getTimezones());
+        state.setErrorMessage("");
+        detailViewModel.updateState(state);
+    }
+
+    @Override
+    public void prepareDetailFailureView(String errorMessage) {
+        DetailState state = detailViewModel.getState();
+        state.setErrorMessage(errorMessage);
         detailViewModel.updateState(state);
     }
 }

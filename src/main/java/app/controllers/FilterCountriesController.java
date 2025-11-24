@@ -17,7 +17,4 @@ public class FilterCountriesController {
         // Call the use case
         filterCountriesInputBoundary.filterCountries(inputData);
     }
-
-    // Method for displaying the details of the clicked Country
-    public void openCountryDetails(String countryName) { filterCountriesInputBoundary.openCountryDetails(countryName); }
 }

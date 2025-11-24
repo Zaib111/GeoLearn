@@ -9,5 +9,5 @@ public class DetailController {
 
     public DetailController(DetailInputBoundary interactor) { this.interactor = interactor; }
 
-    public void showDetails(DetailInputData detailInputData) { interactor.execute(detailInputData); }
+    public void loadDetails(DetailInputData detailInputData) { interactor.execute(detailInputData); }
 }

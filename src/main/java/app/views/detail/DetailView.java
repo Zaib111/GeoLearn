@@ -13,7 +13,6 @@ import java.util.List;
 
 public class DetailView extends AbstractView{
     private final DetailController controller;
-    private final String countryName;
 
     private final JLabel titleLabel = new JLabel();
     private final JLabel flagLabel = new JLabel();
@@ -27,10 +26,9 @@ public class DetailView extends AbstractView{
     private final JTextArea currenciesArea = new JTextArea(3, 20);
     private final JTextArea timezonesArea = new JTextArea(3, 20);
 
-    public DetailView(ViewModel<DetailState> detailViewModel, DetailController controller, String countryName) {
+    public DetailView(ViewModel<DetailState> detailViewModel, DetailController controller) {
         super(detailViewModel);
         this.controller = controller;
-        this.countryName = countryName;
 
         setLayout(new BorderLayout(15, 15));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -76,7 +74,7 @@ public class DetailView extends AbstractView{
     @Override
     public void onViewOpened(String param) {
         DetailInputData inputData = new DetailInputData(param);
-        controller.showDetails(inputData);
+        controller.loadDetails(inputData);
         this.revalidate();
         this.repaint();
     }

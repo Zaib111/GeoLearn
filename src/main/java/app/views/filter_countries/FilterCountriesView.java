@@ -1,5 +1,6 @@
 package app.views.filter_countries;
 
+import app.Navigator;
 import app.controllers.FilterCountriesController;
 import app.entities.Country;
 import app.views.AbstractView;
@@ -26,11 +27,13 @@ public class FilterCountriesView extends AbstractView {
     private JComboBox<String> subregionComboBox;
     private FilterCountriesController filterCountriesController;
     private JScrollPane currentTableScrollPane;
+    private Navigator navigator;
 
-    public FilterCountriesView(ViewModel<FilterCountriesState> filterCountriesViewModel, FilterCountriesController filterCountriesController) {
+    public FilterCountriesView(ViewModel<FilterCountriesState> filterCountriesViewModel, FilterCountriesController filterCountriesController, Navigator navigator) {
         super(filterCountriesViewModel);
 
         this.filterCountriesController = filterCountriesController;
+        this.navigator = navigator;
 
         // Heading
         JLabel heading = new JLabel("Filter Countries");
@@ -155,7 +158,6 @@ public class FilterCountriesView extends AbstractView {
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                // Only handle double-clicks to distinguish from single selection
                 if (e.getClickCount() == 1) {
                     Point point = e.getPoint();
                     int viewRow = table.rowAtPoint(point);
@@ -163,19 +165,10 @@ public class FilterCountriesView extends AbstractView {
 
                     // Check if the click was on a valid row and in the "Name" column (index 0)
                     if (viewRow >= 0 && viewColumn == 0) {
-
-                        // 1. Get the model row index (accounts for sorting/filtering)
                         int modelRow = table.convertRowIndexToModel(viewRow);
-
-                        // 2. Retrieve the original Country object from the data list
-                        // This works because the model row index corresponds to the index in countryDisplayData
                         Country clickedCountry = countryDisplayData.get(modelRow);
                         String countryName = clickedCountry.getName();
-
-                        // 3. Use the controller to trigger the navigation to the DetailView
-                        // NOTE: This assumes filterCountriesController has a method openCountryDetails(String name)
-                        // which handles the routing to the DetailView.
-                        filterCountriesController.openCountryDetails(countryName);
+                        navigator.navigateTo("country_details", countryName);
                     }
                 }
             }

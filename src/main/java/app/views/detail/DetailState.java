@@ -23,4 +23,5 @@ public class DetailState {
     private List<String> languages;
     private List<String> currencies;
     private List<String> timezones;
+    private String errorMessage;
 }
