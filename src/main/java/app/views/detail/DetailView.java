@@ -43,6 +43,7 @@ public class DetailView extends AbstractView{
 
         JPanel detailsPanel = new JPanel();
         detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
+        detailsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         addDetailPanel(detailsPanel, "Code:", codeLabel);
         addDetailPanel(detailsPanel, "Capital:", capitalLabel);
@@ -50,13 +51,10 @@ public class DetailView extends AbstractView{
         addDetailPanel(detailsPanel, "Population:", populationLabel);
         addDetailPanel(detailsPanel, "Area (km²):", areaLabel);
 
-        // Use TestAreaPanels instead to accommodate lengthy entries
         addTextAreaPanel(detailsPanel, "Borders:", bordersArea);
         addTextAreaPanel(detailsPanel, "Languages:", languagesArea);
         addTextAreaPanel(detailsPanel, "Currencies:", currenciesArea);
         addTextAreaPanel(detailsPanel, "Timezones:", timezonesArea);
-
-        detailsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.add(headerPanel, BorderLayout.WEST);
@@ -113,6 +111,11 @@ public class DetailView extends AbstractView{
         panel.add(valueLabel, BorderLayout.CENTER);
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        // Ensures the panel takes up the full width for proper alignment
+        Dimension d = panel.getPreferredSize();
+        d.width = Integer.MAX_VALUE;
+        panel.setMaximumSize(d);
+
         targetPanel.add(panel);
     }
 
@@ -120,7 +123,6 @@ public class DetailView extends AbstractView{
     private void addTextAreaPanel(JPanel targetPanel, String title, JTextArea textArea) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("Serif", Font.BOLD, 14));
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -130,14 +132,21 @@ public class DetailView extends AbstractView{
         textArea.setWrapStyleWord(true);
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.setPreferredSize(new Dimension(300, 60));
+        scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         panel.add(titleLabel);
         panel.add(scrollPane);
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        // Ensures the panel takes up the full width for proper alignment
+        Dimension d = panel.getPreferredSize();
+        d.width = Integer.MAX_VALUE;
+        panel.setMaximumSize(d);
+
         targetPanel.add(panel);
-        targetPanel.add(Box.createRigidArea(new Dimension(0, 5))); // Spacer added to targetPanel
+        targetPanel.add(Box.createRigidArea(new Dimension(0, 5)));
     }
+
     private String joinList(List<String> list) {
         return list != null ? String.join(", ", list) : "N/A";
     }
