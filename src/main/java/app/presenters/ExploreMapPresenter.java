@@ -7,18 +7,28 @@ import app.views.explore_map.ExploreMapState;
 
 /**
  * Presenter for the Explore Map use case.
+ * Translates use case output into updates on the {@link ExploreMapState}
+ * stored in the view model.
  */
 public class ExploreMapPresenter implements ExploreMapOutputBoundary {
+
+    /** View model holding the current Explore Map state. */
     private final ViewModel<ExploreMapState> viewModel;
 
     /**
-     * Constructor for ExploreMapPresenter.
-     * @param viewModel the view model
+     * Creates a presenter for the Explore Map use case.
+     *
+     * @param viewModel the view model to update
      */
     public ExploreMapPresenter(final ViewModel<ExploreMapState> viewModel) {
         this.viewModel = viewModel;
     }
 
+    /**
+     * Updates the view model when a map is successfully loaded.
+     *
+     * @param outputData output data containing the loaded feature source
+     */
     @Override
     public void prepareMapLoadedView(final ExploreMapOutputData outputData) {
         final ExploreMapState state = viewModel.getState();
@@ -28,6 +38,11 @@ public class ExploreMapPresenter implements ExploreMapOutputBoundary {
         viewModel.updateState(state);
     }
 
+    /**
+     * Updates the view model when a feature is selected.
+     *
+     * @param outputData output data containing the selected feature and name
+     */
     @Override
     public void prepareFeatureSelectedView(final ExploreMapOutputData outputData) {
         final ExploreMapState state = viewModel.getState();
@@ -37,6 +52,11 @@ public class ExploreMapPresenter implements ExploreMapOutputBoundary {
         viewModel.updateState(state);
     }
 
+    /**
+     * Updates the view model when an error occurs.
+     *
+     * @param errorMessage description of the error
+     */
     @Override
     public void prepareFailView(final String errorMessage) {
         final ExploreMapState state = viewModel.getState();
@@ -44,4 +64,3 @@ public class ExploreMapPresenter implements ExploreMapOutputBoundary {
         viewModel.updateState(state);
     }
 }
-
