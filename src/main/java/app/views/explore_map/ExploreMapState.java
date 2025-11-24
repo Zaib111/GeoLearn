@@ -4,29 +4,52 @@ import org.geotools.api.data.SimpleFeatureSource;
 import org.geotools.api.feature.simple.SimpleFeature;
 
 /**
- * State for the Explore Map view.
- * This stores all the state for the map exploration feature.
+ * State object for the Explore Map view.
  */
 public class ExploreMapState {
+
+    /** The currently loaded map data. */
     private SimpleFeatureSource featureSource;
+
+    /** The selected feature on the map, if any. */
     private SimpleFeature selectedFeature;
+
+    /** The name of the selected country, if available. */
     private String selectedCountryName;
+
+    /** The current error message to display. */
     private String errorMessage;
-    private boolean mapLoaded = false;
-    private String interactionMode = "PAN"; // PAN, ZOOM, SELECT
+
+    /** Whether a map has been successfully loaded. */
+    private boolean mapLoaded;
+
+    /** The current interaction mode: PAN, ZOOM, or SELECT. */
+    private String interactionMode;
 
     /**
      * Default constructor.
+     * Initializes with no feature selected and map not yet loaded.
      */
     public ExploreMapState() {
+        this.interactionMode = "PAN";
     }
 
     /**
-     * Constructor with all fields.
+     * Constructs a state object with all fields.
+     *
+     * @param featureSource the map feature source
+     * @param selectedFeature the selected feature
+     * @param selectedCountryName the selected country name
+     * @param errorMessage the current error message
+     * @param mapLoaded whether a map is loaded
+     * @param interactionMode the current interaction mode
      */
-    public ExploreMapState(SimpleFeatureSource featureSource, SimpleFeature selectedFeature,
-                          String selectedCountryName, String errorMessage,
-                          boolean mapLoaded, String interactionMode) {
+    public ExploreMapState(SimpleFeatureSource featureSource,
+                           SimpleFeature selectedFeature,
+                           String selectedCountryName,
+                           String errorMessage,
+                           boolean mapLoaded,
+                           String interactionMode) {
         this.featureSource = featureSource;
         this.selectedFeature = selectedFeature;
         this.selectedCountryName = selectedCountryName;

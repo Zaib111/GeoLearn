@@ -26,6 +26,10 @@
     </module>
 
     <!-- Filters -->
+    <module name="SuppressionFilter">
+        <property name="file" value="${basedir}/suppressions.xml"/>
+        <property name="optional" value="true"/>
+    </module>
     <module name="SeverityMatchFilter">
         <!-- report all violations except ignore -->
         <property name="severity" value="ignore"/>
@@ -582,6 +586,15 @@
         <module name="SuppressionXpathSingleFilter">
             <property name="files" value=".*[\\/]src[\\/](test|it|xdocs-examples)[\\/]"/>
             <property name="checks" value="MultipleStringLiterals"/>
+        </module>
+        <!-- Main class wires all modules together, so high coupling is expected -->
+        <module name="SuppressionXpathSingleFilter">
+            <property name="files" value=".*[\\/]Main\.java"/>
+            <property name="checks" value="ClassDataAbstractionCoupling"/>
+        </module>
+        <module name="SuppressionXpathSingleFilter">
+            <property name="files" value=".*[\\/]Main\.java"/>
+            <property name="checks" value="ClassFanOutComplexity"/>
         </module>
         <module name="SuppressWithNearbyCommentFilter">
             <property name="commentFormat"

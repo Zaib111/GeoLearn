@@ -37,62 +37,123 @@ import app.views.compare.CompareView;
 import app.use_cases.compare.CompareViewModel;
 
 
-
+/**
+ * Main entry point for the GeoLearn application.
+ */
 public class Main {
+    /**
+     * Initializes and starts the GeoLearn application.
+     *
+     * @param args command line arguments
+     */
     public static void main(String[] args) {
-        MasterFrame masterFrame = new MasterFrame("GeoLearn");
-        Navigator navigator = new Navigator();
-        navigator.subscribeToNavigationEvents(masterFrame);
-        APICountryDataAccessObject countryDataAPI = new APICountryDataAccessObject();
-        UserDataInMemoryDataAccessObject inMemoryUserDataStorage = new UserDataInMemoryDataAccessObject();
+        final MasterFrame masterFrame = new MasterFrame("GeoLearn");
+        final Navigator navigator = new Navigator(masterFrame);
+        final APICountryDataAccessObject countryDataApi =
+                new APICountryDataAccessObject();
+        final UserDataInMemoryDataAccessObject inMemoryUserDataStorage =
+                new UserDataInMemoryDataAccessObject();
 
-        // Setup Home Module
-        HomeView homeView = new HomeView(navigator);
+        setupHomeModule(masterFrame, navigator);
+        setupCompareModule(masterFrame, navigator, countryDataApi);
+        setupCollectionModule(masterFrame, inMemoryUserDataStorage,
+                countryDataApi);
+        setupSettingsModule(masterFrame, inMemoryUserDataStorage);
+        setupFilterCountriesModule(masterFrame, countryDataApi);
+        setupExploreMapModule(masterFrame);
+
+        navigator.navigateTo("home");
+    }
+
+    private static void setupHomeModule(MasterFrame masterFrame,
+                                         Navigator navigator) {
+        final HomeView homeView = new HomeView(navigator);
         masterFrame.registerView(homeView, "home");
+    }
 
-        // Setup Compare Module
-        CompareViewModel compareViewModel = new CompareViewModel();
-        ComparePresenter comparePresenter = new ComparePresenter(compareViewModel);
-        CompareInteractor compareInteractor = new CompareInteractor(countryDataAPI, comparePresenter);
-        CompareController compareController = new CompareController(compareInteractor);
-        CompareView compareView = new CompareView(compareViewModel, compareController, navigator);
+    private static void setupCompareModule(MasterFrame masterFrame,
+                                            Navigator navigator,
+                                            APICountryDataAccessObject countryDataApi) {
+        final CompareViewModel compareViewModel = new CompareViewModel();
+        final ComparePresenter comparePresenter =
+                new ComparePresenter(compareViewModel);
+        final CompareInteractor compareInteractor =
+                new CompareInteractor(countryDataApi, comparePresenter);
+        final CompareController compareController =
+                new CompareController(compareInteractor);
+        final CompareView compareView =
+                new CompareView(compareViewModel, compareController, navigator);
         masterFrame.registerView(compareView, "compare_countries");
+    }
 
-        // Setup Collection Module
-        ViewModel<CollectionState> collectionViewModel = new ViewModel<>(new CollectionState());
-        CollectionPresenter collectionPresenter = new CollectionPresenter(collectionViewModel);
-        CollectionInteractor collectionInteractor = new CollectionInteractor(inMemoryUserDataStorage, collectionPresenter, countryDataAPI);
-        CollectionController collectionController = new CollectionController(collectionInteractor);
-        CollectionView collectionView = new CollectionView(collectionViewModel, collectionController);
+    private static void setupCollectionModule(
+            MasterFrame masterFrame,
+            UserDataInMemoryDataAccessObject inMemoryUserDataStorage,
+            APICountryDataAccessObject countryDataApi) {
+        final ViewModel<CollectionState> collectionViewModel =
+                new ViewModel<>(new CollectionState());
+        final CollectionPresenter collectionPresenter =
+                new CollectionPresenter(collectionViewModel);
+        final CollectionInteractor collectionInteractor =
+                new CollectionInteractor(inMemoryUserDataStorage,
+                        collectionPresenter, countryDataApi);
+        final CollectionController collectionController =
+                new CollectionController(collectionInteractor);
+        final CollectionView collectionView =
+                new CollectionView(collectionViewModel, collectionController);
         masterFrame.registerView(collectionView, "collection");
+    }
 
-        // Setup Settings Module
-        ViewModel<SettingsState> settingsViewModel = new ViewModel<>(new SettingsState());
-        SettingsPresenter settingsPresenter = new SettingsPresenter(settingsViewModel);
-        SettingsInteractor settingsInteractor = new SettingsInteractor(settingsPresenter, inMemoryUserDataStorage);
-        SettingsController settingsController = new SettingsController(settingsInteractor);
-        SettingsView settingsView = new SettingsView(settingsViewModel, settingsController);
+    private static void setupSettingsModule(
+            MasterFrame masterFrame,
+            UserDataInMemoryDataAccessObject inMemoryUserDataStorage) {
+        final ViewModel<SettingsState> settingsViewModel =
+                new ViewModel<>(new SettingsState());
+        final SettingsPresenter settingsPresenter =
+                new SettingsPresenter(settingsViewModel);
+        final SettingsInteractor settingsInteractor =
+                new SettingsInteractor(settingsPresenter,
+                        inMemoryUserDataStorage);
+        final SettingsController settingsController =
+                new SettingsController(settingsInteractor);
+        final SettingsView settingsView =
+                new SettingsView(settingsViewModel, settingsController);
         masterFrame.registerView(settingsView, "settings");
+    }
 
-        // Setup Filter Country Module
-        ViewModel<FilterCountriesState> filterCountriesViewModel = new ViewModel<>(new FilterCountriesState());
-        FilterCountriesPresenter filterCountriesPresenter = new FilterCountriesPresenter(filterCountriesViewModel);
-        FilterCountriesInteractor filterCountriesInteractor = new FilterCountriesInteractor(countryDataAPI, filterCountriesPresenter);
-        FilterCountriesController filterCountriesController = new FilterCountriesController(filterCountriesInteractor);
-        FilterCountriesView filterCountriesView = new FilterCountriesView(filterCountriesViewModel, filterCountriesController);
+    private static void setupFilterCountriesModule(
+            MasterFrame masterFrame,
+            APICountryDataAccessObject countryDataApi) {
+        final ViewModel<FilterCountriesState> filterCountriesViewModel =
+                new ViewModel<>(new FilterCountriesState());
+        final FilterCountriesPresenter filterCountriesPresenter =
+                new FilterCountriesPresenter(filterCountriesViewModel);
+        final FilterCountriesInteractor filterCountriesInteractor =
+                new FilterCountriesInteractor(countryDataApi,
+                        filterCountriesPresenter);
+        final FilterCountriesController filterCountriesController =
+                new FilterCountriesController(filterCountriesInteractor);
+        final FilterCountriesView filterCountriesView =
+                new FilterCountriesView(filterCountriesViewModel,
+                        filterCountriesController);
         masterFrame.registerView(filterCountriesView, "filter_countries");
+    }
 
-        // Setup Explore Map Module
-        ViewModel<ExploreMapState> exploreMapViewModel = new ViewModel<>(new ExploreMapState());
-        ExploreMapPresenter exploreMapPresenter = new ExploreMapPresenter(exploreMapViewModel);
-        ExploreMapDataAccessObject exploreMapDataAccess = new ExploreMapDataAccessObject();
-        ExploreMapInteractor exploreMapInteractor = new ExploreMapInteractor(exploreMapDataAccess, exploreMapPresenter);
-        ExploreMapController exploreMapController = new ExploreMapController(exploreMapInteractor);
-        ExploreMapView exploreMapView = new ExploreMapView(exploreMapViewModel);
+    private static void setupExploreMapModule(MasterFrame masterFrame) {
+        final ViewModel<ExploreMapState> exploreMapViewModel =
+                new ViewModel<>(new ExploreMapState());
+        final ExploreMapPresenter exploreMapPresenter =
+                new ExploreMapPresenter(exploreMapViewModel);
+        final ExploreMapDataAccessObject exploreMapDataAccess =
+                new ExploreMapDataAccessObject();
+        final ExploreMapInteractor exploreMapInteractor =
+                new ExploreMapInteractor(exploreMapDataAccess,
+                        exploreMapPresenter);
+        final ExploreMapController exploreMapController =
+                new ExploreMapController(exploreMapInteractor);
+        final ExploreMapView exploreMapView =
+                new ExploreMapView(exploreMapViewModel);
         exploreMapView.setController(exploreMapController);
         masterFrame.registerView(exploreMapView, "explore_map");
-
-        // Start the application at Home View
-        masterFrame.navigateTo("home");
     }
 }
