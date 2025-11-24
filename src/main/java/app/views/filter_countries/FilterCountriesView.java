@@ -127,9 +127,9 @@ public class FilterCountriesView extends AbstractView {
     }
 
     public void displayCountries(List<Country> countryDisplayData) {
-        String[] columnNames = {"Name", "Region", "Subregion", "Population", "Area (km²)", "Population Density"};
+        String[] columnNames = {"Name", "Region", "Subregion", "Population", "Area (km²)", "Population Density", "Capital"};
 
-        Object[][] data = new Object[countryDisplayData.size()][6];
+        Object[][] data = new Object[countryDisplayData.size()][7];
 
         for (int i = 0; i < countryDisplayData.size(); i++) {
             Country country = countryDisplayData.get(i);
@@ -139,6 +139,7 @@ public class FilterCountriesView extends AbstractView {
             data[i][3] = country.getPopulation();
             data[i][4] = country.getAreaKm2();
             data[i][5] = country.getPopulation() / country.getAreaKm2();
+            data[i][6] = country.getCapital().orElse("N/A");
         }
 
         JTable table = getFormattedTable(data, columnNames);
@@ -176,6 +177,7 @@ public class FilterCountriesView extends AbstractView {
                     case 3: return Long.class;    // Population
                     case 4: return Double.class;  // Area
                     case 5: return Double.class;  // Population Density
+                    case 6: return String.class; // Capital
                     default: return Object.class;
                 }
             }
