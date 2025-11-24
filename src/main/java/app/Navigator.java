@@ -21,7 +21,7 @@ public class Navigator {
      * @param name the name of the view to navigate to
      */
     public void navigateTo(String name) {
-        masterFrame.navigateTo(name, null);
+        masterFrame.navigateTo(name, "");
     }
 
     /**
