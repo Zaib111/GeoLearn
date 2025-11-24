@@ -101,7 +101,7 @@ public class QuizView extends AbstractView {
         centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(promptLabel, BorderLayout.NORTH);
 
-        optionsPanel.setLayout(new GridLayout(0, 1));
+        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
         centerPanel.add(optionsPanel, BorderLayout.CENTER);
 
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -261,19 +261,37 @@ public class QuizView extends AbstractView {
             submitButton.setVisible(false);
 
             optionsPanel.removeAll();
-            optionsPanel.setLayout(new GridLayout(0, 1));
+            optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
+
 
             for (String opt : options) {
                 JButton btn = new JButton(opt);
 
+                // --- modern rounded button styling ---
+                btn.setBorder(new RoundedBorder(12));
+                btn.setFocusPainted(false);
+                btn.setBackground(new Color(230, 230, 255));
+                btn.setPreferredSize(new Dimension(250, 40)); // narrower buttons
+                btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 16f));
+
+                // action listener
                 btn.addActionListener(e -> {
                     if (controller != null) {
                         controller.submitAnswer(opt);
                     }
                 });
 
-                optionsPanel.add(btn);
+                // wrapper panel centers the button
+                JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
+
+                // spacing between buttons
+                wrapper.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+
+                wrapper.add(btn);
+                optionsPanel.add(wrapper);
             }
+
+
         }
 
         nextButton.setVisible(false);
@@ -561,6 +579,31 @@ public class QuizView extends AbstractView {
         label.setFont(label.getFont().deriveFont(32f));
         return label;
     }
+
+    private static class RoundedBorder implements javax.swing.border.Border {
+        private final int radius;
+
+        RoundedBorder(int radius) {
+            this.radius = radius;
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(this.radius + 1, this.radius + 1, this.radius + 2, this.radius);
+        }
+
+        @Override
+        public boolean isBorderOpaque() {
+            return false;
+        }
+
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y,
+                                int width, int height) {
+            g.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+        }
+    }
+
 
     /**
      * Called when the quiz view becomes visible. Restores selection mode.
