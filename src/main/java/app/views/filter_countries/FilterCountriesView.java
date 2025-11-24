@@ -89,7 +89,7 @@ public class FilterCountriesView extends AbstractView {
     }
 
     @Override
-    public void onViewOpened() {
+    public void onViewOpened(String param) {
 //        filterCountriesController.filterCountries("", "Any", "Any");
         this.revalidate();
         this.repaint();

@@ -5,6 +5,7 @@ import java.awt.CardLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -27,7 +28,7 @@ public class MasterFrame extends JFrame {
     private final CardLayout cardLayout;
     private final JButton backButton;
 
-    private final Stack<String> navigationStack = new Stack<>();
+    private final Stack<List<String>> navigationStack = new Stack<>();
     private String currentViewName;
 
     /**
@@ -90,7 +91,7 @@ public class MasterFrame extends JFrame {
      *
      * @param name the name of the view to navigate to
      */
-    public void navigateTo(String name) {
+    public void navigateTo(String name, String param) {
         if (views.containsKey(name)) {
             if (currentViewName != null) {
                 final JPanel currentView = views.get(currentViewName);
@@ -100,13 +101,14 @@ public class MasterFrame extends JFrame {
             }
 
             if (!navigationStack.isEmpty()) {
-                final String currentView = navigationStack.peek();
-                if (!currentView.equals(name)) {
-                    navigationStack.push(name);
+                final String currentView = navigationStack.peek().get(0);
+                final String currentParam = navigationStack.peek().get(1);
+                if (!currentView.equals(name) || !currentParam.equals(param)) {
+                    navigationStack.push(List.of(name, param));
                 }
             }
             else {
-                navigationStack.push(name);
+                navigationStack.push(List.of(name, param));
             }
 
             currentViewName = name;
@@ -115,7 +117,7 @@ public class MasterFrame extends JFrame {
 
             final JPanel newView = views.get(name);
             if (newView instanceof AbstractView) {
-                ((AbstractView) newView).onViewOpened();
+                ((AbstractView) newView).onViewOpened(param);
             }
 
             backButton.setVisible(navigationStack.size() > 1);
@@ -136,7 +138,8 @@ public class MasterFrame extends JFrame {
             }
 
             navigationStack.pop();
-            final String previousView = navigationStack.peek();
+            final String previousView = navigationStack.peek().get(0);
+            final String previousParam = navigationStack.peek().get(1);
 
             currentViewName = previousView;
 
@@ -144,7 +147,7 @@ public class MasterFrame extends JFrame {
 
             final JPanel prevView = views.get(previousView);
             if (prevView instanceof AbstractView) {
-                ((AbstractView) prevView).onViewOpened();
+                ((AbstractView) prevView).onViewOpened(previousParam);
             }
 
             backButton.setVisible(navigationStack.size() > 1);

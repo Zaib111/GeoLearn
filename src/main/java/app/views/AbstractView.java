@@ -31,7 +31,7 @@ public abstract class AbstractView extends JPanel {
     /**
      * Called when the view is opened.
      */
-    public abstract void onViewOpened();
+    public abstract void onViewOpened(String param);
 
     /**
      * Called when the view is closed.

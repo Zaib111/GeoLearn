@@ -175,7 +175,7 @@ public class CollectionView extends AbstractView {
     }
 
     @Override
-    public void onViewOpened() {
+    public void onViewOpened(String param) {
         // Fetch all collections when view opens
         collectionController.fetchAllCollections();
     }

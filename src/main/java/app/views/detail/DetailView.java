@@ -74,8 +74,8 @@ public class DetailView extends AbstractView{
     }
 
     @Override
-    public void onViewOpened() {
-        DetailInputData inputData = new DetailInputData(countryName);
+    public void onViewOpened(String param) {
+        DetailInputData inputData = new DetailInputData(param);
         controller.showDetails(inputData);
         this.revalidate();
         this.repaint();
