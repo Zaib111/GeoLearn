@@ -7,8 +7,13 @@ import app.views.compare.CompareState;
 import app.use_cases.compare.CompareViewModel;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+/**
+ * Presenter for the Compare Countries use case.
+ * Converts business logic output into UI state and updates the ViewModel.
+ */
 public class ComparePresenter implements CompareOutputBoundary {
 
     private final CompareViewModel viewModel;
@@ -23,14 +28,16 @@ public class ComparePresenter implements CompareOutputBoundary {
         List<String> sortedNames = new ArrayList<>(countryNames);
         sortedNames.sort(String::compareToIgnoreCase);
 
-        // Preserve any existing state (comparison results etc.)
+        // When we're just loading the country list (e.g. on view open),
+        // we DO NOT want to re-show the previous comparison popup.
+        // So we clear comparison-related fields here.
         CompareState oldState = viewModel.getState();
 
         CompareState newState = new CompareState(
                 sortedNames,                          // countryNames (sorted)
-                oldState.getColumnHeaders(),          // keep existing headers
-                oldState.getComparisonTableData(),    // keep existing table
-                oldState.getSelectedCountries(),      // keep existing selected countries
+                new String[0],                        // clear comparison headers
+                new Object[0][0],                     // clear comparison table
+                Collections.emptyList(),              // clear selected countries
                 null                                  // clear error
         );
 
@@ -103,13 +110,14 @@ public class ComparePresenter implements CompareOutputBoundary {
             }
         }
 
+        // Keep the country list, replace comparison data
         CompareState oldState = viewModel.getState();
 
         CompareState newState = new CompareState(
                 oldState.getCountryNames(),               // keep full country list
                 colHeaders.toArray(new String[0]),        // new headers
-                table,                                    // new table
-                countries,                                // selected countries
+                table,                                    // new comparison table
+                countries,                                // new selected countries
                 null                                      // clear error
         );
 
@@ -121,11 +129,11 @@ public class ComparePresenter implements CompareOutputBoundary {
         CompareState oldState = viewModel.getState();
 
         CompareState newState = new CompareState(
-                oldState.getCountryNames(),
-                oldState.getColumnHeaders(),
-                oldState.getComparisonTableData(),
-                oldState.getSelectedCountries(),
-                errorMessage
+                oldState.getCountryNames(),               // keep country list
+                oldState.getColumnHeaders(),              // keep headers
+                oldState.getComparisonTableData(),        // keep table
+                oldState.getSelectedCountries(),          // keep selected countries
+                errorMessage                              // set error
         );
 
         viewModel.updateState(newState);
