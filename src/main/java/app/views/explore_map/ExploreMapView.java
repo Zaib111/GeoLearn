@@ -25,6 +25,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
+import app.Navigator;
 import org.geotools.api.data.SimpleFeatureSource;
 import org.geotools.api.feature.simple.SimpleFeature;
 import org.geotools.api.filter.FilterFactory;
@@ -115,6 +116,9 @@ public class ExploreMapView extends AbstractView {
     private static final String MODE_ZOOM = "ZOOM";
     private static final String MODE_SELECT = "SELECT";
 
+    // Navigator
+    Navigator navigator;
+
     /**
      * -- GETTER --
      * Gets the view name for view switching.
@@ -168,8 +172,9 @@ public class ExploreMapView extends AbstractView {
      *
      * @param viewModel the view model for this view
      */
-    public ExploreMapView(final ViewModel<ExploreMapState> viewModel) {
+    public ExploreMapView(final ViewModel<ExploreMapState> viewModel, Navigator navigator) {
         super(viewModel);
+        this.navigator = navigator;
         this.exploreMapViewModel = viewModel;
 
         // Ensure state exists so we can read/write safely.
@@ -656,6 +661,7 @@ public class ExploreMapView extends AbstractView {
         else {
             if (MODE_SELECT.equals(mode) && controller != null) {
                 controller.selectFeature(worldPos.x, worldPos.y);
+                navigator.navigateTo("world_details", exploreMapViewModel.getState().getSelectedCountryName());
             }
         }
     }

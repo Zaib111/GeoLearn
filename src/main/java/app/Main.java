@@ -70,8 +70,8 @@ public class Main {
                 countryDataApi, navigator);
         setupSettingsModule(masterFrame, inMemoryUserDataStorage);
         setupFilterCountriesModule(masterFrame, countryDataApi, navigator);
-        setupExploreMapModule(masterFrame);
-        setupDetailModule(masterFrame);
+        setupExploreMapModule(masterFrame, navigator);
+        setupDetailModule(masterFrame, navigator);
         setupQuizModule(masterFrame, countryDataApi, inMemoryUserDataStorage);
 
         navigator.navigateTo("home");
@@ -153,7 +153,7 @@ public class Main {
         masterFrame.registerView(filterCountriesView, "filter_countries");
     }
 
-    private static void setupExploreMapModule(MasterFrame masterFrame) {
+    private static void setupExploreMapModule(MasterFrame masterFrame, Navigator navigator) {
         final ViewModel<ExploreMapState> exploreMapViewModel =
                 new ViewModel<>(new ExploreMapState());
         final ExploreMapPresenter exploreMapPresenter =
@@ -166,12 +166,12 @@ public class Main {
         final ExploreMapController exploreMapController =
                 new ExploreMapController(exploreMapInteractor);
         final ExploreMapView exploreMapView =
-                new ExploreMapView(exploreMapViewModel);
+                new ExploreMapView(exploreMapViewModel, navigator);
         exploreMapView.setController(exploreMapController);
         masterFrame.registerView(exploreMapView, "explore_map");
     }
 
-    private static void setupDetailModule(MasterFrame masterFrame) {
+    private static void setupDetailModule(MasterFrame masterFrame, Navigator navigator) {
         final ViewModel<DetailState> detailViewModel =
                 new ViewModel<>(new DetailState());
         final DetailPresenter detailPresenter =
@@ -183,7 +183,7 @@ public class Main {
         final DetailController detailController =
                 new DetailController(detailInteractor);
         final DetailView detailView =
-                new DetailView(detailViewModel, detailController);
+                new DetailView(detailViewModel, detailController, navigator);
         masterFrame.registerView(detailView, "country_details");
     }
 

@@ -10,15 +10,8 @@ public class DetailInteractor implements DetailInputBoundary{
     }
     @Override
     public void execute(DetailInputData detailInputData){
-        final String countryName = detailInputData.getCountryName();
-        final Country country = dataAccess.getCountryByName(countryName);
-        /*if(!dataAccess.getCountries().contains(country)){
-            output.prepareDetailFailureView("Country Does Not Exist");
-        }
-        else{
-            DetailOutputData outputData = new DetailOutputData(dataAccess.getCountryByName(countryName));
-            output.prepareDetailSuccessView(outputData);
-        }*/
+        final String countryCode = detailInputData.getCountryCode();
+        final Country country = dataAccess.getCountryByCode(countryCode);
         DetailOutputData outputData = new DetailOutputData(country);
         output.prepareDetailSuccessView(outputData);
     }

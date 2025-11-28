@@ -496,8 +496,8 @@ public class CollectionView extends AbstractView {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 1) {
-                    String countryName = country.getName();
-                    navigator.navigateTo("country_details", countryName);
+                    String countryCode = country.getCode();
+                    navigator.navigateTo("country_details", countryCode);
 
                 }
             }

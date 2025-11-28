@@ -200,8 +200,8 @@ public class FilterCountriesView extends AbstractView {
                         if (viewRow >= 0) {
                             int modelRow = table.convertRowIndexToModel(viewRow);
                             Country clickedCountry = countryDisplayData.get(modelRow);
-                            String countryName = clickedCountry.getName();
-                            navigator.navigateTo("country_details", countryName);
+                            String countryCode = clickedCountry.getCode();
+                            navigator.navigateTo("country_details", countryCode);
                         }
                     }
                 }

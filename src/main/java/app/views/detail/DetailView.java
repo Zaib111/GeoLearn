@@ -1,5 +1,6 @@
 package app.views.detail;
 
+import app.Navigator;
 import app.controllers.DetailController;
 import app.use_cases.detail.DetailInputData;
 import app.views.AbstractView;
@@ -7,6 +8,9 @@ import app.views.ViewModel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
@@ -26,9 +30,12 @@ public class DetailView extends AbstractView{
     private final JTextArea currenciesArea = new JTextArea(3, 20);
     private final JTextArea timezonesArea = new JTextArea(3, 20);
 
-    public DetailView(ViewModel<DetailState> detailViewModel, DetailController controller) {
+    private final Navigator navigator;
+
+    public DetailView(ViewModel<DetailState> detailViewModel, DetailController controller, Navigator navigator) {
         super(detailViewModel);
         this.controller = controller;
+        this.navigator = navigator;
 
         setLayout(new BorderLayout(15, 15));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -51,7 +58,7 @@ public class DetailView extends AbstractView{
         addDetailPanel(detailsPanel, "Population:", populationLabel);
         addDetailPanel(detailsPanel, "Area (km²):", areaLabel);
 
-        addTextAreaPanel(detailsPanel, "Borders:", bordersArea);
+        addBorderTextAreaPanel(detailsPanel, "Borders:", bordersArea);
         addTextAreaPanel(detailsPanel, "Languages:", languagesArea);
         addTextAreaPanel(detailsPanel, "Currencies:", currenciesArea);
         addTextAreaPanel(detailsPanel, "Timezones:", timezonesArea);
@@ -147,6 +154,36 @@ public class DetailView extends AbstractView{
         targetPanel.add(Box.createRigidArea(new Dimension(0, 5)));
     }
 
+    private void addBorderTextAreaPanel(JPanel targetPanel, String title, JTextArea textArea) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Dialog", Font.BOLD, 14));
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        textArea.setEditable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(300, 60));
+        scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        addSmartCursor(textArea);
+        addSmartClickListener(textArea);
+
+        panel.add(titleLabel);
+        panel.add(scrollPane);
+        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Ensures the panel takes up the full width for proper alignment
+        Dimension d = panel.getPreferredSize();
+        d.width = Integer.MAX_VALUE;
+        panel.setMaximumSize(d);
+
+        targetPanel.add(panel);
+        targetPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+    }
+
     private String joinList(List<String> list) {
         return list != null ? String.join(", ", list) : "N/A";
     }
@@ -158,7 +195,7 @@ public class DetailView extends AbstractView{
                 URL url = new URL(flagUrl);
                 ImageIcon icon = new ImageIcon(url);
 
-                // Optional: Scale the image down if it's too large
+                // Scale the image down if it's too large
                 int width = 100;
                 int height = (icon.getIconHeight() * width) / icon.getIconWidth();
                 Image scaledImage = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
@@ -176,6 +213,91 @@ public class DetailView extends AbstractView{
             flagLabel.setText("Flag N/A");
             flagLabel.setIcon(null);
         }
+    }
+
+    private void addSmartClickListener(JTextArea textArea) {
+        textArea.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 1) {
+                    int offset = textArea.viewToModel2D(e.getPoint());
+                    if (offset >= textArea.getDocument().getLength()) {
+                        return;
+                    }
+                    String text = textArea.getText();
+
+                    int start = text.lastIndexOf(", ", offset);
+                    int end = text.indexOf(", ", offset);
+
+                    if (start == -1) {
+                        start = 0;
+                    } else {
+                        start += 2;
+                    }
+
+                    if (end == -1) {
+                        end = text.length();
+                    }
+
+                    if (offset >= start && offset <= end) {
+                        String clickedValue = text.substring(start, end).trim();
+
+                        if (!clickedValue.isEmpty() && !clickedValue.equals(",")) {
+                            navigator.navigateTo("country_details", clickedValue);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private void addSmartCursor(JTextArea textArea) {
+        textArea.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                try {
+                    boolean isHoveringValid = false;
+
+                    int offset = textArea.viewToModel2D(e.getPoint());
+
+                    if (offset >= 0 && offset < textArea.getDocument().getLength()) {
+                        String text = textArea.getText();
+
+                        // Scan backwards for the start
+                        int start = text.lastIndexOf(", ", offset);
+                        // Scan forwards for the end
+                        int end = text.indexOf(", ", offset);
+
+                        // Adjust start
+                        if (start == -1) {
+                            start = 0;
+                        } else {
+                            start += 2; // Skip the comma and space
+                        }
+
+                        if (end == -1) {
+                            end = text.length();
+                        }
+
+                        if (offset >= start && offset <= end) {
+                            String hoveredText = text.substring(start, end).trim();
+                            if (!hoveredText.isEmpty() && !hoveredText.equals(",")) {
+                                isHoveringValid = true;
+                            }
+                        }
+                    }
+
+                    if (isHoveringValid) {
+                        textArea.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                    } else {
+                        textArea.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                    }
+
+                } catch (Exception ex) {
+                    textArea.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                }
+            }
+        });
     }
 }
 
