@@ -34,7 +34,7 @@ public class DetailView extends AbstractView{
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 24));
+        titleLabel.setFont(new Font("Dialog", Font.BOLD, 24));
         headerPanel.add(titleLabel);
 
         JPanel flagPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -105,7 +105,7 @@ public class DetailView extends AbstractView{
     private void addDetailPanel(JPanel targetPanel, String title, JLabel valueLabel) {
         JPanel panel = new JPanel(new BorderLayout(10, 0));
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 14));
+        titleLabel.setFont(new Font("Dialog", Font.BOLD, 14));
 
         panel.add(titleLabel, BorderLayout.WEST);
         panel.add(valueLabel, BorderLayout.CENTER);
@@ -124,7 +124,7 @@ public class DetailView extends AbstractView{
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 14));
+        titleLabel.setFont(new Font("Dialog", Font.BOLD, 14));
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         textArea.setEditable(false);
