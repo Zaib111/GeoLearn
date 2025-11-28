@@ -1,5 +1,6 @@
 package app.views.collection;
 
+import app.Navigator;
 import app.controllers.CollectionController;
 import app.entities.Country;
 import app.entities.CountryCollection;
@@ -10,6 +11,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -26,10 +29,13 @@ public class CollectionView extends AbstractView {
     private final JPanel collectionsPanel;
     private final JScrollPane collectionsScrollPane;
 
-    public CollectionView(ViewModel<CollectionState> collectionViewModel, CollectionController collectionController) {
+    private final Navigator navigator;
+
+    public CollectionView(ViewModel<CollectionState> collectionViewModel, CollectionController collectionController, Navigator navigator) {
         super(collectionViewModel);
 
         this.collectionController = collectionController;
+        this.navigator = navigator;
         setLayout(new BorderLayout(10, 10));
         setBackground(Color.WHITE);
         setBorder(new EmptyBorder(20, 20, 20, 20));
@@ -484,6 +490,26 @@ public class CollectionView extends AbstractView {
 
         card.add(flagPanel, BorderLayout.WEST);
         card.add(infoPanel, BorderLayout.CENTER);
+
+        // Hyperlink implementation
+        card.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 1) {
+                    String countryName = country.getName();
+                    navigator.navigateTo("country_details", countryName);
+
+                }
+            }
+        });
+
+        // Changes cursor to indicate clickable item to User
+        card.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                card.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            }
+        });
 
         return card;
     }

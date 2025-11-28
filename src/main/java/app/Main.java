@@ -67,7 +67,7 @@ public class Main {
         setupHomeModule(masterFrame, navigator);
         setupCompareModule(masterFrame, navigator, countryDataApi);
         setupCollectionModule(masterFrame, inMemoryUserDataStorage,
-                countryDataApi);
+                countryDataApi, navigator);
         setupSettingsModule(masterFrame, inMemoryUserDataStorage);
         setupFilterCountriesModule(masterFrame, countryDataApi, navigator);
         setupExploreMapModule(masterFrame);
@@ -101,7 +101,8 @@ public class Main {
     private static void setupCollectionModule(
             MasterFrame masterFrame,
             UserDataInMemoryDataAccessObject inMemoryUserDataStorage,
-            APICountryDataAccessObject countryDataApi) {
+            APICountryDataAccessObject countryDataApi,
+            Navigator navigator) {
         final ViewModel<CollectionState> collectionViewModel =
                 new ViewModel<>(new CollectionState());
         final CollectionPresenter collectionPresenter =
@@ -112,7 +113,7 @@ public class Main {
         final CollectionController collectionController =
                 new CollectionController(collectionInteractor);
         final CollectionView collectionView =
-                new CollectionView(collectionViewModel, collectionController);
+                new CollectionView(collectionViewModel, collectionController, navigator);
         masterFrame.registerView(collectionView, "collection");
     }
 

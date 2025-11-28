@@ -195,10 +195,9 @@ public class FilterCountriesView extends AbstractView {
                     if (e.getClickCount() == 1) {
                         Point point = e.getPoint();
                         int viewRow = table.rowAtPoint(point);
-                        int viewColumn = table.columnAtPoint(point);
 
-                        // Check if the click was on a valid row and in the "Name" column (index 0)
-                        if (viewRow >= 0 && viewColumn == 0) {
+                        // Check if the click was on a valid row
+                        if (viewRow >= 0) {
                             int modelRow = table.convertRowIndexToModel(viewRow);
                             Country clickedCountry = countryDisplayData.get(modelRow);
                             String countryName = clickedCountry.getName();
@@ -213,10 +212,11 @@ public class FilterCountriesView extends AbstractView {
                 @Override
                 public void mouseMoved(MouseEvent e) {
                     Point point = e.getPoint();
-                    int viewColumn = table.columnAtPoint(point);
-                    if (viewColumn == 0) { // Check if it's the Name column
+                    int viewRow = table.rowAtPoint(point);
+                    if (viewRow >= 0) {
                         table.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                    } else {
+                    }
+                    else {
                         table.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                     }
                 }
