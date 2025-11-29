@@ -1,16 +1,14 @@
 package app.views.collection;
 
-import app.Navigator;
-import app.controllers.CollectionController;
-import app.entities.Country;
-import app.entities.CountryCollection;
-import app.views.AbstractView;
-import app.views.ViewModel;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
@@ -19,6 +17,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+
+import app.Navigator;
+import app.controllers.CollectionController;
+import app.entities.Country;
+import app.entities.CountryCollection;
+import app.views.AbstractView;
+import app.views.ViewModel;
 
 public class CollectionView extends AbstractView {
     private final CollectionController collectionController;
@@ -370,7 +391,8 @@ public class CollectionView extends AbstractView {
             if (!toAdd.isEmpty() || !toRemove.isEmpty()) {
                 collectionController.editCollection(collection.getCollectionId(), toAdd, toRemove);
                 editDialog.dispose();
-            } else {
+            }
+            else {
                 JOptionPane.showMessageDialog(
                         editDialog,
                         "Please enter countries to add or remove.",
