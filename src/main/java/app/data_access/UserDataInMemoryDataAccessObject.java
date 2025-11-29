@@ -54,7 +54,6 @@ public class UserDataInMemoryDataAccessObject implements SettingsDataAccessInter
         for (int i = 0; i < collections.size(); i++) {
             if (collections.get(i).getCollectionId().equals(updatedCollection.getCollectionId())) {
                 collections.set(i, updatedCollection);
-                return;
             }
         }
     }
