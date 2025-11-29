@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface DetailDataAccessInterface {
 
+    Country getCountryByCode(String code);
     Country getCountryByName(String name);
     List<Country> getCountries();
 

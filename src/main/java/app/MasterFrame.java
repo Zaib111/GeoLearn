@@ -117,6 +117,7 @@ public class MasterFrame extends JFrame {
 
             final JPanel newView = views.get(name);
             if (newView instanceof AbstractView) {
+                this.toFront();
                 ((AbstractView) newView).onViewOpened(param);
             }
 

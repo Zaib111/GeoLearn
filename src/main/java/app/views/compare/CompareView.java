@@ -10,6 +10,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -255,6 +257,39 @@ public class CompareView extends AbstractView {
         JPanel root = new JPanel(new BorderLayout());
         root.add(flagsPanel, BorderLayout.NORTH);
         root.add(scroll, BorderLayout.CENTER);
+        // Hyperlink implementation
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 1) {
+                    Point point = e.getPoint();
+                    int viewCol = table.columnAtPoint(point);
+
+                    // Check if the click was on a valid row
+                    if (viewCol >= 1) {
+                        int modelCol = table.convertColumnIndexToModel(viewCol);
+                        Country clickedCountry = selectedCountries.get(modelCol-1);
+                        String countryCode = clickedCountry.getCode();
+                        navigator.navigateTo("country_details", countryCode);
+                    }
+                }
+            }
+        });
+
+        // Changes cursor to indicate clickable item to User
+        table.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                Point point = e.getPoint();
+                int viewCol = table.columnAtPoint(point);
+                if (viewCol >= 1) {
+                    table.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                }
+                else {
+                    table.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                }
+            }
+        });
 
         JFrame frame = new JFrame("Country Comparison");
         frame.setContentPane(root);
