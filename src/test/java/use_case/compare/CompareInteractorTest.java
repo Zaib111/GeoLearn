@@ -16,12 +16,12 @@ import app.use_cases.compare.CompareOutputBoundary;
 import app.use_cases.compare.CompareOutputData;
 
 /**
- * Tests for the CompareInteractor use case.
+ * Tests for the CompareInteractor.
  */
 public class CompareInteractorTest {
 
     /**
-     * Helper method to create some sample countries used across tests.
+     * Helper method to create some sample countries.
      */
     private List<Country> createTestCountries() {
         return Arrays.asList(
@@ -47,7 +47,6 @@ public class CompareInteractorTest {
         return new CompareDataAccessInterface() {
             @Override
             public List<String> getAllCountryNames() {
-                // Return a copy to avoid leaking internal state into tests.
                 List<String> names = new ArrayList<>();
                 for (Country c : countries) {
                     names.add(c.getName());
@@ -57,7 +56,6 @@ public class CompareInteractorTest {
 
             @Override
             public List<Country> getCountriesByNames(List<String> names) {
-                // Simple linear search is enough for the test fixture size.
                 List<Country> result = new ArrayList<>();
                 for (String name : names) {
                     for (Country c : countries) {
@@ -76,7 +74,6 @@ public class CompareInteractorTest {
 
     @Test
     public void testLoadAvailableCountriesSuccess() {
-        // Arrange
         List<Country> countries = createTestCountries();
         CompareDataAccessInterface dao = createCompareDAO(countries);
 
@@ -103,11 +100,8 @@ public class CompareInteractorTest {
         };
 
         CompareInputBoundary interactor = new CompareInteractor(dao, presenter);
-
-        // Act
         interactor.loadAvailableCountries();
 
-        // Assert
         assertTrue("prepareCountriesList should be called", successCalled[0]);
         assertFalse("prepareFailView should not be called", failCalled[0]);
         assertNotNull(receivedNames[0]);
@@ -118,8 +112,8 @@ public class CompareInteractorTest {
     }
 
     @Test
-    public void testLoadAvailableCountriesFailureWhenEmpty() {
-        // Arrange: DAO returns empty list to trigger failure path.
+    public void testLoadAvailableCountriesFailureWhenEmptyList() {
+        // DAO returns empty list
         CompareDataAccessInterface dao = new CompareDataAccessInterface() {
             @Override
             public List<String> getAllCountryNames() {
@@ -153,11 +147,50 @@ public class CompareInteractorTest {
         };
 
         CompareInputBoundary interactor = new CompareInteractor(dao, presenter);
-
-        // Act
         interactor.loadAvailableCountries();
 
-        // Assert
+        assertFalse("prepareCountriesList should not be called on failure", successCalled[0]);
+        assertEquals("Failed to load country list.", errorMessage[0]);
+    }
+
+    @Test
+    public void testLoadAvailableCountriesFailureWhenNull() {
+        // DAO returns null
+        CompareDataAccessInterface dao = new CompareDataAccessInterface() {
+            @Override
+            public List<String> getAllCountryNames() {
+                return null;
+            }
+
+            @Override
+            public List<Country> getCountriesByNames(List<String> names) {
+                return new ArrayList<>();
+            }
+        };
+
+        final boolean[] successCalled = new boolean[1];
+        final String[] errorMessage = new String[1];
+
+        CompareOutputBoundary presenter = new CompareOutputBoundary() {
+            @Override
+            public void prepareCountriesList(List<String> countryNames) {
+                successCalled[0] = true;
+            }
+
+            @Override
+            public void prepareSuccessView(CompareOutputData outputData) {
+                // not used here
+            }
+
+            @Override
+            public void prepareFailView(String message) {
+                errorMessage[0] = message;
+            }
+        };
+
+        CompareInputBoundary interactor = new CompareInteractor(dao, presenter);
+        interactor.loadAvailableCountries();
+
         assertFalse("prepareCountriesList should not be called on failure", successCalled[0]);
         assertEquals("Failed to load country list.", errorMessage[0]);
     }
@@ -165,8 +198,7 @@ public class CompareInteractorTest {
     // ============ execute() Tests ============
 
     @Test
-    public void testExecuteFailsWhenLessThanTwoCountries() {
-        // Arrange
+    public void testExecuteFailsWhenSelectedNamesNull() {
         List<Country> countries = createTestCountries();
         CompareDataAccessInterface dao = createCompareDAO(countries);
 
@@ -191,18 +223,46 @@ public class CompareInteractorTest {
         };
 
         CompareInputBoundary interactor = new CompareInteractor(dao, presenter);
+        interactor.execute(null);
 
-        // Act
+        assertFalse("prepareSuccessView should not be called", successCalled[0]);
+        assertEquals("Select at least two countries to compare.", errorMessage[0]);
+    }
+
+    @Test
+    public void testExecuteFailsWhenLessThanTwoCountries() {
+        List<Country> countries = createTestCountries();
+        CompareDataAccessInterface dao = createCompareDAO(countries);
+
+        final String[] errorMessage = new String[1];
+        final boolean[] successCalled = new boolean[1];
+
+        CompareOutputBoundary presenter = new CompareOutputBoundary() {
+            @Override
+            public void prepareCountriesList(List<String> countryNames) {
+                // not used here
+            }
+
+            @Override
+            public void prepareSuccessView(CompareOutputData outputData) {
+                successCalled[0] = true;
+            }
+
+            @Override
+            public void prepareFailView(String message) {
+                errorMessage[0] = message;
+            }
+        };
+
+        CompareInputBoundary interactor = new CompareInteractor(dao, presenter);
         interactor.execute(Arrays.asList("Canada"));
 
-        // Assert
         assertFalse("prepareSuccessView should not be called", successCalled[0]);
         assertEquals("Select at least two countries to compare.", errorMessage[0]);
     }
 
     @Test
     public void testExecuteFailsWhenCountriesNotFound() {
-        // Arrange
         List<Country> countries = createTestCountries();
         CompareDataAccessInterface dao = createCompareDAO(countries);
 
@@ -227,18 +287,14 @@ public class CompareInteractorTest {
         };
 
         CompareInputBoundary interactor = new CompareInteractor(dao, presenter);
-
-        // Act
         interactor.execute(Arrays.asList("Canada", "FakeCountry"));
 
-        // Assert
         assertFalse("prepareSuccessView should not be called", successCalled[0]);
         assertEquals("Some selected countries could not be found.", errorMessage[0]);
     }
 
     @Test
     public void testExecuteSuccess() {
-        // Arrange
         List<Country> countries = createTestCountries();
         CompareDataAccessInterface dao = createCompareDAO(countries);
 
@@ -265,16 +321,81 @@ public class CompareInteractorTest {
         };
 
         CompareInputBoundary interactor = new CompareInteractor(dao, presenter);
-
-        // Act
         interactor.execute(Arrays.asList("Canada", "United States"));
 
-        // Assert
         assertTrue("prepareSuccessView should be called", successCalled[0]);
         assertNull("prepareFailView should not be called", errorMessage[0]);
         assertNotNull(capturedOutput[0]);
         assertEquals(2, capturedOutput[0].getSelectedCountries().size());
         assertEquals("Canada", capturedOutput[0].getSelectedCountries().get(0).getName());
         assertEquals("United States", capturedOutput[0].getSelectedCountries().get(1).getName());
+    }
+
+    @Test
+    public void testExecuteSuccessEvenIfDAOOrderDiffers() {
+        // DAO that returns countries in reverse order of input
+        List<Country> countries = createTestCountries();
+        CompareDataAccessInterface dao = new CompareDataAccessInterface() {
+            @Override
+            public List<String> getAllCountryNames() {
+                List<String> names = new ArrayList<>();
+                for (Country c : countries) {
+                    names.add(c.getName());
+                }
+                return names;
+            }
+
+            @Override
+            public List<Country> getCountriesByNames(List<String> names) {
+                List<Country> result = new ArrayList<>();
+                for (int i = names.size() - 1; i >= 0; i--) {
+                    String name = names.get(i);
+                    for (Country c : countries) {
+                        if (c.getName().equals(name)) {
+                            result.add(c);
+                            break;
+                        }
+                    }
+                }
+                return result;
+            }
+        };
+
+        final boolean[] successCalled = new boolean[1];
+        final String[] errorMessage = new String[1];
+        final CompareOutputData[] capturedOutput = new CompareOutputData[1];
+
+        CompareOutputBoundary presenter = new CompareOutputBoundary() {
+            @Override
+            public void prepareCountriesList(List<String> countryNames) {
+                // not used here
+            }
+
+            @Override
+            public void prepareSuccessView(CompareOutputData outputData) {
+                successCalled[0] = true;
+                capturedOutput[0] = outputData;
+            }
+
+            @Override
+            public void prepareFailView(String message) {
+                errorMessage[0] = message;
+            }
+        };
+
+        CompareInputBoundary interactor = new CompareInteractor(dao, presenter);
+        interactor.execute(Arrays.asList("Canada", "United States"));
+
+        assertTrue("prepareSuccessView should be called", successCalled[0]);
+        assertNull("prepareFailView should not be called", errorMessage[0]);
+        assertNotNull(capturedOutput[0]);
+        assertEquals(2, capturedOutput[0].getSelectedCountries().size());
+        // We don't assert order here, just that both are present
+        List<String> names = Arrays.asList(
+                capturedOutput[0].getSelectedCountries().get(0).getName(),
+                capturedOutput[0].getSelectedCountries().get(1).getName()
+        );
+        assertTrue(names.contains("Canada"));
+        assertTrue(names.contains("United States"));
     }
 }
