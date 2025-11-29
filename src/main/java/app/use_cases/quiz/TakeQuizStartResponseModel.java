@@ -2,6 +2,9 @@ package app.use_cases.quiz;
 
 import java.util.List;
 
+/**
+ * Response model sent when a quiz begins.
+ */
 public class TakeQuizStartResponseModel {
     private final String quizTitle;
     private final String prompt;
@@ -10,6 +13,14 @@ public class TakeQuizStartResponseModel {
     private final int totalQuestions;
     private final String mediaUrl;
 
+    /**
+     * @param quizTitle title shown to the user
+     * @param prompt text of the first question
+     * @param options MCQ options (empty for type-in)
+     * @param questionIndex index of the first question (0-based)
+     * @param totalQuestions total number of questions in the quiz
+     * @param mediaUrl optional image/flag URL
+     */
     public TakeQuizStartResponseModel(String quizTitle,
                                       String prompt,
                                       List<String> options,

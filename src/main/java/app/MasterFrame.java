@@ -1,50 +1,63 @@
 package app;
 
-import app.views.AbstractView;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+import app.views.AbstractView;
+
+/**
+ * Master frame for the GeoLearn application.
+ * Manages view navigation and back button functionality.
+ */
 public class MasterFrame extends JFrame {
-    public Map<String, JPanel> views = new HashMap<>();
+    private static final int FRAME_WIDTH = 800;
+    private static final int FRAME_HEIGHT = 600;
+
+    private final Map<String, JPanel> views = new HashMap<>();
     private final JPanel contentPanel;
     private final CardLayout cardLayout;
     private final JButton backButton;
 
-    private Stack<String> navigationStack = new Stack<>();
-    private String currentViewName = null;
+    private final Stack<List<String>> navigationStack = new Stack<>();
+    private String currentViewName;
 
+    /**
+     * Constructs a new MasterFrame with the specified title.
+     *
+     * @param title the title of the frame
+     */
     public MasterFrame(String title) {
         super(title);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(800, 600);
+        setSize(FRAME_WIDTH, FRAME_HEIGHT);
         setLocationRelativeTo(null);
-        
-        // Add a master panel with BorderLayout
-        JPanel masterPanel = new JPanel(new BorderLayout());
 
-        // Create top app.navigation panel with BorderLayout
-        JPanel topPanel = new JPanel(new BorderLayout());
+        final JPanel masterPanel = new JPanel(new BorderLayout());
 
-        // Left side for back button
-        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        final JPanel topPanel = new JPanel(new BorderLayout());
+
+        final JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         backButton = new JButton("Back");
-        backButton.setVisible(false); // Initially hidden
+        backButton.setVisible(false);
         leftPanel.add(backButton);
 
         topPanel.add(leftPanel, BorderLayout.WEST);
 
         backButton.addActionListener(getOnBackClicked());
 
-        // Create content panel with CardLayout for dynamic view swapping
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
 
-        // Add panels to master panel
         masterPanel.add(topPanel, BorderLayout.NORTH);
         masterPanel.add(contentPanel, BorderLayout.CENTER);
 
@@ -53,76 +66,92 @@ public class MasterFrame extends JFrame {
         this.setVisible(true);
     }
 
+    /**
+     * Gets the views map.
+     *
+     * @return the map of view names to panels
+     */
+    public Map<String, JPanel> getViews() {
+        return views;
+    }
+
+    /**
+     * Registers a view with the given name.
+     *
+     * @param view the panel to register
+     * @param name the name to associate with the view
+     */
     public void registerView(JPanel view, String name) {
         views.put(name, view);
         contentPanel.add(view, name);
     }
 
-    public void navigateTo(String name) {
+    /**
+     * Navigates to the view with the specified name.
+     *
+     * @param name the name of the view to navigate to
+     */
+    public void navigateTo(String name, String param) {
         if (views.containsKey(name)) {
-            // Trigger onViewClosed for the current view if it's an AbstractView
             if (currentViewName != null) {
-                JPanel currentView = views.get(currentViewName);
+                final JPanel currentView = views.get(currentViewName);
                 if (currentView instanceof AbstractView) {
                     ((AbstractView) currentView).onViewClosed();
                 }
             }
 
             if (!navigationStack.isEmpty()) {
-                String currentView = navigationStack.peek();
-                if (!currentView.equals(name)) {
-                    navigationStack.push(name);
+                final String currentView = navigationStack.peek().get(0);
+                final String currentParam = navigationStack.peek().get(1);
+                if (!currentView.equals(name) || !currentParam.equals(param)) {
+                    navigationStack.push(List.of(name, param));
                 }
-            } else {
-                navigationStack.push(name);
+            }
+            else {
+                navigationStack.push(List.of(name, param));
             }
 
-            // Update current view name
             currentViewName = name;
 
             cardLayout.show(contentPanel, name);
 
-            // Trigger onViewOpened for the new view if it's an AbstractView
-            JPanel newView = views.get(name);
+            final JPanel newView = views.get(name);
             if (newView instanceof AbstractView) {
-                ((AbstractView) newView).onViewOpened();
+                this.toFront();
+                ((AbstractView) newView).onViewOpened(param);
             }
 
-            // Update back button visibility
             backButton.setVisible(navigationStack.size() > 1);
         }
     }
 
     private ActionListener getOnBackClicked() {
-        return e -> {
-            if (navigationStack.size() > 1) {
-                // Trigger onViewClosed for the current view if it's an AbstractView
-                if (currentViewName != null) {
-                    JPanel currentView = views.get(currentViewName);
-                    if (currentView instanceof AbstractView) {
-                        ((AbstractView) currentView).onViewClosed();
-                    }
+        return event -> handleBackNavigation();
+    }
+
+    private void handleBackNavigation() {
+        if (navigationStack.size() > 1) {
+            if (currentViewName != null) {
+                final JPanel currentView = views.get(currentViewName);
+                if (currentView instanceof AbstractView) {
+                    ((AbstractView) currentView).onViewClosed();
                 }
-
-                // Pop current view
-                navigationStack.pop();
-                // Get previous view
-                String previousView = navigationStack.peek();
-
-                // Update current view name
-                currentViewName = previousView;
-
-                cardLayout.show(contentPanel, previousView);
-
-                // Trigger onViewOpened for the previous view if it's an AbstractView
-                JPanel prevView = views.get(previousView);
-                if (prevView instanceof AbstractView) {
-                    ((AbstractView) prevView).onViewOpened();
-                }
-
-                // Update back button visibility
-                backButton.setVisible(navigationStack.size() > 1);
             }
-        };
+
+            navigationStack.pop();
+            final String previousView = navigationStack.peek().get(0);
+            final String previousParam = navigationStack.peek().get(1);
+
+            currentViewName = previousView;
+
+            cardLayout.show(contentPanel, previousView);
+
+            final JPanel prevView = views.get(previousView);
+            if (prevView instanceof AbstractView) {
+                ((AbstractView) prevView).onViewOpened(previousParam);
+            }
+
+            backButton.setVisible(navigationStack.size() > 1);
+        }
     }
 }

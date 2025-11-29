@@ -1,5 +1,6 @@
 package app.views.filter_countries;
 
+import app.Navigator;
 import app.controllers.FilterCountriesController;
 import app.entities.Country;
 import app.views.AbstractView;
@@ -13,6 +14,8 @@ import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,11 +27,13 @@ public class FilterCountriesView extends AbstractView {
     private JComboBox<String> subregionComboBox;
     private FilterCountriesController filterCountriesController;
     private JScrollPane currentTableScrollPane;
+    private Navigator navigator;
 
-    public FilterCountriesView(ViewModel<FilterCountriesState> filterCountriesViewModel, FilterCountriesController filterCountriesController) {
+    public FilterCountriesView(ViewModel<FilterCountriesState> filterCountriesViewModel, FilterCountriesController filterCountriesController, Navigator navigator) {
         super(filterCountriesViewModel);
 
         this.filterCountriesController = filterCountriesController;
+        this.navigator = navigator;
 
         // Heading
         JLabel heading = new JLabel("Filter Countries");
@@ -87,8 +92,7 @@ public class FilterCountriesView extends AbstractView {
     }
 
     @Override
-    public void onViewOpened() {
-//        filterCountriesController.filterCountries("", "Any", "Any");
+    public void onViewOpened(String param) {
         this.revalidate();
         this.repaint();
     }
@@ -99,14 +103,15 @@ public class FilterCountriesView extends AbstractView {
     }
 
     public void onStateChange(Object oldState, Object newState) {
-        FilterCountriesState filterCountriesState = (FilterCountriesState) newState;
+        FilterCountriesState filterCountriesState = (FilterCountriesState) newState; // when state is changed we display a new table of filtered countries
 
         displayCountries(filterCountriesState.getFilteredCountries());
     }
 
     private HashMap<String, String[]> createSubregionHashMap(){
+        // add regions and define subregions for each region
         HashMap<String, String[]> subregionHashMap = new HashMap<>();
-        subregionHashMap.put("Any", new String[]{"Any"});
+        subregionHashMap.put("Any", new String[]{"Any"}); // default setting, also in the event that we do not want to filter by region
         subregionHashMap.put("Africa", new String[]{"Any", "Eastern Africa", "Middle Africa", "Northern Africa", "Southern Africa", "Western Africa"});
         subregionHashMap.put("Americas", new String[]{"Any", "Northern America", "Caribbean", "Central America", "South America"});
         subregionHashMap.put("Antarctic", new String[]{"Any"});
@@ -127,41 +132,110 @@ public class FilterCountriesView extends AbstractView {
     }
 
     public void displayCountries(List<Country> countryDisplayData) {
-        String[] columnNames = {"Name", "Region", "Subregion", "Population", "Area (km²)", "Population Density"};
+        // check if filter returned nothing
+        if (countryDisplayData.isEmpty()) {
+            // Remove old table pane if exists
+            if (currentTableScrollPane != null) {
+                this.remove(currentTableScrollPane);
+            }
 
-        Object[][] data = new Object[countryDisplayData.size()][6];
+            // create no results text and center it
+            JLabel noResults = new JLabel("No Results Found", SwingConstants.CENTER);
+            // set font for no results
+            noResults.setFont(new Font("Dialog", Font.PLAIN, 18));
+            // add no results text to scroll pane
+            currentTableScrollPane = new JScrollPane(noResults);
+            // set dimension of scroll pane
+            currentTableScrollPane.setPreferredSize(new Dimension(750, 300));
+            // remove border of scroll pane
+            currentTableScrollPane.setBorder(null);
 
-        for (int i = 0; i < countryDisplayData.size(); i++) {
-            Country country = countryDisplayData.get(i);
-            data[i][0] = country.getName();
-            data[i][1] = country.getRegion();
-            data[i][2] = country.getSubregion().orElse("N/A");
-            data[i][3] = country.getPopulation();
-            data[i][4] = country.getAreaKm2();
-            data[i][5] = country.getPopulation() / country.getAreaKm2();
+            // add scroll pane to view
+            this.add(currentTableScrollPane);
+
+            this.revalidate();
+            this.repaint();
+        } else {
+            // otherwise display table of countries
+            String[] columnNames = {"Name", "Region", "Subregion", "Population", "Area (km²)", "Population Density", "Capital"};
+
+            Object[][] data = new Object[countryDisplayData.size()][7];
+
+            for (int i = 0; i < countryDisplayData.size(); i++) {
+                Country country = countryDisplayData.get(i);
+                data[i][0] = country.getName();
+                data[i][1] = country.getRegion();
+                data[i][2] = country.getSubregion().orElse("N/A");
+                data[i][3] = country.getPopulation();
+                data[i][4] = country.getAreaKm2();
+                data[i][5] = country.getPopulation() / country.getAreaKm2();
+                data[i][6] = country.getCapital().orElse("N/A");
+            }
+
+            // create table with string/double data types for sorting purposes
+            JTable table = getFormattedTable(data, columnNames);
+
+            // define sorter for table
+            TableRowSorter<DefaultTableModel> sorter = (TableRowSorter<DefaultTableModel>) table.getRowSorter();
+            List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+            // sort by first column (name) by default
+            sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
+            sorter.setSortKeys(sortKeys);
+            sorter.sort();
+
+            // Remove old table pane if exists
+            if (currentTableScrollPane != null) {
+                this.remove(currentTableScrollPane); // panel must be a class field
+            }
+
+            // Hyperlink implementation
+            table.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getClickCount() == 1) {
+                        Point point = e.getPoint();
+                        int viewRow = table.rowAtPoint(point);
+
+                        // Check if the click was on a valid row
+                        if (viewRow >= 0) {
+                            int modelRow = table.convertRowIndexToModel(viewRow);
+                            Country clickedCountry = countryDisplayData.get(modelRow);
+                            String countryCode = clickedCountry.getCode();
+                            navigator.navigateTo("country_details", countryCode);
+                        }
+                    }
+                }
+            });
+
+            // Changes cursor to indicate clickable item to User
+            table.addMouseMotionListener(new MouseAdapter() {
+                @Override
+                public void mouseMoved(MouseEvent e) {
+                    Point point = e.getPoint();
+                    int viewRow = table.rowAtPoint(point);
+                    if (viewRow >= 0) {
+                        table.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                    }
+                    else {
+                        table.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                    }
+                }
+            });
+
+            // Remove old table pane if exists
+            if (currentTableScrollPane != null) {
+                this.remove(currentTableScrollPane); // panel must be a class field
+            }
+
+            // Add new table pane
+            currentTableScrollPane = new JScrollPane(table);
+            currentTableScrollPane.setPreferredSize(new Dimension(750, 300));
+            this.add(currentTableScrollPane);
+
+            // Refresh display
+            this.revalidate();
+            this.repaint();
         }
-
-        JTable table = getFormattedTable(data, columnNames);
-
-        TableRowSorter<DefaultTableModel> sorter = (TableRowSorter<DefaultTableModel>) table.getRowSorter();
-        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
-        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
-        sorter.setSortKeys(sortKeys);
-        sorter.sort();
-
-        // Remove old table pane if exists
-        if (currentTableScrollPane != null) {
-            this.remove(currentTableScrollPane); // panel must be a class field
-        }
-
-        // Add new table pane
-        currentTableScrollPane = new JScrollPane(table);
-        currentTableScrollPane.setPreferredSize(new Dimension(750, 300));
-        this.add(currentTableScrollPane);
-
-        // Refresh display
-        this.revalidate();
-        this.repaint();
     }
 
     @NotNull
@@ -176,7 +250,8 @@ public class FilterCountriesView extends AbstractView {
                     case 3: return Long.class;    // Population
                     case 4: return Double.class;  // Area
                     case 5: return Double.class;  // Population Density
-                    default: return Object.class;
+                    case 6: return String.class; // Capital
+                    default: return Object.class; // probably unnecessary, in case the cases dont cover everything
                 }
             }
         };

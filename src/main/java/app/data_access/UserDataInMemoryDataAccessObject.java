@@ -4,15 +4,18 @@ import app.entities.CountryCollection;
 import app.use_cases.collection.CollectionDataAccessInterface;
 import app.use_cases.settings.SettingsDataAccessInterface;
 import app.use_cases.settings.UserSettingsData;
+import app.entities.QuizHistoryEntry;
+import app.use_cases.quiz.QuizHistoryDataAccessInterface;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserDataInMemoryDataAccessObject implements SettingsDataAccessInterface, CollectionDataAccessInterface {
+public class UserDataInMemoryDataAccessObject implements SettingsDataAccessInterface, CollectionDataAccessInterface, QuizHistoryDataAccessInterface {
     UserSettingsData currentSettings = new UserSettingsData();
     List<CountryCollection> collections = new ArrayList<>();
+    private final List<QuizHistoryEntry> quizHistory = new ArrayList<>();
 
     @Override
     public UserSettingsData getSettings() {
@@ -51,8 +54,18 @@ public class UserDataInMemoryDataAccessObject implements SettingsDataAccessInter
         for (int i = 0; i < collections.size(); i++) {
             if (collections.get(i).getCollectionId().equals(updatedCollection.getCollectionId())) {
                 collections.set(i, updatedCollection);
-                return;
             }
         }
     }
+
+    @Override
+    public synchronized void saveQuizAttempt(QuizHistoryEntry entry) {
+        quizHistory.add(entry);
+    }
+
+    @Override
+    public synchronized List<QuizHistoryEntry> getAllQuizAttempts() {
+        return new ArrayList<>(quizHistory);
+    }
+
 }

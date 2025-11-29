@@ -109,13 +109,13 @@ public class CollectionInteractor implements CollectionInputBoundary {
         );
         userDataAccessObject.createCollection(newCollection);
         final List<CountryCollection> collections = userDataAccessObject.getAllCollections();
-        collectionPresenter.prepareCollectionsView(collections);
+        collectionPresenter.prepareCollectionsView(new CollectionOutputData(collections));
     }
 
     @Override
     public void fetchAllCollections() {
         final List<CountryCollection> collections = userDataAccessObject.getAllCollections();
-        collectionPresenter.prepareCollectionsView(collections);
+        collectionPresenter.prepareCollectionsView(new CollectionOutputData(collections));
     }
 
     @Override
@@ -127,7 +127,7 @@ public class CollectionInteractor implements CollectionInputBoundary {
         }
         userDataAccessObject.deleteCollection(collectionId);
         final List<CountryCollection> collections = userDataAccessObject.getAllCollections();
-        collectionPresenter.prepareCollectionsView(collections);
+        collectionPresenter.prepareCollectionsView(new CollectionOutputData(collections));
     }
 
     @Override
@@ -151,7 +151,7 @@ public class CollectionInteractor implements CollectionInputBoundary {
         );
         userDataAccessObject.updateCollection(updatedCollection);
         final List<CountryCollection> collections = userDataAccessObject.getAllCollections();
-        collectionPresenter.prepareCollectionsView(collections);
+        collectionPresenter.prepareCollectionsView(new CollectionOutputData(collections));
     }
 
     @Override
@@ -235,6 +235,6 @@ public class CollectionInteractor implements CollectionInputBoundary {
         );
         userDataAccessObject.updateCollection(updatedCollection);
         final List<CountryCollection> collections = userDataAccessObject.getAllCollections();
-        collectionPresenter.prepareCollectionsView(collections);
+        collectionPresenter.prepareCollectionsView(new CollectionOutputData(collections));
     }
 }
