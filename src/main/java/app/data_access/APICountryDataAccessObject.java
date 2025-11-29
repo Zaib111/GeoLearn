@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import app.use_cases.filter_country.FilterCountriesDataAccessInterface;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,7 +23,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class APICountryDataAccessObject implements CountryDataAccessInterface, CompareDataAccessInterface, DetailDataAccessInterface {
+public class APICountryDataAccessObject implements FilterCountriesDataAccessInterface, CountryDataAccessInterface, CompareDataAccessInterface, DetailDataAccessInterface {
     private static final String FIELD_NAME = "name";
     private static final String FIELD_CAPITAL = "capital";
     private static final String FIELD_REGION = "region";
@@ -267,6 +268,18 @@ public class APICountryDataAccessObject implements CountryDataAccessInterface, C
         Country result = null;
         for (Country country : getCountries()) {
             if (country.getCode().equals(countryCode)) {
+                result = country;
+                break;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Country getCountryByName(String countryName) {
+        Country result = null;
+        for (Country country : getCountries()) {
+            if (country.getName().equals(countryName)) {
                 result = country;
                 break;
             }

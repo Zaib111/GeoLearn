@@ -1,14 +1,6 @@
 package app.use_cases.filter_country;
 
-import app.controllers.DetailController;
-import app.data_access.APICountryDataAccessObject;
 import app.entities.Country;
-import app.presenters.DetailPresenter;
-import app.use_cases.detail.DetailDataAccessInterface;
-import app.use_cases.detail.DetailInteractor;
-import app.views.ViewModel;
-import app.views.detail.DetailState;
-import app.views.detail.DetailView;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,10 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FilterCountriesInteractor implements FilterCountriesInputBoundary {
-    private final APICountryDataAccessObject dataAccess;
+    private final FilterCountriesDataAccessInterface dataAccess;
     private final FilterCountriesOutputBoundary presenter;
 
-    public FilterCountriesInteractor(APICountryDataAccessObject dataAccess, FilterCountriesOutputBoundary presenter) {
+    public FilterCountriesInteractor(FilterCountriesDataAccessInterface dataAccess, FilterCountriesOutputBoundary presenter) {
         this.dataAccess = dataAccess;
         this.presenter = presenter;
     }

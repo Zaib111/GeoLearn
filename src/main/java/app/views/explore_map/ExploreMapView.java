@@ -661,7 +661,7 @@ public class ExploreMapView extends AbstractView {
         else {
             if (MODE_SELECT.equals(mode) && controller != null) {
                 controller.selectFeature(worldPos.x, worldPos.y);
-                navigator.navigateTo("world_details", exploreMapViewModel.getState().getSelectedCountryName());
+                navigator.navigateTo("country_details", exploreMapViewModel.getState().getSelectedCountryName());
             }
         }
     }
