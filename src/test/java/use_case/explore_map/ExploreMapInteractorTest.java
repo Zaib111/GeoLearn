@@ -152,6 +152,25 @@ public class ExploreMapInteractorTest {
         assertNull(presenter.lastOutputData.getSelectedCountryName());
     }
 
+    @Test
+    void testSelectFeatureWithNonStringNameAttribute() {
+        // Arrange: Test the toString() conversion path when NAME is a non-String object
+        double x = 175.0;
+        double y = 275.0;
+        ExploreMapSelectInputData inputData = new ExploreMapSelectInputData(x, y);
+        // Pass an Integer to force toString() conversion
+        dataAccess.setFeatureToReturn(new TestSimpleFeatureWithObjectName(12345, "feature.999"));
+
+        // Act
+        interactor.selectFeature(inputData);
+
+        // Assert
+        assertTrue(dataAccess.getFeatureAtPositionWasCalled);
+        assertTrue(presenter.prepareFeatureSelectedViewWasCalled);
+        assertNotNull(presenter.lastOutputData);
+        assertEquals("12345", presenter.lastOutputData.getSelectedCountryName());
+    }
+
     // Test Double for ExploreMapDataAccessInterface
     private static class TestDataAccess implements ExploreMapDataAccessInterface {
         boolean loadShapefileWasCalled = false;
@@ -320,6 +339,170 @@ public class ExploreMapInteractorTest {
         public Object getAttribute(String name) {
             if ("NAME".equals(name)) {
                 return this.name;
+            }
+            return null;
+        }
+
+        @Override
+        public Object getAttribute(Name name) {
+            return null;
+        }
+
+        @Override
+        public Object getAttribute(int index) {
+            return null;
+        }
+
+        @Override
+        public int getAttributeCount() {
+            return 0;
+        }
+
+        @Override
+        public List<Object> getAttributes() {
+            return null;
+        }
+
+        @Override
+        public Object getDefaultGeometry() {
+            return null;
+        }
+
+        @Override
+        public SimpleFeatureType getFeatureType() {
+            return null;
+        }
+
+        @Override
+        public SimpleFeatureType getType() {
+            return null;
+        }
+
+        @Override
+        public void setAttribute(String name, Object value) {
+        }
+
+        @Override
+        public void setAttribute(Name name, Object value) {
+        }
+
+        @Override
+        public void setAttribute(int index, Object value) {
+        }
+
+        @Override
+        public void setAttributes(List<Object> values) {
+        }
+
+        @Override
+        public void setAttributes(Object[] values) {
+        }
+
+        @Override
+        public void setDefaultGeometry(Object geometry) {
+        }
+
+        @Override
+        public org.geotools.api.geometry.BoundingBox getBounds() {
+            return null;
+        }
+
+        @Override
+        public void setDefaultGeometryProperty(org.geotools.api.feature.GeometryAttribute geometryAttribute) {
+        }
+
+        @Override
+        public Collection<org.geotools.api.feature.Property> getProperties() {
+            return null;
+        }
+
+        @Override
+        public Collection<org.geotools.api.feature.Property> getProperties(Name name) {
+            return null;
+        }
+
+        @Override
+        public Collection<org.geotools.api.feature.Property> getProperties(String name) {
+            return null;
+        }
+
+        @Override
+        public org.geotools.api.feature.Property getProperty(Name name) {
+            return null;
+        }
+
+        @Override
+        public org.geotools.api.feature.Property getProperty(String name) {
+            return null;
+        }
+
+        @Override
+        public Collection<? extends org.geotools.api.feature.Property> getValue() {
+            return null;
+        }
+
+        @Override
+        public void setValue(Collection<org.geotools.api.feature.Property> values) {
+        }
+
+        @Override
+        public void setValue(Object newValue) {
+        }
+
+        @Override
+        public org.geotools.api.feature.GeometryAttribute getDefaultGeometryProperty() {
+            return null;
+        }
+
+        @Override
+        public Name getName() {
+            return null;
+        }
+
+        @Override
+        public boolean isNillable() {
+            return false;
+        }
+
+        @Override
+        public java.util.Map<Object, Object> getUserData() {
+            return null;
+        }
+
+        @Override
+        public org.geotools.api.feature.type.AttributeDescriptor getDescriptor() {
+            return null;
+        }
+
+        @Override
+        public void validate() {
+        }
+    }
+
+    // Minimal test implementation of SimpleFeature with Object NAME attribute
+    private static class TestSimpleFeatureWithObjectName implements SimpleFeature {
+        private final Object nameObject;
+        private final String id;
+
+        TestSimpleFeatureWithObjectName(Object nameObject, String id) {
+            this.nameObject = nameObject;
+            this.id = id;
+        }
+
+        @Override
+        public FeatureId getIdentifier() {
+            return null;
+        }
+
+        @Override
+        public String getID() {
+            return id;
+        }
+
+        @Override
+        public Object getAttribute(String name) {
+            if ("NAME".equals(name)) {
+                return this.nameObject;  // Return the object directly, not converted to String
             }
             return null;
         }
