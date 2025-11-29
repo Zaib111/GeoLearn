@@ -274,6 +274,18 @@ public class APICountryDataAccessObject implements CountryDataAccessInterface, C
         return result;
     }
 
+    @Override
+    public Country getCountryByName(String countryName) {
+        Country result = null;
+        for (Country country : getCountries()) {
+            if (country.getName().equals(countryName)) {
+                result = country;
+                break;
+            }
+        }
+        return result;
+    }
+
     // -------------------- ADDED FOR COMPARE USE CASE --------------------
 
     @Override
