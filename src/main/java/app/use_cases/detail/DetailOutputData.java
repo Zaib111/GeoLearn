@@ -5,9 +5,6 @@ import app.entities.Country;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Output data for detail use case.
- */
 public class DetailOutputData {
     private final String countryCode;
     private final String countryName;
@@ -21,13 +18,7 @@ public class DetailOutputData {
     private final List<String> languages;
     private final List<String> currencies;
     private final List<String> timezones;
-
-    /**
-     * Constructor.
-     *
-     * @param country the country
-     */
-    public DetailOutputData(final Country country) {
+    public DetailOutputData(Country country){
         countryCode = country.getCode();
         countryName = country.getName();
         capital = country.getCapital();
@@ -41,112 +32,51 @@ public class DetailOutputData {
         currencies = country.getCurrencies();
         timezones = country.getTimezones();
     }
-
-    /**
-     * Get the country code.
-     *
-     * @return the country code
-     */
-    public final String getCountryCode() {
+    public String getCountryCode() {
         return countryCode;
     }
 
-    /**
-     * Get the country name.
-     *
-     * @return the country name
-     */
-    public final String getCountryName() {
+    public String getCountryName() {
         return countryName;
     }
 
-    /**
-     * Get the capital.
-     *
-     * @return the capital
-     */
-    public final Optional<String> getCapital() {
+    public Optional<String> getCapital() {
         return capital;
     }
 
-    /**
-     * Get the region.
-     *
-     * @return the region
-     */
-    public final String getRegion() {
+    public String getRegion() {
         return region;
     }
 
-    /**
-     * Get the subregion.
-     *
-     * @return the subregion
-     */
-    public final Optional<String> getSubregion() {
+    public Optional<String> getSubregion() {
         return subregion;
     }
 
-    /**
-     * Get the population.
-     *
-     * @return the population
-     */
-    public final long getPopulation() {
+    public long getPopulation() {
         return population;
     }
 
-    /**
-     * Get the area in km2.
-     *
-     * @return the area in km2
-     */
-    public final double getAreaKm2() {
+    public double getAreaKm2() {
         return areaKm2;
     }
 
-    /**
-     * Get the borders.
-     *
-     * @return the borders
-     */
-    public final List<String> getBorders() {
+    public List<String> getBorders() {
         return borders;
     }
 
-    /**
-     * Get the flag URL.
-     *
-     * @return the flag URL
-     */
-    public final String getFlagUrl() {
+    public String getFlagUrl() {
         return flagUrl;
     }
 
-    /**
-     * Get the languages.
-     *
-     * @return the languages
-     */
-    public final List<String> getLanguages() {
+    public List<String> getLanguages() {
         return languages;
     }
 
-    /**
-     * Get the currencies.
-     *
-     * @return the currencies
-     */
-    public final List<String> getCurrencies() {
+    public List<String> getCurrencies() {
         return currencies;
     }
 
-    /**
-     * Get the timezones.
-     *
-     * @return the timezones
-     */
-    public final List<String> getTimezones() {
+    public List<String> getTimezones() {
         return timezones;
     }
 }
