@@ -9,6 +9,7 @@ import app.controllers.SettingsController;
 import app.controllers.TakeQuizController;
 import app.data_access.APICountryDataAccessObject;
 import app.data_access.ExploreMapDataAccessObject;
+import app.data_access.UserDataFireStoreDataAccessObject;
 import app.data_access.UserDataInMemoryDataAccessObject;
 import app.presenters.CollectionPresenter;
 import app.presenters.ComparePresenter;
@@ -17,6 +18,7 @@ import app.presenters.ExploreMapPresenter;
 import app.presenters.FilterCountriesPresenter;
 import app.presenters.SettingsPresenter;
 import app.presenters.TakeQuizPresenter;
+import app.use_cases.country_collection.CollectionDataAccessInterface;
 import app.use_cases.country_collection.CollectionInteractor;
 import app.use_cases.compare.CompareInteractor;
 import app.use_cases.compare.CompareViewModel;
@@ -26,9 +28,11 @@ import app.use_cases.explore_map.ExploreMapInteractor;
 import app.use_cases.filter_country.FilterCountriesInteractor;
 import app.use_cases.quiz.LocalQuestionRepository;
 import app.use_cases.quiz.QuestionRepository;
+import app.use_cases.quiz.QuizHistoryDataAccessInterface;
 import app.use_cases.quiz.QuizViewModel;
 import app.use_cases.quiz.TakeQuizInteractor;
 import app.use_cases.quiz.TakeQuizOutputBoundary;
+import app.use_cases.settings.SettingsDataAccessInterface;
 import app.use_cases.settings.SettingsInteractor;
 import app.views.ViewModel;
 import app.views.country_collection.CollectionState;
@@ -61,8 +65,8 @@ public class Main {
                 new APICountryDataAccessObject();
         // Call getCountries to load cache at startup
         countryDataApi.getCountries();
-        final UserDataInMemoryDataAccessObject inMemoryUserDataStorage =
-                new UserDataInMemoryDataAccessObject();
+        final UserDataFireStoreDataAccessObject inMemoryUserDataStorage =
+                new UserDataFireStoreDataAccessObject();
 
         setupHomeModule(masterFrame, navigator);
         setupCompareModule(masterFrame, navigator, countryDataApi);
@@ -100,7 +104,7 @@ public class Main {
 
     private static void setupCollectionModule(
             MasterFrame masterFrame,
-            UserDataInMemoryDataAccessObject inMemoryUserDataStorage,
+            CollectionDataAccessInterface inMemoryUserDataStorage,
             APICountryDataAccessObject countryDataApi,
             Navigator navigator) {
         final ViewModel<CollectionState> collectionViewModel =
@@ -119,7 +123,7 @@ public class Main {
 
     private static void setupSettingsModule(
             MasterFrame masterFrame,
-            UserDataInMemoryDataAccessObject inMemoryUserDataStorage) {
+            SettingsDataAccessInterface inMemoryUserDataStorage) {
         final ViewModel<SettingsState> settingsViewModel =
                 new ViewModel<>(new SettingsState());
         final SettingsPresenter settingsPresenter =
@@ -190,7 +194,7 @@ public class Main {
     private static void setupQuizModule(
             MasterFrame masterFrame,
             APICountryDataAccessObject countryDataApi,
-            UserDataInMemoryDataAccessObject userDataStorage) {
+            QuizHistoryDataAccessInterface userDataStorage) {
         // ViewModel for the quiz screen
         final QuizViewModel quizViewModel = new QuizViewModel();
 
