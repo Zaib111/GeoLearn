@@ -1,26 +1,30 @@
 package app.use_cases.detail;
+
 import app.entities.Country;
 
-public class DetailInteractor implements DetailInputBoundary{
+/**
+ * Interactor for detail use case.
+ */
+public class DetailInteractor implements DetailInputBoundary {
     private final DetailDataAccessInterface dataAccess;
     private final DetailOutputBoundary output;
-    public DetailInteractor(DetailDataAccessInterface dataAccess, DetailOutputBoundary output) {
+
+    /**
+     * Constructor.
+     * @param dataAccess the data access interface
+     * @param output the output boundary
+     */
+    public DetailInteractor(final DetailDataAccessInterface dataAccess,
+                           final DetailOutputBoundary output) {
         this.dataAccess = dataAccess;
         this.output = output;
     }
-    @Override
-    public void execute(DetailInputData detailInputData){
-        final String countryInfo = detailInputData.getCountryInfo();
-        if(dataAccess.getCountryByCode(countryInfo) != null){
-            final Country country = dataAccess.getCountryByCode(countryInfo);
-            DetailOutputData outputData = new DetailOutputData(country);
-            output.prepareDetailSuccessView(outputData);
-        }
-        else if(dataAccess.getCountryByName(countryInfo) != null){
-            final Country country = dataAccess.getCountryByName(countryInfo);
-            DetailOutputData outputData = new DetailOutputData(country);
-            output.prepareDetailSuccessView(outputData);
-        }
 
+    @Override
+    public void execute(final DetailInputData detailInputData) {
+        final String countryCode = detailInputData.getCountryCode();
+        final Country country = dataAccess.getCountryByCode(countryCode);
+        final DetailOutputData outputData = new DetailOutputData(country);
+        output.prepareDetailSuccessView(outputData);
     }
 }
