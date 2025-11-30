@@ -19,6 +19,7 @@ public class ExploreMapInteractor implements ExploreMapInputBoundary {
 
     /** Prepares output data and updates the view through the presenter. */
     private final ExploreMapOutputBoundary presenter;
+    /**
 
     /**
      * Constructs an ExploreMapInteractor with the required dependency interfaces.
@@ -81,6 +82,7 @@ public class ExploreMapInteractor implements ExploreMapInputBoundary {
             countryName = (nameAttribute != null)
                     ? nameAttribute.toString()
                     : feature.getID();
+
         }
 
         // Send selected feature details to the presenter for display

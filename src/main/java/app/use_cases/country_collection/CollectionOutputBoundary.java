@@ -1,8 +1,4 @@
-package app.use_cases.collection;
-
-import java.util.List;
-
-import app.entities.CountryCollection;
+package app.use_cases.country_collection;
 
 /**
  * Output boundary for presenting country collections and errors.
@@ -11,9 +7,9 @@ public interface CollectionOutputBoundary {
     /**
      * Prepares the view for displaying a list of country collections.
      *
-     * @param collections the list of country collections to display
+     * @param outputData the output data containing the collections to display
      */
-    void prepareCollectionsView(List<CountryCollection> collections);
+    void prepareCollectionsView(CollectionOutputData outputData);
 
     /**
      * Prepares the view for displaying an error message.

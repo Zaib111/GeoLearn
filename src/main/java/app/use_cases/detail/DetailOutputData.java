@@ -32,4 +32,51 @@ public class DetailOutputData {
         currencies = country.getCurrencies();
         timezones = country.getTimezones();
     }
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public String getCountryName() {
+        return countryName;
+    }
+
+    public Optional<String> getCapital() {
+        return capital;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public Optional<String> getSubregion() {
+        return subregion;
+    }
+
+    public long getPopulation() {
+        return population;
+    }
+
+    public double getAreaKm2() {
+        return areaKm2;
+    }
+
+    public List<String> getBorders() {
+        return borders;
+    }
+
+    public String getFlagUrl() {
+        return flagUrl;
+    }
+
+    public List<String> getLanguages() {
+        return languages;
+    }
+
+    public List<String> getCurrencies() {
+        return currencies;
+    }
+
+    public List<String> getTimezones() {
+        return timezones;
+    }
 }

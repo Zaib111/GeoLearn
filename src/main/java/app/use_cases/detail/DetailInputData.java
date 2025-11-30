@@ -1,12 +1,12 @@
 package app.use_cases.detail;
 
 public class DetailInputData {
-    private final String countryCode;
-    public DetailInputData(String countryCode) {
-        this.countryCode = countryCode;
+    private final String countryInfo;
+    public DetailInputData(String countryInfo) {
+        this.countryInfo = countryInfo;
     }
 
-    String getCountryCode() {
-        return countryCode;
+    String getCountryInfo() {
+        return countryInfo;
     }
 }

@@ -7,18 +7,42 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Represents a single quiz question.
+ *
+ * Stores the prompt, answer options (if MCQ), the correct answer,
+ * accepted aliases, an explanation, and an optional media URL (e.g., flag).
+ */
 @Getter
 public class Question {
 
+    /** Category of quiz this question belongs to (e.g., Capitals, Flags). */
     private final QuizType quizType;
+
+    /** Whether the question is MCQ or type-in. */
     private final QuestionType questionType;
+
+    /** The text of the question presented to the user. */
     private final String prompt;
+
+    /** Multiple-choice options (empty for type-in questions). */
     private final List<String> options;
+
+    /** The correct answer. */
     private final String correct;
+
+    /** Alternate acceptable answers for type-in mode. */
     private final List<String> aliases;
+
+    /** Explanation displayed after answering. */
     private final String explanation;
+
+    /** Optional flag image. */
     private final String mediaUrl;
 
+    /**
+     * Constructs a Question.
+     */
     public Question(QuizType quizType,
                     QuestionType questionType,
                     String prompt,
@@ -40,11 +64,12 @@ public class Question {
         this.mediaUrl = mediaUrl;
     }
 
-    // Custom getters to return unmodifiable lists
+    /** Returns an unmodifiable list of options. */
     public List<String> getOptions() {
         return Collections.unmodifiableList(options);
     }
 
+    /** Returns an unmodifiable list of aliases. */
     public List<String> getAliases() {
         return Collections.unmodifiableList(aliases);
     }
