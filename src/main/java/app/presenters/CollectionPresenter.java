@@ -1,9 +1,9 @@
 package app.presenters;
 
-import app.use_cases.collection.CollectionOutputBoundary;
-import app.use_cases.collection.CollectionOutputData;
+import app.use_cases.country_collection.CollectionOutputBoundary;
+import app.use_cases.country_collection.CollectionOutputData;
 import app.views.ViewModel;
-import app.views.collection.CollectionState;
+import app.views.country_collection.CollectionState;
 
 import javax.swing.*;
 

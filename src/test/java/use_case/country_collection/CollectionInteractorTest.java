@@ -1,4 +1,4 @@
-package use_case.collection;
+package use_case.country_collection;
 
 import static org.junit.Assert.*;
 
@@ -12,14 +12,14 @@ import org.junit.Test;
 
 import app.entities.Country;
 import app.entities.CountryCollection;
-import app.use_cases.collection.AddCollectionRequestData;
-import app.use_cases.collection.CollectionDataAccessInterface;
-import app.use_cases.collection.CollectionInteractor;
-import app.use_cases.collection.CollectionOutputBoundary;
-import app.use_cases.collection.CollectionOutputData;
-import app.use_cases.collection.DeleteCollectionRequestData;
-import app.use_cases.collection.EditCollectionRequestData;
-import app.use_cases.collection.RenameCollectionRequestData;
+import app.use_cases.country_collection.AddCollectionRequestData;
+import app.use_cases.country_collection.CollectionDataAccessInterface;
+import app.use_cases.country_collection.CollectionInteractor;
+import app.use_cases.country_collection.CollectionOutputBoundary;
+import app.use_cases.country_collection.CollectionOutputData;
+import app.use_cases.country_collection.DeleteCollectionRequestData;
+import app.use_cases.country_collection.EditCollectionRequestData;
+import app.use_cases.country_collection.RenameCollectionRequestData;
 import app.use_cases.country.CountryDataAccessInterface;
 
 public class CollectionInteractorTest {

@@ -3,11 +3,11 @@ package app.controllers;
 import java.util.List;
 import java.util.UUID;
 
-import app.use_cases.collection.AddCollectionRequestData;
-import app.use_cases.collection.CollectionInputBoundary;
-import app.use_cases.collection.DeleteCollectionRequestData;
-import app.use_cases.collection.EditCollectionRequestData;
-import app.use_cases.collection.RenameCollectionRequestData;
+import app.use_cases.country_collection.AddCollectionRequestData;
+import app.use_cases.country_collection.CollectionInputBoundary;
+import app.use_cases.country_collection.DeleteCollectionRequestData;
+import app.use_cases.country_collection.EditCollectionRequestData;
+import app.use_cases.country_collection.RenameCollectionRequestData;
 
 public class CollectionController {
     private final CollectionInputBoundary collectionUseCaseInteractor;

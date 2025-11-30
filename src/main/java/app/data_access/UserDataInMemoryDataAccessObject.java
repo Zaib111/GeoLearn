@@ -1,7 +1,7 @@
 package app.data_access;
 
 import app.entities.CountryCollection;
-import app.use_cases.collection.CollectionDataAccessInterface;
+import app.use_cases.country_collection.CollectionDataAccessInterface;
 import app.use_cases.settings.SettingsDataAccessInterface;
 import app.use_cases.settings.UserSettingsData;
 import app.entities.QuizHistoryEntry;
