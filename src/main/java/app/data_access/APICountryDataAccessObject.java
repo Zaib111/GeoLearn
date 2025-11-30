@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import app.use_cases.filter_country.FilterCountriesDataAccessInterface;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,11 +18,13 @@ import app.entities.Country;
 import app.use_cases.compare.CompareDataAccessInterface;
 import app.use_cases.country.CountryDataAccessInterface;
 import app.use_cases.detail.DetailDataAccessInterface;
+import app.use_cases.filter_country.FilterCountriesDataAccessInterface;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class APICountryDataAccessObject implements FilterCountriesDataAccessInterface, CountryDataAccessInterface, CompareDataAccessInterface, DetailDataAccessInterface {
+public class APICountryDataAccessObject implements FilterCountriesDataAccessInterface, CountryDataAccessInterface,
+        CompareDataAccessInterface, DetailDataAccessInterface {
     private static final String FIELD_NAME = "name";
     private static final String FIELD_CAPITAL = "capital";
     private static final String FIELD_REGION = "region";
@@ -38,7 +39,7 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
 
     private final OkHttpClient client;
     private final String apiBase;
-    private List<Country> cachedCountries = null;
+    private List<Country> cachedCountries;
 
     public APICountryDataAccessObject() {
         this.client = new OkHttpClient().newBuilder().build();
@@ -47,36 +48,36 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
 
     @Override
     public List<Country> getCountries() {
-        if (cachedCountries != null) {
-            return cachedCountries;
+        // Cache countries if they have not been cached yet.
+        if (cachedCountries == null) {
+            final List<Country> countries = new ArrayList<>();
+            final CountryDataMaps dataMaps = new CountryDataMaps();
+
+            final List<String> fieldGroups = List.of(
+                    FIELD_NAME,
+                    FIELD_CAPITAL,
+                    FIELD_REGION,
+                    FIELD_SUBREGION,
+                    FIELD_POPULATION,
+                    FIELD_AREA,
+                    FIELD_BORDERS,
+                    FIELD_FLAGS,
+                    FIELD_LANGUAGES,
+                    FIELD_CURRENCIES,
+                    FIELD_TIMEZONES
+            );
+
+            fieldGroups.forEach(field -> {
+                fetchFieldData(field, dataMaps);
+            });
+
+            dataMaps.countryCodes.forEach(countryCode -> {
+                final Country country = createCountry(countryCode, dataMaps);
+                countries.add(country);
+            });
+            cachedCountries = countries;
         }
-        final List<Country> countries = new ArrayList<>();
-        final CountryDataMaps dataMaps = new CountryDataMaps();
-
-        final List<String> fieldGroups = List.of(
-                FIELD_NAME,
-                FIELD_CAPITAL,
-                FIELD_REGION,
-                FIELD_SUBREGION,
-                FIELD_POPULATION,
-                FIELD_AREA,
-                FIELD_BORDERS,
-                FIELD_FLAGS,
-                FIELD_LANGUAGES,
-                FIELD_CURRENCIES,
-                FIELD_TIMEZONES
-        );
-
-        fieldGroups.forEach(field -> {
-            fetchFieldData(field, dataMaps);
-        });
-
-        dataMaps.countryCodes.forEach(countryCode -> {
-            final Country country = createCountry(countryCode, dataMaps);
-            countries.add(country);
-        });
-        cachedCountries = countries;
-        return countries;
+        return cachedCountries;
     }
 
     private void fetchFieldData(String field, CountryDataMaps dataMaps) {

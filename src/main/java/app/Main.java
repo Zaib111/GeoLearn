@@ -24,12 +24,12 @@ import app.use_cases.detail.DetailDataAccessInterface;
 import app.use_cases.detail.DetailInteractor;
 import app.use_cases.explore_map.ExploreMapInteractor;
 import app.use_cases.filter_country.FilterCountriesInteractor;
-import app.use_cases.settings.SettingsInteractor;
 import app.use_cases.quiz.LocalQuestionRepository;
 import app.use_cases.quiz.QuestionRepository;
+import app.use_cases.quiz.QuizViewModel;
 import app.use_cases.quiz.TakeQuizInteractor;
 import app.use_cases.quiz.TakeQuizOutputBoundary;
-import app.use_cases.quiz.QuizViewModel;
+import app.use_cases.settings.SettingsInteractor;
 import app.views.ViewModel;
 import app.views.collection.CollectionState;
 import app.views.collection.CollectionView;
@@ -41,9 +41,9 @@ import app.views.explore_map.ExploreMapView;
 import app.views.filter_countries.FilterCountriesState;
 import app.views.filter_countries.FilterCountriesView;
 import app.views.home.HomeView;
+import app.views.quiz.QuizView;
 import app.views.settings.SettingsState;
 import app.views.settings.SettingsView;
-import app.views.quiz.QuizView;
 
 /**
  * Main entry point for the GeoLearn application.
