@@ -1,4 +1,4 @@
-package app.use_cases.collection;
+package app.use_cases.country_collection;
 
 import java.util.UUID;
 

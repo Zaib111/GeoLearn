@@ -1,4 +1,4 @@
-package app.views.collection;
+package app.views.country_collection;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
