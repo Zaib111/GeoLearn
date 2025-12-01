@@ -188,7 +188,7 @@ public class FilterCountriesView extends AbstractView {
                 this.remove(currentTableScrollPane); // panel must be a class field
             }
 
-            // Hyperlink implementation
+            // Hyperlink to implementation
             table.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -198,8 +198,11 @@ public class FilterCountriesView extends AbstractView {
 
                         // Check if the click was on a valid row
                         if (viewRow >= 0) {
+
+                            // Retrieves the required info needed to make the navigation call
                             int modelRow = table.convertRowIndexToModel(viewRow);
                             Country clickedCountry = countryDisplayData.get(modelRow);
+
                             String countryCode = clickedCountry.getCode();
                             navigator.navigateTo("country_details", countryCode);
                         }
@@ -213,10 +216,13 @@ public class FilterCountriesView extends AbstractView {
                 public void mouseMoved(MouseEvent e) {
                     Point point = e.getPoint();
                     int viewRow = table.rowAtPoint(point);
+
                     if (viewRow >= 0) {
+                        // Displays clickable cursor
                         table.setCursor(new Cursor(Cursor.HAND_CURSOR));
                     }
                     else {
+                        // Displays default cursor
                         table.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                     }
                 }
