@@ -1,4 +1,4 @@
-package use_case.collection;
+package use_case.country_collection;
 
 import static org.junit.Assert.*;
 
@@ -12,14 +12,14 @@ import org.junit.Test;
 
 import app.entities.Country;
 import app.entities.CountryCollection;
-import app.use_cases.collection.AddCollectionRequestData;
-import app.use_cases.collection.CollectionDataAccessInterface;
-import app.use_cases.collection.CollectionInteractor;
-import app.use_cases.collection.CollectionOutputBoundary;
-import app.use_cases.collection.CollectionOutputData;
-import app.use_cases.collection.DeleteCollectionRequestData;
-import app.use_cases.collection.EditCollectionRequestData;
-import app.use_cases.collection.RenameCollectionRequestData;
+import app.use_cases.country_collection.CollectionAddInputData;
+import app.use_cases.country_collection.CollectionDataAccessInterface;
+import app.use_cases.country_collection.CollectionInteractor;
+import app.use_cases.country_collection.CollectionOutputBoundary;
+import app.use_cases.country_collection.CollectionOutputData;
+import app.use_cases.country_collection.CollectionDeleteInputData;
+import app.use_cases.country_collection.CollectionEditInputData;
+import app.use_cases.country_collection.CollectionRenameInputData;
 import app.use_cases.country.CountryDataAccessInterface;
 
 public class CollectionInteractorTest {
@@ -107,7 +107,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.addCollection(new AddCollectionRequestData("Test Collection", Arrays.asList("Canada", "Brazil")));
+        interactor.addCollection(new CollectionAddInputData("Test Collection", Arrays.asList("Canada", "Brazil")));
 
         assertTrue(successCalled[0]);
         assertEquals(1, collections.size());
@@ -136,7 +136,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.addCollection(new AddCollectionRequestData("   ", Arrays.asList("Canada")));
+        interactor.addCollection(new CollectionAddInputData("   ", Arrays.asList("Canada")));
 
         assertEquals("Collection name cannot be empty.", errorMessage[0]);
     }
@@ -164,7 +164,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.addCollection(new AddCollectionRequestData("Test", null));
+        interactor.addCollection(new CollectionAddInputData("Test", null));
 
         assertEquals("Please add at least one country to the collection.", errorMessage[0]);
     }
@@ -192,7 +192,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.addCollection(new AddCollectionRequestData("Test", new ArrayList<>()));
+        interactor.addCollection(new CollectionAddInputData("Test", new ArrayList<>()));
 
         assertEquals("Please add at least one country to the collection.", errorMessage[0]);
     }
@@ -220,7 +220,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.addCollection(new AddCollectionRequestData("Test", Arrays.asList("   ", "  ", "")));
+        interactor.addCollection(new CollectionAddInputData("Test", Arrays.asList("   ", "  ", "")));
 
         assertEquals("Please add at least one valid country name.", errorMessage[0]);
     }
@@ -248,7 +248,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.addCollection(new AddCollectionRequestData("Test", Arrays.asList("Canada", "Brazil", "Canada")));
+        interactor.addCollection(new CollectionAddInputData("Test", Arrays.asList("Canada", "Brazil", "Canada")));
 
         assertTrue(errorMessage[0].contains("Duplicate countries in input"));
     }
@@ -276,7 +276,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.addCollection(new AddCollectionRequestData("Test", Arrays.asList("Canada", "FakeCountry")));
+        interactor.addCollection(new CollectionAddInputData("Test", Arrays.asList("Canada", "FakeCountry")));
 
         assertTrue(errorMessage[0].contains("Could not find countries"));
     }
@@ -344,7 +344,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.deleteCollection(new DeleteCollectionRequestData(UUID.randomUUID()));
+        interactor.deleteCollection(new CollectionDeleteInputData(UUID.randomUUID()));
 
         assertEquals("Collection not found.", errorMessage[0]);
     }
@@ -377,7 +377,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.deleteCollection(new DeleteCollectionRequestData(id));
+        interactor.deleteCollection(new CollectionDeleteInputData(id));
 
         assertTrue(successCalled[0]);
         assertEquals(0, collections.size());
@@ -408,7 +408,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.renameCollection(new RenameCollectionRequestData(UUID.randomUUID(), "   "));
+        interactor.renameCollection(new CollectionRenameInputData(UUID.randomUUID(), "   "));
 
         assertEquals("Collection name cannot be empty.", errorMessage[0]);
     }
@@ -437,7 +437,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.renameCollection(new RenameCollectionRequestData(UUID.randomUUID(), "New Name"));
+        interactor.renameCollection(new CollectionRenameInputData(UUID.randomUUID(), "New Name"));
 
         assertEquals("Collection not found.", errorMessage[0]);
     }
@@ -470,7 +470,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.renameCollection(new RenameCollectionRequestData(id, "New Name"));
+        interactor.renameCollection(new CollectionRenameInputData(id, "New Name"));
 
         assertTrue(successCalled[0]);
         assertEquals("New Name", collections.get(0).getCollectionName());
@@ -502,7 +502,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.editCollection(new EditCollectionRequestData(UUID.randomUUID(), null, null));
+        interactor.editCollection(new CollectionEditInputData(UUID.randomUUID(), null, null));
 
         assertEquals("Collection not found.", errorMessage[0]);
     }
@@ -535,7 +535,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.editCollection(new EditCollectionRequestData(id, null, Arrays.asList("Canada")));
+        interactor.editCollection(new CollectionEditInputData(id, null, Arrays.asList("Canada")));
 
         assertTrue(successCalled[0]);
         assertEquals(2, collections.get(0).getCountries().size());
@@ -569,7 +569,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.editCollection(new EditCollectionRequestData(id, Arrays.asList("Brazil"), null));
+        interactor.editCollection(new CollectionEditInputData(id, Arrays.asList("Brazil"), null));
 
         assertTrue(successCalled[0]);
         assertEquals(2, collections.get(0).getCountries().size());
@@ -602,7 +602,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.editCollection(new EditCollectionRequestData(id, null, null));
+        interactor.editCollection(new CollectionEditInputData(id, null, null));
 
         assertTrue(successCalled[0]);
     }
@@ -636,7 +636,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.editCollection(new EditCollectionRequestData(id, Arrays.asList("Brazil"), Arrays.asList("Canada")));
+        interactor.editCollection(new CollectionEditInputData(id, Arrays.asList("Brazil"), Arrays.asList("Canada")));
 
         assertTrue(successCalled[0]);
         assertEquals("Brazil", collections.get(0).getCountries().get(0).getName());
@@ -669,7 +669,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.editCollection(new EditCollectionRequestData(id, Arrays.asList("Canada"), null));
+        interactor.editCollection(new CollectionEditInputData(id, Arrays.asList("Canada"), null));
 
         assertTrue(errorMessage[0].contains("already in the collection"));
     }
@@ -701,7 +701,7 @@ public class CollectionInteractorTest {
                     return createTestCountries();
                 }
             });
-        interactor.editCollection(new EditCollectionRequestData(id, Arrays.asList("FakeCountry"), null));
+        interactor.editCollection(new CollectionEditInputData(id, Arrays.asList("FakeCountry"), null));
 
         assertTrue(errorMessage[0].contains("Could not find countries"));
     }

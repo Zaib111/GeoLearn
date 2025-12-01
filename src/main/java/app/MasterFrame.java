@@ -121,7 +121,26 @@ public class MasterFrame extends JFrame {
                 ((AbstractView) newView).onViewOpened(param);
             }
 
-            backButton.setVisible(navigationStack.size() > 1);
+            updateBackButton();
+        }
+    }
+
+    /**
+     * Updates the back button visibility and text based on navigation state.
+     */
+    private void updateBackButton() {
+        if (navigationStack.size() > 1) {
+            backButton.setVisible(true);
+            final String previousView = navigationStack.get(navigationStack.size() - 2).get(0);
+            if ("authentication".equals(previousView)) {
+                backButton.setText("Sign Out");
+            }
+            else {
+                backButton.setText("Back");
+            }
+        }
+        else {
+            backButton.setVisible(false);
         }
     }
 
@@ -151,7 +170,7 @@ public class MasterFrame extends JFrame {
                 ((AbstractView) prevView).onViewOpened(previousParam);
             }
 
-            backButton.setVisible(navigationStack.size() > 1);
+            updateBackButton();
         }
     }
 }

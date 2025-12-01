@@ -8,4 +8,5 @@ public interface TakeQuizInputBoundary {
     void submitAnswer(SubmitAnswerRequestModel requestModel);
     void nextQuestion();
     void timeExpired();
+    void loadQuizHistory();
 }

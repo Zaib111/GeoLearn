@@ -8,4 +8,5 @@ public interface TakeQuizOutputBoundary {
     void presentQuestion(TakeQuizQuestionResponseModel responseModel);
     void presentAnswerFeedback(AnswerFeedbackResponseModel responseModel);
     void presentQuizEnd(TakeQuizEndResponseModel responseModel);
+    void presentQuizHistory(QuizHistoryResponseModel responseModel);
 }
