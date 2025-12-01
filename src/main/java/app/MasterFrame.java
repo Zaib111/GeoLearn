@@ -200,4 +200,17 @@ public class MasterFrame extends JFrame implements NavigationService {
             updateBackButton();
         }
     }
+
+    /**
+     * Allows views to explicitly control the visibility of the global back button.
+     *
+     * For example, CompareView can hide the back button on its internal
+     * comparison screen while still allowing normal back behavior elsewhere.
+     *
+     * @param visible true to show the back button, false to hide it
+     */
+    @Override
+    public void setBackButtonVisible(boolean visible) {
+        backButton.setVisible(visible);
+    }
 }

@@ -20,5 +20,13 @@ public interface NavigationService {
      * @param param the parameter to pass to the view
      */
     void navigateTo(String name, String param);
-}
 
+    /**
+     * Controls the visibility of the global back button in the MasterFrame.
+     * Views can use this to temporarily hide the back button when they provide
+     * their own in-view navigation (e.g., CompareView's "Back to Country Selection").
+     *
+     * @param visible true to show the back button, false to hide it
+     */
+    void setBackButtonVisible(boolean visible);
+}
