@@ -1,22 +1,5 @@
 package app.data_access;
 
-import app.entities.Country;
-import app.entities.CountryCollection;
-import app.entities.QuestionType;
-import app.entities.QuizHistoryEntry;
-import app.entities.QuizType;
-import app.use_cases.country_collection.CollectionDataAccessInterface;
-import app.use_cases.quiz.QuizHistoryDataAccessInterface;
-import app.use_cases.settings.SettingsDataAccessInterface;
-import app.use_cases.settings.UserSettingsData;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,12 +8,31 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import app.entities.Country;
+import app.entities.CountryCollection;
+import app.entities.QuestionType;
+import app.entities.QuizHistoryEntry;
+import app.entities.QuizType;
+import app.entities.User;
+import app.use_cases.country_collection.CollectionDataAccessInterface;
+import app.use_cases.quiz.QuizHistoryDataAccessInterface;
+import app.use_cases.authentication.AuthenticationDataAccessInterface;
+import app.use_cases.authentication.AuthenticationData;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 /**
  * Firestore implementation of user data access.
  * Uses Firestore REST API to persist collections and quiz history.
  * All data is organized under a user document identified by username.
  */
-public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInterface, CollectionDataAccessInterface,
+public class UserDataFireStoreDataAccessObject implements AuthenticationDataAccessInterface, CollectionDataAccessInterface,
         QuizHistoryDataAccessInterface {
 
     private static final String FIREBASE_BASE_URL =
@@ -38,27 +40,37 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
     private static final String USERS_COLLECTION = "users";
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
+    private static final String FIELDS_KEY = "fields";
+    private static final String COLLECTIONS_KEY = "collections";
+    private static final String QUIZ_HISTORY_KEY = "quizHistory";
+    private static final String ARRAY_VALUE_KEY = "arrayValue";
+    private static final String VALUES_KEY = "values";
+    private static final String MAP_VALUE_KEY = "mapValue";
+    private static final String COLLECTION_ID_KEY = "collectionId";
+    private static final String INTEGER_VALUE_KEY = "integerValue";
+    private static final int HTTP_NOT_FOUND = 404;
+
     private final OkHttpClient httpClient;
-    private UserSettingsData currentSettings;
-    private List<CountryCollection> inMemoryCollections;
-    private List<QuizHistoryEntry> inMemoryQuizHistory;
+    private User currentUser;
+    private final List<CountryCollection> inMemoryCollections;
+    private final List<QuizHistoryEntry> inMemoryQuizHistory;
 
     /**
      * Constructs a new UserDataFireStoreDataAccessObject with a default OkHttp client.
      */
     public UserDataFireStoreDataAccessObject() {
         this.httpClient = new OkHttpClient();
-        this.currentSettings = new UserSettingsData();
+        this.currentUser = new User();
         this.inMemoryCollections = new ArrayList<>();
         this.inMemoryQuizHistory = new ArrayList<>();
     }
 
     private String getUsername() {
-        return currentSettings.getUsername();
+        return currentUser.getUsername();
     }
 
-    private boolean shouldUseFirestore() {
-        return getUsername() != null && !getUsername().isBlank();
+    private boolean shouldUseInMemory() {
+        return getUsername() == null || getUsername().isBlank();
     }
 
     private String getUserDocumentUrl() {
@@ -73,23 +85,24 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
-            if (response.code() == 404 || response.body() == null) {
+            if (response.code() == HTTP_NOT_FOUND || response.body() == null) {
                 return createUserDocument();
             }
 
             final JSONObject doc = new JSONObject(response.body().string());
-            return doc.getJSONObject("fields");
+            return doc.getJSONObject(FIELDS_KEY);
         }
     }
 
     private JSONObject createUserDocument() throws IOException {
         final JSONObject fields = new JSONObject();
         fields.put("username", createStringValue(getUsername()));
-        fields.put("collections", createArrayValue(new JSONArray()));
-        fields.put("quizHistory", createArrayValue(new JSONArray()));
+        fields.put("password", createStringValue(currentUser.getPassword() != null ? currentUser.getPassword() : ""));
+        fields.put(COLLECTIONS_KEY, createArrayValue(new JSONArray()));
+        fields.put(QUIZ_HISTORY_KEY, createArrayValue(new JSONArray()));
 
         final JSONObject document = new JSONObject();
-        document.put("fields", fields);
+        document.put(FIELDS_KEY, fields);
 
         final String url = FIREBASE_BASE_URL + USERS_COLLECTION + "?documentId=" + getUsername();
         final RequestBody body = RequestBody.create(document.toString(), JSON);
@@ -109,7 +122,7 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
 
     private void updateUserDocument(JSONObject fields) throws IOException {
         final JSONObject document = new JSONObject();
-        document.put("fields", fields);
+        document.put(FIELDS_KEY, fields);
 
         final String url = getUserDocumentUrl();
         final RequestBody body = RequestBody.create(document.toString(), JSON);
@@ -127,96 +140,124 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
 
     @Override
     public void createCollection(CountryCollection countryCollection) {
-        if (!shouldUseFirestore()) {
+        if (shouldUseInMemory()) {
             inMemoryCollections.add(countryCollection);
-            return;
         }
+        else {
+            createCollectionInFirestore(countryCollection);
+        }
+    }
 
+    private void createCollectionInFirestore(CountryCollection countryCollection) {
         try {
             final JSONObject userFields = getUserDocument();
-            final JSONArray collectionsArray = userFields.has("collections")
-                    ? userFields.getJSONObject("collections").getJSONObject("arrayValue").optJSONArray("values")
-                    : null;
-            final JSONArray newCollections = collectionsArray != null
-                    ? new JSONArray(collectionsArray.toString())
-                    : new JSONArray();
+            final JSONArray collectionsArray = extractCollectionsArray(userFields);
+            final JSONArray newCollections = createNewCollectionsArray(collectionsArray);
 
             newCollections.put(buildCollectionMap(countryCollection));
-            userFields.put("collections", createArrayValue(newCollections));
+            userFields.put(COLLECTIONS_KEY, createArrayValue(newCollections));
             updateUserDocument(userFields);
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             throw new RuntimeException("Failed to create collection in Firestore", ex);
         }
     }
 
+    private JSONArray extractCollectionsArray(JSONObject userFields) {
+        JSONArray result = null;
+        if (userFields.has(COLLECTIONS_KEY)) {
+            result = userFields.getJSONObject(COLLECTIONS_KEY)
+                    .getJSONObject(ARRAY_VALUE_KEY)
+                    .optJSONArray(VALUES_KEY);
+        }
+        return result;
+    }
+
+    private JSONArray createNewCollectionsArray(JSONArray collectionsArray) {
+        JSONArray result = new JSONArray();
+        if (collectionsArray != null) {
+            result = new JSONArray(collectionsArray.toString());
+        }
+        return result;
+    }
+
     @Override
     public List<CountryCollection> getAllCollections() {
-        if (!shouldUseFirestore()) {
+        if (shouldUseInMemory()) {
             return new ArrayList<>(inMemoryCollections);
         }
 
+        return getAllCollectionsFromFirestore();
+    }
+
+    private List<CountryCollection> getAllCollectionsFromFirestore() {
         try {
             final JSONObject userFields = getUserDocument();
             final List<CountryCollection> collections = new ArrayList<>();
 
-            if (userFields.has("collections")) {
-                final JSONArray collectionsArray = userFields.getJSONObject("collections")
-                        .getJSONObject("arrayValue")
-                        .optJSONArray("values");
+            if (userFields.has(COLLECTIONS_KEY)) {
+                final JSONArray collectionsArray = userFields.getJSONObject(COLLECTIONS_KEY)
+                        .getJSONObject(ARRAY_VALUE_KEY)
+                        .optJSONArray(VALUES_KEY);
 
                 if (collectionsArray != null) {
                     for (int i = 0; i < collectionsArray.length(); i++) {
                         final JSONObject collectionMap = collectionsArray.getJSONObject(i)
-                                .getJSONObject("mapValue")
-                                .getJSONObject("fields");
+                                .getJSONObject(MAP_VALUE_KEY)
+                                .getJSONObject(FIELDS_KEY);
                         collections.add(parseCollectionMap(collectionMap));
                     }
                 }
             }
 
             return collections;
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             throw new RuntimeException("Failed to get collections from Firestore", ex);
         }
     }
 
     @Override
     public Optional<CountryCollection> getCollectionById(UUID collectionId) {
-        if (!shouldUseFirestore()) {
+        if (shouldUseInMemory()) {
             return inMemoryCollections.stream()
-                    .filter(c -> c.getCollectionId().equals(collectionId))
+                    .filter(collection -> collection.getCollectionId().equals(collectionId))
                     .findFirst();
         }
 
         return getAllCollections().stream()
-                .filter(c -> c.getCollectionId().equals(collectionId))
+                .filter(collection -> collection.getCollectionId().equals(collectionId))
                 .findFirst();
     }
 
     @Override
     public void deleteCollection(UUID collectionId) {
-        if (!shouldUseFirestore()) {
-            inMemoryCollections.removeIf(c -> c.getCollectionId().equals(collectionId));
-            return;
+        if (shouldUseInMemory()) {
+            inMemoryCollections.removeIf(collection -> collection.getCollectionId().equals(collectionId));
         }
+        else {
+            deleteCollectionFromFirestore(collectionId);
+        }
+    }
 
+    private void deleteCollectionFromFirestore(UUID collectionId) {
         try {
             final JSONObject userFields = getUserDocument();
 
-            if (userFields.has("collections")) {
-                final JSONArray collectionsArray = userFields.getJSONObject("collections")
-                        .getJSONObject("arrayValue")
-                        .optJSONArray("values");
+            if (userFields.has(COLLECTIONS_KEY)) {
+                final JSONArray collectionsArray = userFields.getJSONObject(COLLECTIONS_KEY)
+                        .getJSONObject(ARRAY_VALUE_KEY)
+                        .optJSONArray(VALUES_KEY);
 
                 if (collectionsArray != null) {
                     final JSONArray newCollections = new JSONArray();
 
                     for (int i = 0; i < collectionsArray.length(); i++) {
                         final JSONObject collectionMap = collectionsArray.getJSONObject(i)
-                                .getJSONObject("mapValue")
-                                .getJSONObject("fields");
+                                .getJSONObject(MAP_VALUE_KEY)
+                                .getJSONObject(FIELDS_KEY);
                         final UUID currentId = UUID.fromString(
-                                getStringValue(collectionMap.getJSONObject("collectionId"))
+                                getStringValue(collectionMap.getJSONObject(COLLECTION_ID_KEY))
                         );
 
                         if (!currentId.equals(collectionId)) {
@@ -224,135 +265,249 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
                         }
                     }
 
-                    userFields.put("collections", createArrayValue(newCollections));
+                    userFields.put(COLLECTIONS_KEY, createArrayValue(newCollections));
                     updateUserDocument(userFields);
                 }
             }
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             throw new RuntimeException("Failed to delete collection from Firestore", ex);
         }
     }
 
     @Override
     public void updateCollection(CountryCollection updatedCollection) {
-        if (!shouldUseFirestore()) {
-            for (int i = 0; i < inMemoryCollections.size(); i++) {
-                if (inMemoryCollections.get(i).getCollectionId().equals(updatedCollection.getCollectionId())) {
-                    inMemoryCollections.set(i, updatedCollection);
-                    return;
-                }
-            }
-            return;
+        if (shouldUseInMemory()) {
+            updateInMemoryCollection(updatedCollection);
         }
+        else {
+            updateCollectionInFirestore(updatedCollection);
+        }
+    }
 
+    private void updateCollectionInFirestore(CountryCollection updatedCollection) {
         try {
             final JSONObject userFields = getUserDocument();
 
-            if (userFields.has("collections")) {
-                final JSONArray collectionsArray = userFields.getJSONObject("collections")
-                        .getJSONObject("arrayValue")
-                        .optJSONArray("values");
+            if (userFields.has(COLLECTIONS_KEY)) {
+                final JSONArray collectionsArray = userFields.getJSONObject(COLLECTIONS_KEY)
+                        .getJSONObject(ARRAY_VALUE_KEY)
+                        .optJSONArray(VALUES_KEY);
 
                 if (collectionsArray != null) {
                     final JSONArray newCollections = new JSONArray();
 
                     for (int i = 0; i < collectionsArray.length(); i++) {
                         final JSONObject collectionMap = collectionsArray.getJSONObject(i)
-                                .getJSONObject("mapValue")
-                                .getJSONObject("fields");
+                                .getJSONObject(MAP_VALUE_KEY)
+                                .getJSONObject(FIELDS_KEY);
                         final UUID currentId = UUID.fromString(
-                                getStringValue(collectionMap.getJSONObject("collectionId"))
+                                getStringValue(collectionMap.getJSONObject(COLLECTION_ID_KEY))
                         );
 
                         if (currentId.equals(updatedCollection.getCollectionId())) {
                             newCollections.put(buildCollectionMap(updatedCollection));
-                        } else {
+                        }
+                        else {
                             newCollections.put(collectionsArray.getJSONObject(i));
                         }
                     }
 
-                    userFields.put("collections", createArrayValue(newCollections));
+                    userFields.put(COLLECTIONS_KEY, createArrayValue(newCollections));
                     updateUserDocument(userFields);
                 }
             }
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             throw new RuntimeException("Failed to update collection in Firestore", ex);
         }
     }
 
-    @Override
-    public UserSettingsData getSettings() {
-        return currentSettings;
+    private void updateInMemoryCollection(CountryCollection updatedCollection) {
+        for (int i = 0; i < inMemoryCollections.size(); i++) {
+            if (inMemoryCollections.get(i).getCollectionId().equals(updatedCollection.getCollectionId())) {
+                inMemoryCollections.set(i, updatedCollection);
+                break;
+            }
+        }
     }
 
     @Override
-    public void saveSettings(UserSettingsData userSettingsDto) {
-        userSettingsDto.setUsername(userSettingsDto.getUsername().strip());
-        this.currentSettings = userSettingsDto;
-        if (!shouldUseFirestore()) {
+    public AuthenticationData getUserAuth(AuthenticationData user) {
+        if (user == null || user.getUsername() == null || user.getUsername().isBlank()) {
+            return new AuthenticationData("", "");
+        }
+
+        try {
+            final String url = FIREBASE_BASE_URL + USERS_COLLECTION + "/" + user.getUsername();
+            final Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .build();
+
+            try (Response response = httpClient.newCall(request).execute()) {
+                if (response.code() == HTTP_NOT_FOUND || response.body() == null) {
+                    return new AuthenticationData("", "");
+                }
+
+                final JSONObject doc = new JSONObject(response.body().string());
+                final JSONObject fields = doc.getJSONObject(FIELDS_KEY);
+
+                final String username = getStringValue(fields.getJSONObject("username"));
+                final String password = fields.has("password") ? getStringValue(fields.getJSONObject("password")) : "";
+
+                return new AuthenticationData(username, password);
+            }
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Failed to get user auth from Firestore", ex);
+        }
+    }
+
+    @Override
+    public void setCurrentUser(AuthenticationData user) {
+        if (user == null || user.getUsername() == null || user.getUsername().isEmpty()) {
+            this.currentUser = new User("", "");
+            inMemoryCollections.clear();
+            inMemoryQuizHistory.clear();
+            return;
+        }
+
+        user.setUsername(user.getUsername().strip());
+        this.currentUser = new User(user.getUsername(), user.getPassword());
+
+        if (shouldUseInMemory()) {
             inMemoryCollections.clear();
             inMemoryQuizHistory.clear();
         }
     }
 
     @Override
-    public synchronized void saveQuizAttempt(QuizHistoryEntry entry) {
-        if (!shouldUseFirestore()) {
-            inMemoryQuizHistory.add(entry);
+    public void saveUserToDatabase(AuthenticationData user) {
+        if (user == null || user.getUsername() == null) {
             return;
         }
 
-        try {
-            final JSONObject userFields = getUserDocument();
-            final JSONArray historyArray = userFields.has("quizHistory")
-                    ? userFields.getJSONObject("quizHistory").getJSONObject("arrayValue").optJSONArray("values")
-                    : null;
-            final JSONArray newHistory = historyArray != null
-                    ? new JSONArray(historyArray.toString())
-                    : new JSONArray();
+        final String username = user.getUsername().strip();
+        final String password = user.getPassword();
 
-            newHistory.put(buildQuizHistoryMap(entry));
-            userFields.put("quizHistory", createArrayValue(newHistory));
-            updateUserDocument(userFields);
-        } catch (IOException ex) {
-            throw new RuntimeException("Failed to save quiz attempt to Firestore", ex);
+        try {
+            final String url = FIREBASE_BASE_URL + USERS_COLLECTION + "/" + username;
+            final Request checkRequest = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .build();
+
+            boolean userExists = false;
+            try (Response checkResponse = httpClient.newCall(checkRequest).execute()) {
+                userExists = checkResponse.isSuccessful() && checkResponse.code() != HTTP_NOT_FOUND;
+            }
+
+            // Temporarily set current user to create/update the document
+            final User previousUser = this.currentUser;
+            this.currentUser = new User(username, password);
+
+            if (userExists) {
+                // User exists - update password
+                final JSONObject userFields = getUserDocument();
+                userFields.put("password", createStringValue(password != null ? password : ""));
+                updateUserDocument(userFields);
+            }
+            else {
+                // User doesn't exist - create new user document
+                createUserDocument();
+            }
+
+            // Restore previous current user
+            this.currentUser = previousUser;
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Failed to save user to Firestore", ex);
         }
     }
 
     @Override
+    public synchronized void saveQuizAttempt(QuizHistoryEntry entry) {
+        if (shouldUseInMemory()) {
+            inMemoryQuizHistory.add(entry);
+        }
+        else {
+            saveQuizAttemptToFirestore(entry);
+        }
+    }
+
+    private void saveQuizAttemptToFirestore(QuizHistoryEntry entry) {
+        try {
+            final JSONObject userFields = getUserDocument();
+            final JSONArray historyArray = extractQuizHistoryArray(userFields);
+            final JSONArray newHistory = createNewHistoryArray(historyArray);
+
+            newHistory.put(buildQuizHistoryMap(entry));
+            userFields.put(QUIZ_HISTORY_KEY, createArrayValue(newHistory));
+            updateUserDocument(userFields);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Failed to save quiz attempt to Firestore", ex);
+        }
+    }
+
+    private JSONArray extractQuizHistoryArray(JSONObject userFields) {
+        JSONArray result = null;
+        if (userFields.has(QUIZ_HISTORY_KEY)) {
+            result = userFields.getJSONObject(QUIZ_HISTORY_KEY)
+                    .getJSONObject(ARRAY_VALUE_KEY)
+                    .optJSONArray(VALUES_KEY);
+        }
+        return result;
+    }
+
+    private JSONArray createNewHistoryArray(JSONArray historyArray) {
+        JSONArray result = new JSONArray();
+        if (historyArray != null) {
+            result = new JSONArray(historyArray.toString());
+        }
+        return result;
+    }
+
+    @Override
     public synchronized List<QuizHistoryEntry> getAllQuizAttempts() {
-        if (!shouldUseFirestore()) {
+        if (shouldUseInMemory()) {
             return new ArrayList<>(inMemoryQuizHistory);
         }
 
+        return getAllQuizAttemptsFromFirestore();
+    }
+
+    private List<QuizHistoryEntry> getAllQuizAttemptsFromFirestore() {
         try {
             final JSONObject userFields = getUserDocument();
             final List<QuizHistoryEntry> history = new ArrayList<>();
 
-            if (userFields.has("quizHistory")) {
-                final JSONArray historyArray = userFields.getJSONObject("quizHistory")
-                        .getJSONObject("arrayValue")
-                        .optJSONArray("values");
+            if (userFields.has(QUIZ_HISTORY_KEY)) {
+                final JSONArray historyArray = userFields.getJSONObject(QUIZ_HISTORY_KEY)
+                        .getJSONObject(ARRAY_VALUE_KEY)
+                        .optJSONArray(VALUES_KEY);
 
                 if (historyArray != null) {
                     for (int i = 0; i < historyArray.length(); i++) {
                         final JSONObject historyMap = historyArray.getJSONObject(i)
-                                .getJSONObject("mapValue")
-                                .getJSONObject("fields");
+                                .getJSONObject(MAP_VALUE_KEY)
+                                .getJSONObject(FIELDS_KEY);
                         history.add(parseQuizHistoryMap(historyMap));
                     }
                 }
             }
 
             return history;
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             throw new RuntimeException("Failed to get quiz attempts from Firestore", ex);
         }
     }
 
     private JSONObject buildCollectionMap(CountryCollection collection) {
         final JSONObject fields = new JSONObject();
-        fields.put("collectionId", createStringValue(collection.getCollectionId().toString()));
+        fields.put(COLLECTION_ID_KEY, createStringValue(collection.getCollectionId().toString()));
         fields.put("collectionName", createStringValue(collection.getCollectionName()));
 
         final JSONArray countriesArray = new JSONArray();
@@ -361,7 +516,7 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
         }
         fields.put("countries", createArrayValue(countriesArray));
 
-        return new JSONObject().put("mapValue", new JSONObject().put("fields", fields));
+        return new JSONObject().put(MAP_VALUE_KEY, new JSONObject().put(FIELDS_KEY, fields));
     }
 
     private JSONObject buildCountryMap(Country country) {
@@ -379,7 +534,7 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
         fields.put("currencies", createArrayValue(stringListToJsonArray(country.getCurrencies())));
         fields.put("timezones", createArrayValue(stringListToJsonArray(country.getTimezones())));
 
-        return new JSONObject().put("mapValue", new JSONObject().put("fields", fields));
+        return new JSONObject().put(MAP_VALUE_KEY, new JSONObject().put(FIELDS_KEY, fields));
     }
 
     private JSONObject buildQuizHistoryMap(QuizHistoryEntry entry) {
@@ -390,25 +545,26 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
         fields.put("score", createIntegerValue(entry.getScore()));
         fields.put("durationSeconds", createIntegerValue(entry.getDurationSeconds()));
         fields.put("highestStreak", createIntegerValue(entry.getHighestStreak()));
-        fields.put("completedAt", createStringValue(entry.getCompletedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
+        fields.put("completedAt",
+                createStringValue(entry.getCompletedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
 
-        return new JSONObject().put("mapValue", new JSONObject().put("fields", fields));
+        return new JSONObject().put(MAP_VALUE_KEY, new JSONObject().put(FIELDS_KEY, fields));
     }
 
     private CountryCollection parseCollectionMap(JSONObject fields) {
-        final UUID collectionId = UUID.fromString(getStringValue(fields.getJSONObject("collectionId")));
+        final UUID collectionId = UUID.fromString(getStringValue(fields.getJSONObject(COLLECTION_ID_KEY)));
         final String collectionName = getStringValue(fields.getJSONObject("collectionName"));
 
         final List<Country> countries = new ArrayList<>();
         final JSONArray countriesArray = fields.getJSONObject("countries")
-                .getJSONObject("arrayValue")
-                .optJSONArray("values");
+                .getJSONObject(ARRAY_VALUE_KEY)
+                .optJSONArray(VALUES_KEY);
 
         if (countriesArray != null) {
             for (int i = 0; i < countriesArray.length(); i++) {
                 final JSONObject countryMap = countriesArray.getJSONObject(i)
-                        .getJSONObject("mapValue")
-                        .getJSONObject("fields");
+                        .getJSONObject(MAP_VALUE_KEY)
+                        .getJSONObject(FIELDS_KEY);
                 countries.add(parseCountryMap(countryMap));
             }
         }
@@ -446,13 +602,24 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
         final List<String> currencies = getStringList(fields.getJSONObject("currencies"));
         final List<String> timezones = getStringList(fields.getJSONObject("timezones"));
 
+        final String capitalValue = getOptionalString(capital);
+        final String subregionValue = getOptionalString(subregion);
+
         return new Country(
                 code, name,
-                capital.isEmpty() ? null : capital,
+                capitalValue,
                 region,
-                subregion.isEmpty() ? null : subregion,
+                subregionValue,
                 population, areaKm2, borders, flagUrl, languages, currencies, timezones
         );
+    }
+
+    private String getOptionalString(String value) {
+        String result = null;
+        if (!value.isEmpty()) {
+            result = value;
+        }
+        return result;
     }
 
     private JSONObject createStringValue(String value) {
@@ -460,7 +627,7 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
     }
 
     private JSONObject createIntegerValue(long value) {
-        return new JSONObject().put("integerValue", String.valueOf(value));
+        return new JSONObject().put(INTEGER_VALUE_KEY, String.valueOf(value));
     }
 
     private JSONObject createDoubleValue(double value) {
@@ -468,7 +635,7 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
     }
 
     private JSONObject createArrayValue(JSONArray array) {
-        return new JSONObject().put("arrayValue", new JSONObject().put("values", array));
+        return new JSONObject().put(ARRAY_VALUE_KEY, new JSONObject().put(VALUES_KEY, array));
     }
 
     private String getStringValue(JSONObject field) {
@@ -476,12 +643,12 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
     }
 
     private int getIntValue(JSONObject field) {
-        final String intStr = field.optString("integerValue", "0");
+        final String intStr = field.optString(INTEGER_VALUE_KEY, "0");
         return Integer.parseInt(intStr);
     }
 
     private long getLongValue(JSONObject field) {
-        final String longStr = field.optString("integerValue", "0");
+        final String longStr = field.optString(INTEGER_VALUE_KEY, "0");
         return Long.parseLong(longStr);
     }
 
@@ -491,9 +658,11 @@ public class UserDataFireStoreDataAccessObject implements SettingsDataAccessInte
 
     private List<String> getStringList(JSONObject field) {
         final List<String> result = new ArrayList<>();
-        final JSONArray array = field.optJSONObject("arrayValue") != null
-                ? field.getJSONObject("arrayValue").optJSONArray("values")
-                : null;
+        final JSONObject arrayValueObj = field.optJSONObject(ARRAY_VALUE_KEY);
+        JSONArray array = null;
+        if (arrayValueObj != null) {
+            array = arrayValueObj.optJSONArray(VALUES_KEY);
+        }
 
         if (array != null) {
             for (int i = 0; i < array.length(); i++) {

@@ -5,18 +5,17 @@ import app.controllers.CompareController;
 import app.controllers.DetailController;
 import app.controllers.ExploreMapController;
 import app.controllers.FilterCountriesController;
-import app.controllers.SettingsController;
+import app.controllers.AuthenticationController;
 import app.controllers.TakeQuizController;
 import app.data_access.APICountryDataAccessObject;
 import app.data_access.ExploreMapDataAccessObject;
 import app.data_access.UserDataFireStoreDataAccessObject;
-import app.data_access.UserDataInMemoryDataAccessObject;
 import app.presenters.CollectionPresenter;
 import app.presenters.ComparePresenter;
 import app.presenters.DetailPresenter;
 import app.presenters.ExploreMapPresenter;
 import app.presenters.FilterCountriesPresenter;
-import app.presenters.SettingsPresenter;
+import app.presenters.AuthenticationPresenter;
 import app.presenters.TakeQuizPresenter;
 import app.use_cases.country_collection.CollectionDataAccessInterface;
 import app.use_cases.country_collection.CollectionInteractor;
@@ -32,8 +31,8 @@ import app.use_cases.quiz.QuizHistoryDataAccessInterface;
 import app.use_cases.quiz.QuizViewModel;
 import app.use_cases.quiz.TakeQuizInteractor;
 import app.use_cases.quiz.TakeQuizOutputBoundary;
-import app.use_cases.settings.SettingsDataAccessInterface;
-import app.use_cases.settings.SettingsInteractor;
+import app.use_cases.authentication.AuthenticationDataAccessInterface;
+import app.use_cases.authentication.AuthenticationInteractor;
 import app.views.ViewModel;
 import app.views.country_collection.CollectionState;
 import app.views.country_collection.CollectionView;
@@ -46,8 +45,8 @@ import app.views.filter_countries.FilterCountriesState;
 import app.views.filter_countries.FilterCountriesView;
 import app.views.home.HomeView;
 import app.views.quiz.QuizView;
-import app.views.settings.SettingsState;
-import app.views.settings.SettingsView;
+import app.views.authentication.AuthenticationState;
+import app.views.authentication.AuthenticationView;
 
 /**
  * Main entry point for the GeoLearn application.
@@ -68,17 +67,17 @@ public class Main {
         final UserDataFireStoreDataAccessObject inMemoryUserDataStorage =
                 new UserDataFireStoreDataAccessObject();
 
+        setupAuthenticationModule(masterFrame, inMemoryUserDataStorage, navigator);
         setupHomeModule(masterFrame, navigator);
         setupCompareModule(masterFrame, navigator, countryDataApi);
         setupCollectionModule(masterFrame, inMemoryUserDataStorage,
                 countryDataApi, navigator);
-        setupSettingsModule(masterFrame, inMemoryUserDataStorage);
         setupFilterCountriesModule(masterFrame, countryDataApi, navigator);
         setupExploreMapModule(masterFrame, navigator);
         setupDetailModule(masterFrame, navigator);
         setupQuizModule(masterFrame, countryDataApi, inMemoryUserDataStorage);
 
-        navigator.navigateTo("home");
+        navigator.navigateTo("authentication");
     }
 
     private static void setupHomeModule(MasterFrame masterFrame,
@@ -121,21 +120,22 @@ public class Main {
         masterFrame.registerView(collectionView, "collection");
     }
 
-    private static void setupSettingsModule(
+    private static void setupAuthenticationModule(
             MasterFrame masterFrame,
-            SettingsDataAccessInterface inMemoryUserDataStorage) {
-        final ViewModel<SettingsState> settingsViewModel =
-                new ViewModel<>(new SettingsState());
-        final SettingsPresenter settingsPresenter =
-                new SettingsPresenter(settingsViewModel);
-        final SettingsInteractor settingsInteractor =
-                new SettingsInteractor(settingsPresenter,
+            AuthenticationDataAccessInterface inMemoryUserDataStorage,
+            Navigator navigator) {
+        final ViewModel<AuthenticationState> authenticationViewModel =
+                new ViewModel<>(new AuthenticationState());
+        final AuthenticationPresenter settingsPresenter =
+                new AuthenticationPresenter(authenticationViewModel);
+        final AuthenticationInteractor settingsInteractor =
+                new AuthenticationInteractor(settingsPresenter,
                         inMemoryUserDataStorage);
-        final SettingsController settingsController =
-                new SettingsController(settingsInteractor);
-        final SettingsView settingsView =
-                new SettingsView(settingsViewModel, settingsController);
-        masterFrame.registerView(settingsView, "settings");
+        final AuthenticationController authenticationController =
+                new AuthenticationController(settingsInteractor);
+        final AuthenticationView authenticationView =
+                new AuthenticationView(authenticationViewModel, authenticationController, navigator);
+        masterFrame.registerView(authenticationView, "authentication");
     }
 
     private static void setupFilterCountriesModule(
@@ -201,9 +201,9 @@ public class Main {
         // Swing view for the quiz screen
         final QuizView quizView = new QuizView(quizViewModel);
 
-        // Presenter (use case → view)
+        // Presenter (use case → view model)
         final TakeQuizOutputBoundary quizPresenter =
-                new TakeQuizPresenter(quizView);
+                new TakeQuizPresenter(quizViewModel);
 
         // Question repository (manual questions for now)
         final QuestionRepository questionRepository =

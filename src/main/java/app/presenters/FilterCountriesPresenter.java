@@ -5,8 +5,6 @@ import app.use_cases.filter_country.FilterCountriesOutputBoundary;
 import app.use_cases.filter_country.FilterCountriesOutputData;
 import app.views.ViewModel;
 import app.views.filter_countries.FilterCountriesState;
-import app.views.filter_countries.FilterCountriesView;
-import app.views.settings.SettingsState;
 
 import java.util.List;
 
