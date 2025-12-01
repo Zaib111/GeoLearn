@@ -25,7 +25,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
-import app.Navigator;
+import app.NavigationService;
 import org.geotools.api.data.SimpleFeatureSource;
 import org.geotools.api.feature.simple.SimpleFeature;
 import org.geotools.api.filter.FilterFactory;
@@ -117,7 +117,7 @@ public class ExploreMapView extends AbstractView {
     private static final String MODE_SELECT = "SELECT";
 
     // Navigator
-    Navigator navigator;
+    NavigationService navigator;
 
     /**
      * -- GETTER --
@@ -172,7 +172,7 @@ public class ExploreMapView extends AbstractView {
      *
      * @param viewModel the view model for this view
      */
-    public ExploreMapView(final ViewModel<ExploreMapState> viewModel, Navigator navigator) {
+    public ExploreMapView(final ViewModel<ExploreMapState> viewModel, NavigationService navigator) {
         super(viewModel);
         this.navigator = navigator;
         this.exploreMapViewModel = viewModel;

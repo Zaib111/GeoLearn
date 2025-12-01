@@ -30,7 +30,7 @@ import javax.swing.table.TableRowSorter;
 
 import org.jetbrains.annotations.NotNull;
 
-import app.Navigator;
+import app.NavigationService;
 import app.controllers.FilterCountriesController;
 import app.entities.Country;
 import app.views.AbstractView;
@@ -47,11 +47,11 @@ public class FilterCountriesView extends AbstractView {
     private JComboBox<String> subregionComboBox;
     private FilterCountriesController filterCountriesController;
     private JScrollPane currentTableScrollPane;
-    private Navigator navigator;
+    private NavigationService navigator;
 
     public FilterCountriesView(ViewModel<FilterCountriesState> filterCountriesViewModel,
                                FilterCountriesController filterCountriesController,
-                               Navigator navigator) {
+                               NavigationService navigator) {
         super(filterCountriesViewModel);
 
         this.filterCountriesController = filterCountriesController;

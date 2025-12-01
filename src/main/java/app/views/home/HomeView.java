@@ -1,6 +1,6 @@
 package app.views.home;
 
-import app.Navigator;
+import app.NavigationService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,7 +10,7 @@ import java.util.Map;
 public class HomeView extends JPanel {
     private final Map<String, JButton> buttons;
 
-    public HomeView(Navigator navigator) {
+    public HomeView(NavigationService navigator) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.WHITE);
 
