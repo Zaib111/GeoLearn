@@ -56,7 +56,7 @@ public class DetailView extends AbstractView {
      * @param controller      The controller to handle user actions and data loading.
      * @param navigator       The navigator to handle screen switching.
      */
-    public DetailView(ViewModel<DetailState> detailViewModel, DetailController controller, Navigator navigator) {
+    public DetailView(ViewModel<DetailState> detailViewModel, DetailController controller, NavigationService navigator) {
         // Initialize the parent AbstractView with the ViewModel
         super(detailViewModel);
         this.controller = controller;
