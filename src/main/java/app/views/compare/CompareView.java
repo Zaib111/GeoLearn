@@ -206,7 +206,7 @@ public class CompareView extends AbstractView {
         headerPanel.setBorder(new EmptyBorder(0, -5, 5, 10));
 
         JPanel buttonsRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        JButton backToSelectionButton = new JButton("Back");
+        JButton backToSelectionButton = new JButton("Back to Country Selection");
         backToSelectionButton.addActionListener(e -> {
             buildSelectionUI();
             compareController.loadAvailableCountries();
