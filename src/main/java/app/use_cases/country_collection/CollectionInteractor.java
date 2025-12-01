@@ -33,7 +33,7 @@ public class CollectionInteractor implements CollectionInputBoundary {
     }
 
     @Override
-    public void addCollection(final AddCollectionRequestData collectionInputData) {
+    public void addCollection(final CollectionAddInputData collectionInputData) {
         final String collectionName = collectionInputData.getCollectionName().trim();
         final List<String> countryNames = collectionInputData.getCountryNames();
 
@@ -121,8 +121,8 @@ public class CollectionInteractor implements CollectionInputBoundary {
     }
 
     @Override
-    public void deleteCollection(final DeleteCollectionRequestData deleteCollectionRequestData) {
-        final UUID collectionId = deleteCollectionRequestData.getCollectionId();
+    public void deleteCollection(final CollectionDeleteInputData collectionDeleteInputData) {
+        final UUID collectionId = collectionDeleteInputData.getCollectionId();
         final Optional<CountryCollection> collectionOpt = userDataAccessObject.getCollectionById(collectionId);
         if (collectionOpt.isEmpty()) {
             collectionPresenter.prepareErrorView(ERROR_COLLECTION_NOT_FOUND);
@@ -133,10 +133,10 @@ public class CollectionInteractor implements CollectionInputBoundary {
     }
 
     @Override
-    public void renameCollection(final RenameCollectionRequestData renameCollectionRequestData) {
-        final UUID collectionId = renameCollectionRequestData.getCollectionId();
+    public void renameCollection(final CollectionRenameInputData collectionRenameInputData) {
+        final UUID collectionId = collectionRenameInputData.getCollectionId();
         final Optional<CountryCollection> collectionOpt = userDataAccessObject.getCollectionById(collectionId);
-        final String newName = renameCollectionRequestData.getNewName().trim();
+        final String newName = collectionRenameInputData.getNewName().trim();
         if (newName.isEmpty()) {
             collectionPresenter.prepareErrorView("Collection name cannot be empty.");
         }
@@ -157,8 +157,8 @@ public class CollectionInteractor implements CollectionInputBoundary {
     }
 
     @Override
-    public void editCollection(final EditCollectionRequestData editCollectionRequestData) {
-        final UUID collectionId = editCollectionRequestData.getCollectionId();
+    public void editCollection(final CollectionEditInputData collectionEditInputData) {
+        final UUID collectionId = collectionEditInputData.getCollectionId();
         final Optional<CountryCollection> collectionOpt = userDataAccessObject.getCollectionById(collectionId);
         boolean error = false;
 
@@ -169,14 +169,14 @@ public class CollectionInteractor implements CollectionInputBoundary {
             final CountryCollection existingCollection = collectionOpt.get();
             final List<Country> updatedCountries = new ArrayList<>(existingCollection.getCountries());
 
-            final List<String> countryNamesToRemove = editCollectionRequestData.getCountryNamesToRemove();
+            final List<String> countryNamesToRemove = collectionEditInputData.getCountryNamesToRemove();
             if (countryNamesToRemove != null && !countryNamesToRemove.isEmpty()) {
                 for (final String countryName : countryNamesToRemove) {
                     updatedCountries.removeIf(country -> country.getName().equals(countryName.trim()));
                 }
             }
 
-            final List<String> countryNamesToAdd = editCollectionRequestData.getCountryNamesToAdd();
+            final List<String> countryNamesToAdd = collectionEditInputData.getCountryNamesToAdd();
             if (countryNamesToAdd != null && !countryNamesToAdd.isEmpty()) {
                 final List<Country> allCountries = countryDataAccess.getCountries();
                 final Map<String, Country> countriesByName = new LinkedHashMap<>();
