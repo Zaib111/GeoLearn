@@ -10,6 +10,11 @@ import java.util.Optional;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+/**
+ * View Model for the Detail View
+ * Holds all required parameters needed to construct the view
+ * Automatically updates the view upon a change in the state
+ */
 public class DetailState {
     private String countryCode;
     private String countryName;
@@ -24,4 +29,5 @@ public class DetailState {
     private List<String> currencies;
     private List<String> timezones;
     private String errorMessage;
+    private Boolean hasError;
 }

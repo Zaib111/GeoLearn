@@ -306,8 +306,10 @@ public class CompareView extends AbstractView {
             @Override
             public void mouseMoved(MouseEvent e) {
                 Point point = e.getPoint();
-                int viewCol = table.columnAtPoint(point);
-                if (viewCol >= 1) {
+                int viewRow = table.rowAtPoint(point);
+
+                if (viewRow >= 0) {
+                    // Displays clickable cursor
                     table.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 } else {
                     table.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
