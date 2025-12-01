@@ -2,27 +2,67 @@ package app.views.home;
 
 import app.Navigator;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 public class HomeView extends JPanel {
+    private static final int LOGO_MAX_HEIGHT = 175;
+
     private final Map<String, JButton> buttons;
 
     public HomeView(Navigator navigator) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.WHITE);
 
-        // Big centered heading
-        JLabel title = new JLabel("GeoLearn");
-        title.setFont(new Font("SansSerif", Font.BOLD, 36));
-        title.setAlignmentX(Component.CENTER_ALIGNMENT);
-        title.setHorizontalAlignment(SwingConstants.CENTER);
-
         // Spacing to center content vertically
         add(Box.createVerticalGlue());
-        add(title);
+
+        // Load and display GeoLearn logo image
+        try (InputStream is = getClass().getResourceAsStream("/images/GeoLearn.png")) {
+            if (is != null) {
+                BufferedImage logoImage = ImageIO.read(is);
+
+                // Calculate scaled dimensions to maintain aspect ratio
+                int originalWidth = logoImage.getWidth();
+                int originalHeight = logoImage.getHeight();
+                int scaledHeight = LOGO_MAX_HEIGHT;
+                int scaledWidth = (originalWidth * LOGO_MAX_HEIGHT) / originalHeight;
+
+                // Use the original high-res image and let Java's default scaling handle it
+                // This preserves quality better for high-resolution source images
+                Image scaledImage = logoImage.getScaledInstance(
+                        scaledWidth,
+                        scaledHeight,
+                        Image.SCALE_AREA_AVERAGING  // Best for downscaling high-res images
+                );
+
+                JLabel logoLabel = new JLabel(new ImageIcon(scaledImage));
+                logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                add(logoLabel);
+            } else {
+                // Fallback to text if image not found
+                JLabel title = new JLabel("GeoLearn");
+                title.setFont(new Font("SansSerif", Font.BOLD, 36));
+                title.setAlignmentX(Component.CENTER_ALIGNMENT);
+                title.setHorizontalAlignment(SwingConstants.CENTER);
+                add(title);
+            }
+        } catch (IOException e) {
+            // Fallback to text if image loading fails
+            JLabel title = new JLabel("GeoLearn");
+            title.setFont(new Font("SansSerif", Font.BOLD, 36));
+            title.setAlignmentX(Component.CENTER_ALIGNMENT);
+            title.setHorizontalAlignment(SwingConstants.CENTER);
+            add(title);
+            System.err.println("Failed to load GeoLearn logo: " + e.getMessage());
+        }
+
         add(Box.createVerticalStrut(30));
 
         // Create buttons for each view
