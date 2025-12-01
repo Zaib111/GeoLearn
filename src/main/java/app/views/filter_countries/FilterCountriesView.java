@@ -146,15 +146,15 @@ public class FilterCountriesView extends AbstractView {
             ANY, "Eastern Africa", "Middle Africa", "Northern Africa",
             "Southern Africa", "Western Africa"});
         subregionMap.put("Americas", new String[]{
-            ANY, "Northern America", "Caribbean",
+            ANY, "North America", "Caribbean",
             "Central America", "South America"});
         subregionMap.put("Antarctic", new String[]{ANY});
         subregionMap.put("Asia", new String[]{
             ANY, "Central Asia", "Eastern Asia",
-            "South-eastern Asia", "Southern Asia", "Western Asia"});
+            "South-Eastern Asia", "Southern Asia", "Western Asia"});
         subregionMap.put("Europe", new String[]{
-            ANY, "Eastern Europe", "Northern Europe",
-            "Southern Europe", "Western Europe"});
+            ANY, "Central Europe", "Eastern Europe", "Northern Europe",
+            "Southeast Europe", "Southern Europe", "Western Europe"});
         subregionMap.put("Oceania", new String[]{
             ANY, "Australia and New Zealand",
             "Melanesia", "Micronesia", "Polynesia"});
