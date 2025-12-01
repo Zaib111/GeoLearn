@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class AddCollectionRequestData {
+public class CollectionAddInputData {
     private final String collectionName;
     private final List<String> countryNames;
 }

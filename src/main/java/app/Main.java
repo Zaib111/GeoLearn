@@ -1,39 +1,43 @@
 package app;
 
+import app.controllers.AuthenticationController;
 import app.controllers.CollectionController;
 import app.controllers.CompareController;
 import app.controllers.DetailController;
 import app.controllers.ExploreMapController;
 import app.controllers.FilterCountriesController;
-import app.controllers.SettingsController;
 import app.controllers.TakeQuizController;
 import app.data_access.APICountryDataAccessObject;
 import app.data_access.ExploreMapDataAccessObject;
-import app.data_access.UserDataInMemoryDataAccessObject;
+import app.data_access.UserDataFireStoreDataAccessObject;
+import app.presenters.AuthenticationPresenter;
 import app.presenters.CollectionPresenter;
 import app.presenters.ComparePresenter;
 import app.presenters.DetailPresenter;
 import app.presenters.ExploreMapPresenter;
 import app.presenters.FilterCountriesPresenter;
-import app.presenters.SettingsPresenter;
 import app.presenters.TakeQuizPresenter;
-import app.use_cases.country_collection.CollectionInteractor;
+import app.use_cases.authentication.AuthenticationDataAccessInterface;
+import app.use_cases.authentication.AuthenticationInteractor;
 import app.use_cases.compare.CompareInteractor;
 import app.use_cases.compare.CompareViewModel;
+import app.use_cases.country_collection.CollectionDataAccessInterface;
+import app.use_cases.country_collection.CollectionInteractor;
 import app.use_cases.detail.DetailDataAccessInterface;
 import app.use_cases.detail.DetailInteractor;
 import app.use_cases.explore_map.ExploreMapInteractor;
 import app.use_cases.filter_country.FilterCountriesInteractor;
 import app.use_cases.quiz.LocalQuestionRepository;
 import app.use_cases.quiz.QuestionRepository;
-import app.use_cases.quiz.QuizViewModel;
+import app.use_cases.quiz.QuizHistoryDataAccessInterface;
 import app.use_cases.quiz.TakeQuizInteractor;
 import app.use_cases.quiz.TakeQuizOutputBoundary;
-import app.use_cases.settings.SettingsInteractor;
 import app.views.ViewModel;
+import app.views.authentication.AuthenticationState;
+import app.views.authentication.AuthenticationView;
+import app.views.compare.CompareView;
 import app.views.country_collection.CollectionState;
 import app.views.country_collection.CollectionView;
-import app.views.compare.CompareView;
 import app.views.detail.DetailState;
 import app.views.detail.DetailView;
 import app.views.explore_map.ExploreMapState;
@@ -41,15 +45,8 @@ import app.views.explore_map.ExploreMapView;
 import app.views.filter_countries.FilterCountriesState;
 import app.views.filter_countries.FilterCountriesView;
 import app.views.home.HomeView;
+import app.views.quiz.QuizState;
 import app.views.quiz.QuizView;
-import app.views.settings.SettingsState;
-import app.views.settings.SettingsView;
-import app.controllers.CompareController;
-import app.presenters.ComparePresenter;
-import app.use_cases.compare.CompareInteractor;
-import app.views.compare.CompareView;
-import app.use_cases.compare.CompareViewModel;
-
 
 /**
  * Main entry point for the GeoLearn application.
@@ -61,36 +58,33 @@ public class Main {
      * @param args command line arguments
      */
     public static void main(String[] args) {
-        final MasterFrame masterFrame = new MasterFrame("GeoLearn");
-        final Navigator navigator = new Navigator(masterFrame);
+        final MasterFrame masterFrame = MasterFrame.getInstance();
+        final NavigationService navigator = masterFrame;
         final APICountryDataAccessObject countryDataApi =
                 new APICountryDataAccessObject();
         // Call getCountries to load cache at startup
         countryDataApi.getCountries();
-        final UserDataInMemoryDataAccessObject inMemoryUserDataStorage =
-                new UserDataInMemoryDataAccessObject();
+        final UserDataFireStoreDataAccessObject inMemoryUserDataStorage =
+                new UserDataFireStoreDataAccessObject();
 
-        setupHomeModule(masterFrame, navigator);
-        setupCompareModule(masterFrame, navigator, countryDataApi);
-        setupCollectionModule(masterFrame, inMemoryUserDataStorage,
-                countryDataApi, navigator);
-        setupSettingsModule(masterFrame, inMemoryUserDataStorage);
-        setupFilterCountriesModule(masterFrame, countryDataApi, navigator);
-        setupExploreMapModule(masterFrame, navigator);
-        setupDetailModule(masterFrame, navigator);
-        setupQuizModule(masterFrame, countryDataApi, inMemoryUserDataStorage);
+        setupAuthenticationModule(inMemoryUserDataStorage, navigator);
+        setupHomeModule(navigator);
+        setupCompareModule(navigator, countryDataApi);
+        setupCollectionModule(inMemoryUserDataStorage, countryDataApi, navigator);
+        setupFilterCountriesModule(countryDataApi, navigator);
+        setupExploreMapModule(navigator);
+        setupDetailModule(navigator);
+        setupQuizModule(countryDataApi, inMemoryUserDataStorage);
 
-        navigator.navigateTo("home");
+        navigator.navigateTo("authentication");
     }
 
-    private static void setupHomeModule(MasterFrame masterFrame,
-                                         Navigator navigator) {
+    private static void setupHomeModule(NavigationService navigator) {
         final HomeView homeView = new HomeView(navigator);
-        masterFrame.registerView(homeView, "home");
+        MasterFrame.getInstance().registerView(homeView, "home");
     }
 
-    private static void setupCompareModule(MasterFrame masterFrame,
-                                            Navigator navigator,
+    private static void setupCompareModule(NavigationService navigator,
                                             APICountryDataAccessObject countryDataApi) {
         final CompareViewModel compareViewModel = new CompareViewModel();
         final ComparePresenter comparePresenter =
@@ -101,14 +95,13 @@ public class Main {
                 new CompareController(compareInteractor);
         final CompareView compareView =
                 new CompareView(compareViewModel, compareController, navigator);
-        masterFrame.registerView(compareView, "compare_countries");
+        MasterFrame.getInstance().registerView(compareView, "compare_countries");
     }
 
     private static void setupCollectionModule(
-            MasterFrame masterFrame,
-            UserDataInMemoryDataAccessObject inMemoryUserDataStorage,
+            CollectionDataAccessInterface inMemoryUserDataStorage,
             APICountryDataAccessObject countryDataApi,
-            Navigator navigator) {
+            NavigationService navigator) {
         final ViewModel<CollectionState> collectionViewModel =
                 new ViewModel<>(new CollectionState());
         final CollectionPresenter collectionPresenter =
@@ -120,30 +113,29 @@ public class Main {
                 new CollectionController(collectionInteractor);
         final CollectionView collectionView =
                 new CollectionView(collectionViewModel, collectionController, navigator);
-        masterFrame.registerView(collectionView, "collection");
+        MasterFrame.getInstance().registerView(collectionView, "collection");
     }
 
-    private static void setupSettingsModule(
-            MasterFrame masterFrame,
-            UserDataInMemoryDataAccessObject inMemoryUserDataStorage) {
-        final ViewModel<SettingsState> settingsViewModel =
-                new ViewModel<>(new SettingsState());
-        final SettingsPresenter settingsPresenter =
-                new SettingsPresenter(settingsViewModel);
-        final SettingsInteractor settingsInteractor =
-                new SettingsInteractor(settingsPresenter,
+    private static void setupAuthenticationModule(
+            AuthenticationDataAccessInterface inMemoryUserDataStorage,
+            NavigationService navigator) {
+        final ViewModel<AuthenticationState> authenticationViewModel =
+                new ViewModel<>(new AuthenticationState());
+        final AuthenticationPresenter settingsPresenter =
+                new AuthenticationPresenter(authenticationViewModel);
+        final AuthenticationInteractor settingsInteractor =
+                new AuthenticationInteractor(settingsPresenter,
                         inMemoryUserDataStorage);
-        final SettingsController settingsController =
-                new SettingsController(settingsInteractor);
-        final SettingsView settingsView =
-                new SettingsView(settingsViewModel, settingsController);
-        masterFrame.registerView(settingsView, "settings");
+        final AuthenticationController authenticationController =
+                new AuthenticationController(settingsInteractor);
+        final AuthenticationView authenticationView =
+                new AuthenticationView(authenticationViewModel, authenticationController, navigator);
+        MasterFrame.getInstance().registerView(authenticationView, "authentication");
     }
 
     private static void setupFilterCountriesModule(
-            MasterFrame masterFrame,
             APICountryDataAccessObject countryDataApi,
-            Navigator navigator) {
+            NavigationService navigator) {
         final ViewModel<FilterCountriesState> filterCountriesViewModel =
                 new ViewModel<>(new FilterCountriesState());
         final FilterCountriesPresenter filterCountriesPresenter =
@@ -156,10 +148,10 @@ public class Main {
         final FilterCountriesView filterCountriesView =
                 new FilterCountriesView(filterCountriesViewModel,
                         filterCountriesController, navigator);
-        masterFrame.registerView(filterCountriesView, "filter_countries");
+        MasterFrame.getInstance().registerView(filterCountriesView, "filter_countries");
     }
 
-    private static void setupExploreMapModule(MasterFrame masterFrame, Navigator navigator) {
+    private static void setupExploreMapModule(NavigationService navigator) {
         final ViewModel<ExploreMapState> exploreMapViewModel =
                 new ViewModel<>(new ExploreMapState());
         final ExploreMapPresenter exploreMapPresenter =
@@ -174,10 +166,10 @@ public class Main {
         final ExploreMapView exploreMapView =
                 new ExploreMapView(exploreMapViewModel, navigator);
         exploreMapView.setController(exploreMapController);
-        masterFrame.registerView(exploreMapView, "explore_map");
+        MasterFrame.getInstance().registerView(exploreMapView, "explore_map");
     }
 
-    private static void setupDetailModule(MasterFrame masterFrame, Navigator navigator) {
+    private static void setupDetailModule(NavigationService navigator) {
         final ViewModel<DetailState> detailViewModel =
                 new ViewModel<>(new DetailState());
         final DetailPresenter detailPresenter =
@@ -190,22 +182,21 @@ public class Main {
                 new DetailController(detailInteractor);
         final DetailView detailView =
                 new DetailView(detailViewModel, detailController, navigator);
-        masterFrame.registerView(detailView, "country_details");
+        MasterFrame.getInstance().registerView(detailView, "country_details");
     }
 
     private static void setupQuizModule(
-            MasterFrame masterFrame,
             APICountryDataAccessObject countryDataApi,
-            UserDataInMemoryDataAccessObject userDataStorage) {
+            QuizHistoryDataAccessInterface userDataStorage) {
         // ViewModel for the quiz screen
-        final QuizViewModel quizViewModel = new QuizViewModel();
+        final ViewModel<QuizState> quizViewModel = new ViewModel<>(new QuizState());
 
         // Swing view for the quiz screen
         final QuizView quizView = new QuizView(quizViewModel);
 
-        // Presenter (use case → view)
+        // Presenter (use case → view model)
         final TakeQuizOutputBoundary quizPresenter =
-                new TakeQuizPresenter(quizView);
+                new TakeQuizPresenter(quizViewModel);
 
         // Question repository (manual questions for now)
         final QuestionRepository questionRepository =
@@ -223,6 +214,6 @@ public class Main {
         quizView.setController(takeQuizController);
 
         // Register the quiz view so HomeView can navigate to it
-        masterFrame.registerView(quizView, "quiz");
+        MasterFrame.getInstance().registerView(quizView, "quiz");
     }
 }

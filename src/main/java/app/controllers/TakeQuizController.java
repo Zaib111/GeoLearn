@@ -64,4 +64,11 @@ public class TakeQuizController {
     public void timeExpired() {
         interactor.timeExpired();
     }
+
+    /**
+     * Requests the quiz history from the database.
+     */
+    public void loadQuizHistory() {
+        interactor.loadQuizHistory();
+    }
 }

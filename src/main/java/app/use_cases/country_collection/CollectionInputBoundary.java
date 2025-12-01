@@ -8,9 +8,9 @@ public interface CollectionInputBoundary {
     /**
      * Adds a new collection.
      *
-     * @param addCollectionRequestData the request data for adding a collection
+     * @param collectionAddInputData the request data for adding a collection
      */
-    void addCollection(AddCollectionRequestData addCollectionRequestData);
+    void addCollection(CollectionAddInputData collectionAddInputData);
 
     /**
      * Fetches all collections.
@@ -20,21 +20,21 @@ public interface CollectionInputBoundary {
     /**
      * Deletes a collection.
      *
-     * @param deleteCollectionRequestData the request data for deleting a collection
+     * @param collectionDeleteInputData the request data for deleting a collection
      */
-    void deleteCollection(DeleteCollectionRequestData deleteCollectionRequestData);
+    void deleteCollection(CollectionDeleteInputData collectionDeleteInputData);
 
     /**
      * Renames a collection.
      *
-     * @param renameCollectionRequestData the request data for renaming a collection
+     * @param collectionRenameInputData the request data for renaming a collection
      */
-    void renameCollection(RenameCollectionRequestData renameCollectionRequestData);
+    void renameCollection(CollectionRenameInputData collectionRenameInputData);
 
     /**
      * Edits a collection.
      *
-     * @param editCollectionRequestData the request data for editing a collection
+     * @param collectionEditInputData the request data for editing a collection
      */
-    void editCollection(EditCollectionRequestData editCollectionRequestData);
+    void editCollection(CollectionEditInputData collectionEditInputData);
 }

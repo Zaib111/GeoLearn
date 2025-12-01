@@ -26,4 +26,11 @@
     <suppress checks="CyclomaticComplexity" files="CollectionInteractor\.java"/>
     <suppress checks="NPathComplexity" files="CollectionInteractor\.java"/>
     <suppress checks="ExecutableStatementCount" files="CollectionInteractor\.java"/>
+
+    <!-- Firestore DAO needs high coupling for JSON serialization and multiple entities -->
+    <suppress checks="ClassDataAbstractionCoupling" files="UserDataFireStoreDataAccessObject\.java" lines="34"/>
+    <!-- Many helper methods needed for JSON serialization/deserialization -->
+    <suppress checks="MethodCount" files="UserDataFireStoreDataAccessObject\.java" lines="34"/>
+    <!-- Early returns needed for conditional logic between in-memory and Firestore storage -->
+    <suppress checks="ReturnCount" files="UserDataFireStoreDataAccessObject\.java" lines="79,182,218,391"/>
 </suppressions>

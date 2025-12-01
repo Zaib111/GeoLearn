@@ -7,6 +7,9 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import app.data_access.APICountryDataAccessObject;
+import app.entities.Country;
+
 public class FilterCountriesInteractor implements FilterCountriesInputBoundary {
     private final FilterCountriesDataAccessInterface dataAccess;
     private final FilterCountriesOutputBoundary presenter;
@@ -18,30 +21,32 @@ public class FilterCountriesInteractor implements FilterCountriesInputBoundary {
 
     @Override
     public void filterCountries(FilterCountriesInputData inputData) {
-        List<Country> allCountries = dataAccess.getCountries();
-        List<Country> filteredCountries = new ArrayList<>();
+        final List<Country> allCountries = dataAccess.getCountries();
+        final List<Country> filteredCountries = new ArrayList<>();
 
-        String searchTerm = inputData.getSearchTerm();
-        String region = inputData.getRegion();
-        String subregion = inputData.getSubregion();
+        final String searchTerm = inputData.getSearchTerm();
+        final String region = inputData.getRegion();
+        final String subregion = inputData.getSubregion();
 
         for (Country country : allCountries) {
-            if (matchesSearch(country, searchTerm) && matchesRegion(country, region) && matchesSubregion(country, subregion)) {
+            if (matchesSearch(country, searchTerm)
+                    && matchesRegion(country, region)
+                    && matchesSubregion(country, subregion)) {
                 filteredCountries.add(country);
             }
         }
 
-        FilterCountriesOutputData outputData = new FilterCountriesOutputData(filteredCountries);
+        final FilterCountriesOutputData outputData = new FilterCountriesOutputData(filteredCountries);
 
         presenter.presentFilteredCountries(outputData);
     }
 
     private static boolean matchesSubregion(Country country, String subregion) {
-        return subregion.equals(country.getSubregion().orElse(null)) || subregion.equals("Any");
+        return subregion.equals(country.getSubregion().orElse(null)) || "Any".equals(subregion);
     }
 
     private static boolean matchesRegion(Country country, String region) {
-        return region.equals(country.getRegion()) || region.equals("Any");
+        return region.equals(country.getRegion()) || "Any".equals(region);
     }
 
     private boolean matchesSearch(Country country, String searchTerm) {

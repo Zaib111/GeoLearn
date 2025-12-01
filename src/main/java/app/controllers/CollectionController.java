@@ -3,11 +3,11 @@ package app.controllers;
 import java.util.List;
 import java.util.UUID;
 
-import app.use_cases.country_collection.AddCollectionRequestData;
+import app.use_cases.country_collection.CollectionAddInputData;
 import app.use_cases.country_collection.CollectionInputBoundary;
-import app.use_cases.country_collection.DeleteCollectionRequestData;
-import app.use_cases.country_collection.EditCollectionRequestData;
-import app.use_cases.country_collection.RenameCollectionRequestData;
+import app.use_cases.country_collection.CollectionDeleteInputData;
+import app.use_cases.country_collection.CollectionEditInputData;
+import app.use_cases.country_collection.CollectionRenameInputData;
 
 public class CollectionController {
     private final CollectionInputBoundary collectionUseCaseInteractor;
@@ -28,7 +28,7 @@ public class CollectionController {
      * @param countryNames the list of country names to include
      */
     public void addCollection(String collectionName, List<String> countryNames) {
-        final AddCollectionRequestData collectionInputData = new AddCollectionRequestData(collectionName, countryNames);
+        final CollectionAddInputData collectionInputData = new CollectionAddInputData(collectionName, countryNames);
         collectionUseCaseInteractor.addCollection(collectionInputData);
     }
 
@@ -45,7 +45,7 @@ public class CollectionController {
      * @param collectionId the UUID of the collection to delete
      */
     public void deleteCollection(UUID collectionId) {
-        final DeleteCollectionRequestData deleteRequestData = new DeleteCollectionRequestData(collectionId);
+        final CollectionDeleteInputData deleteRequestData = new CollectionDeleteInputData(collectionId);
         collectionUseCaseInteractor.deleteCollection(deleteRequestData);
     }
 
@@ -56,7 +56,7 @@ public class CollectionController {
      * @param newName the new name for the collection
      */
     public void renameCollection(UUID collectionId, String newName) {
-        final RenameCollectionRequestData renameRequestData = new RenameCollectionRequestData(collectionId, newName);
+        final CollectionRenameInputData renameRequestData = new CollectionRenameInputData(collectionId, newName);
         collectionUseCaseInteractor.renameCollection(renameRequestData);
     }
 
@@ -68,7 +68,7 @@ public class CollectionController {
      * @param countryNamesToRemove the list of country names to remove
      */
     public void editCollection(UUID collectionId, List<String> countryNamesToAdd, List<String> countryNamesToRemove) {
-        final EditCollectionRequestData editRequestData = new EditCollectionRequestData(
+        final CollectionEditInputData editRequestData = new CollectionEditInputData(
                 collectionId,
                 countryNamesToAdd,
                 countryNamesToRemove

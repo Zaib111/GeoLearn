@@ -1,12 +1,12 @@
 package app.views.filter_countries;
 
+import java.util.Collections;
+import java.util.List;
+
 import app.entities.Country;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Collections;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
