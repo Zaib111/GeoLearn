@@ -257,7 +257,9 @@ public class CompareView extends AbstractView {
         JPanel root = new JPanel(new BorderLayout());
         root.add(flagsPanel, BorderLayout.NORTH);
         root.add(scroll, BorderLayout.CENTER);
-        // Hyperlink implementation
+
+        // Hyperlink implementation for accessing details of the country
+        // associated with the clicked column
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -265,7 +267,9 @@ public class CompareView extends AbstractView {
                     Point point = e.getPoint();
                     int viewCol = table.columnAtPoint(point);
 
-                    // Check if the click was on a valid row
+                    // Check if the click was on a valid column
+                    // If so, passes the required country info to the navigator
+                    // to navigate to the correct detail page
                     if (viewCol >= 1) {
                         int modelCol = table.convertColumnIndexToModel(viewCol);
                         Country clickedCountry = selectedCountries.get(modelCol-1);
@@ -281,11 +285,14 @@ public class CompareView extends AbstractView {
             @Override
             public void mouseMoved(MouseEvent e) {
                 Point point = e.getPoint();
-                int viewCol = table.columnAtPoint(point);
-                if (viewCol >= 1) {
+                int viewRow = table.rowAtPoint(point);
+
+                if (viewRow >= 0) {
+                    // Displays clickable cursor
                     table.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 }
                 else {
+                    // Displays default cursor
                     table.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 }
             }

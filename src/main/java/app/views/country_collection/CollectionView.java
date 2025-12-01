@@ -538,7 +538,8 @@ public class CollectionView extends AbstractView {
         card.add(flagPanel, BorderLayout.WEST);
         card.add(infoPanel, BorderLayout.CENTER);
 
-        // Hyperlink implementation
+        // Hyperlink implementation for accessing the details of the
+        // card's associated country
         card.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
