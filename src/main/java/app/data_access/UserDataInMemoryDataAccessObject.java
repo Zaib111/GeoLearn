@@ -1,20 +1,22 @@
 package app.data_access;
 
-import app.entities.CountryCollection;
-import app.use_cases.collection.CollectionDataAccessInterface;
-import app.use_cases.settings.SettingsDataAccessInterface;
-import app.use_cases.settings.UserSettingsData;
-import app.entities.QuizHistoryEntry;
-import app.use_cases.quiz.QuizHistoryDataAccessInterface;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserDataInMemoryDataAccessObject implements SettingsDataAccessInterface, CollectionDataAccessInterface, QuizHistoryDataAccessInterface {
-    UserSettingsData currentSettings = new UserSettingsData();
-    List<CountryCollection> collections = new ArrayList<>();
+import app.entities.CountryCollection;
+import app.entities.QuizHistoryEntry;
+import app.use_cases.country_collection.CollectionDataAccessInterface;
+import app.use_cases.quiz.QuizHistoryDataAccessInterface;
+import app.use_cases.settings.SettingsDataAccessInterface;
+import app.use_cases.settings.UserSettingsData;
+
+public class UserDataInMemoryDataAccessObject
+        implements SettingsDataAccessInterface, CollectionDataAccessInterface,
+        QuizHistoryDataAccessInterface {
+    private UserSettingsData currentSettings = new UserSettingsData();
+    private final List<CountryCollection> collections = new ArrayList<>();
     private final List<QuizHistoryEntry> quizHistory = new ArrayList<>();
 
     @Override
@@ -40,13 +42,13 @@ public class UserDataInMemoryDataAccessObject implements SettingsDataAccessInter
     @Override
     public Optional<CountryCollection> getCollectionById(UUID collectionId) {
         return collections.stream()
-                .filter(c -> c.getCollectionId().equals(collectionId))
+                .filter(col -> col.getCollectionId().equals(collectionId))
                 .findFirst();
     }
 
     @Override
     public void deleteCollection(UUID collectionId) {
-        collections.removeIf(c -> c.getCollectionId().equals(collectionId));
+        collections.removeIf(col -> col.getCollectionId().equals(collectionId));
     }
 
     @Override

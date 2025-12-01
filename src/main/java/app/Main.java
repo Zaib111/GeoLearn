@@ -17,22 +17,22 @@ import app.presenters.ExploreMapPresenter;
 import app.presenters.FilterCountriesPresenter;
 import app.presenters.SettingsPresenter;
 import app.presenters.TakeQuizPresenter;
-import app.use_cases.collection.CollectionInteractor;
+import app.use_cases.country_collection.CollectionInteractor;
 import app.use_cases.compare.CompareInteractor;
 import app.use_cases.compare.CompareViewModel;
 import app.use_cases.detail.DetailDataAccessInterface;
 import app.use_cases.detail.DetailInteractor;
 import app.use_cases.explore_map.ExploreMapInteractor;
 import app.use_cases.filter_country.FilterCountriesInteractor;
-import app.use_cases.settings.SettingsInteractor;
 import app.use_cases.quiz.LocalQuestionRepository;
 import app.use_cases.quiz.QuestionRepository;
+import app.use_cases.quiz.QuizViewModel;
 import app.use_cases.quiz.TakeQuizInteractor;
 import app.use_cases.quiz.TakeQuizOutputBoundary;
-import app.use_cases.quiz.QuizViewModel;
+import app.use_cases.settings.SettingsInteractor;
 import app.views.ViewModel;
-import app.views.collection.CollectionState;
-import app.views.collection.CollectionView;
+import app.views.country_collection.CollectionState;
+import app.views.country_collection.CollectionView;
 import app.views.compare.CompareView;
 import app.views.detail.DetailState;
 import app.views.detail.DetailView;
@@ -41,9 +41,15 @@ import app.views.explore_map.ExploreMapView;
 import app.views.filter_countries.FilterCountriesState;
 import app.views.filter_countries.FilterCountriesView;
 import app.views.home.HomeView;
+import app.views.quiz.QuizView;
 import app.views.settings.SettingsState;
 import app.views.settings.SettingsView;
-import app.views.quiz.QuizView;
+import app.controllers.CompareController;
+import app.presenters.ComparePresenter;
+import app.use_cases.compare.CompareInteractor;
+import app.views.compare.CompareView;
+import app.use_cases.compare.CompareViewModel;
+
 
 /**
  * Main entry point for the GeoLearn application.
