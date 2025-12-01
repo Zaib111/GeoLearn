@@ -130,11 +130,8 @@ public class CompareView extends AbstractView {
         }
     }
 
-    // ----------------- AbstractView lifecycle methods -----------------
-
     @Override
     public void onViewOpened(String param) {
-        // When the view opens, ask to load all countries
         compareController.loadAvailableCountries();
     }
 
@@ -150,7 +147,6 @@ public class CompareView extends AbstractView {
         }
         CompareState state = (CompareState) newState;
 
-        // Show any errors from use case
         if (state.getErrorMessage() != null && !state.getErrorMessage().isEmpty()) {
             JOptionPane.showMessageDialog(
                     this,
@@ -160,12 +156,10 @@ public class CompareView extends AbstractView {
             );
         }
 
-        // Populate dropdowns with full country list
         if (state.getCountryNames() != null && !state.getCountryNames().isEmpty()) {
             updateDropdownOptions(state.getCountryNames());
         }
 
-        // When comparison data is ready, render comparison in the same panel
         if (state.getSelectedCountries() != null
                 && !state.getSelectedCountries().isEmpty()
                 && state.getColumnHeaders() != null
@@ -176,8 +170,6 @@ public class CompareView extends AbstractView {
             showComparisonInSamePanel(state);
         }
     }
-
-    // ----------------- Helpers to update UI from state -----------------
 
     private void updateDropdownOptions(List<String> countryNames) {
         // All countries in every dropdown
@@ -194,15 +186,11 @@ public class CompareView extends AbstractView {
         updateVisibleDropdowns();
     }
 
-    /**
-     * Comparison view with flag row at top of table.
-     */
     private void showComparisonInSamePanel(CompareState state) {
         List<Country> selectedCountries = state.getSelectedCountries();
         String[] colNames = state.getColumnHeaders();
         Object[][] data = state.getComparisonTableData();
 
-        // 🔹 rename "Attribute" and country names in header row to ""
         if (colNames != null && colNames.length > 0) {
             for (int i = 0; i < colNames.length; i++) {
                 colNames[i] = "";
@@ -213,7 +201,6 @@ public class CompareView extends AbstractView {
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(5, 5, 5, 5));
 
-        // ----- Header (back button + title) -----
         JPanel headerPanel = new JPanel();
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
         headerPanel.setBorder(new EmptyBorder(0, -5, 5, 10));
@@ -252,7 +239,6 @@ public class CompareView extends AbstractView {
             }
         }
 
-        // Copy attribute rows down one
         for (int r = 0; r < rows; r++) {
             System.arraycopy(data[r], 0, tableData[r + 1], 0, cols);
         }
@@ -270,7 +256,6 @@ public class CompareView extends AbstractView {
             }
         };
 
-        // Row heights: bigger for flag row
         table.setRowHeight(0, 60);
         for (int r = 1; r < table.getRowCount(); r++) {
             table.setRowHeight(r, 24);
@@ -280,7 +265,6 @@ public class CompareView extends AbstractView {
         table.getTableHeader().setResizingAllowed(false);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-        // Center header text
         JTableHeader header = table.getTableHeader();
         DefaultTableCellRenderer headerRenderer =
                 (DefaultTableCellRenderer) header.getDefaultRenderer();
@@ -300,7 +284,6 @@ public class CompareView extends AbstractView {
         );
         scroll.setPreferredSize(new Dimension(1400, 400));
 
-        // Clickable columns -> country details
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
