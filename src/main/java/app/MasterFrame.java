@@ -18,10 +18,13 @@ import app.views.AbstractView;
 /**
  * Master frame for the GeoLearn application.
  * Manages view navigation and back button functionality.
+ * Singleton pattern ensures only one instance exists.
  */
-public class MasterFrame extends JFrame {
+public class MasterFrame extends JFrame implements NavigationService {
     private static final int FRAME_WIDTH = 800;
     private static final int FRAME_HEIGHT = 600;
+
+    private static MasterFrame instance;
 
     private final Map<String, JPanel> views = new HashMap<>();
     private final JPanel contentPanel;
@@ -32,11 +35,11 @@ public class MasterFrame extends JFrame {
     private String currentViewName;
 
     /**
-     * Constructs a new MasterFrame with the specified title.
+     * Private constructor to prevent direct instantiation.
      *
      * @param title the title of the frame
      */
-    public MasterFrame(String title) {
+    private MasterFrame(String title) {
         super(title);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(FRAME_WIDTH, FRAME_HEIGHT);
@@ -67,6 +70,18 @@ public class MasterFrame extends JFrame {
     }
 
     /**
+     * Gets the singleton instance of MasterFrame.
+     *
+     * @return the singleton instance
+     */
+    public static MasterFrame getInstance() {
+        if (instance == null) {
+            instance = new MasterFrame("GeoLearn");
+        }
+        return instance;
+    }
+
+    /**
      * Gets the views map.
      *
      * @return the map of view names to panels
@@ -91,6 +106,18 @@ public class MasterFrame extends JFrame {
      *
      * @param name the name of the view to navigate to
      */
+    @Override
+    public void navigateTo(String name) {
+        navigateTo(name, "");
+    }
+
+    /**
+     * Navigates to the view with the specified name and parameter.
+     *
+     * @param name the name of the view to navigate to
+     * @param param the parameter to pass when navigating
+     */
+    @Override
     public void navigateTo(String name, String param) {
         if (views.containsKey(name)) {
             if (currentViewName != null) {

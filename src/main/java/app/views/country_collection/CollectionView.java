@@ -39,7 +39,7 @@ import javax.swing.border.TitledBorder;
 
 import org.jetbrains.annotations.NotNull;
 
-import app.Navigator;
+import app.NavigationService;
 import app.controllers.CollectionController;
 import app.entities.Country;
 import app.entities.CountryCollection;
@@ -56,10 +56,11 @@ public class CollectionView extends AbstractView {
     private JScrollPane collectionsScrollPane;
     private String font;
 
-    private final Navigator navigator;
+    private final NavigationService navigator;
 
     public CollectionView(ViewModel<CollectionState> collectionViewModel,
-                          CollectionController collectionController, Navigator navigator) {
+                          CollectionController collectionController,
+                          NavigationService navigator) {
         super(collectionViewModel);
 
         this.collectionController = collectionController;

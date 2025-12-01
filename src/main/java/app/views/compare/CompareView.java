@@ -1,6 +1,6 @@
 package app.views.compare;
 
-import app.Navigator;
+import app.NavigationService;
 import app.controllers.CompareController;
 import app.entities.Country;
 import app.use_cases.compare.CompareViewModel;
@@ -30,7 +30,7 @@ public class CompareView extends AbstractView {
 
     private final CompareViewModel viewModel;
     private final CompareController compareController;
-    private final Navigator navigator;
+    private final NavigationService navigator;
 
     private JComboBox<Integer> countComboBox;
     @SuppressWarnings("unchecked")
@@ -39,7 +39,7 @@ public class CompareView extends AbstractView {
 
     public CompareView(CompareViewModel viewModel,
                        CompareController compareController,
-                       Navigator navigator) {
+                       NavigationService navigator) {
         super(viewModel);
         this.viewModel = viewModel;
         this.compareController = compareController;

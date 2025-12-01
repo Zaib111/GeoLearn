@@ -13,7 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-import app.Navigator;
+import app.NavigationService;
 import app.controllers.AuthenticationController;
 import app.use_cases.authentication.AuthenticationData;
 import app.views.AbstractView;
@@ -30,7 +30,7 @@ public class AuthenticationView extends AbstractView {
     private static final int VERTICAL_STRUT_SMALL = 10;
 
     private final AuthenticationController authenticationController;
-    private final Navigator navigator;
+    private final NavigationService navigator;
 
     // Sign-in components
     private final JPanel signInPanel;
@@ -63,7 +63,7 @@ public class AuthenticationView extends AbstractView {
      */
     public AuthenticationView(ViewModel<AuthenticationState> authenticationViewModel,
                               AuthenticationController controller,
-                              Navigator navigator) {
+                              NavigationService navigator) {
         super(authenticationViewModel);
 
         this.authenticationController = controller;

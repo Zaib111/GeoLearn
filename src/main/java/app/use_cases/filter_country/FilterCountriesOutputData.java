@@ -1,8 +1,8 @@
 package app.use_cases.filter_country;
 
-import app.entities.Country;
-
 import java.util.List;
+
+import app.entities.Country;
 
 public class FilterCountriesOutputData {
     private final List<Country> countries;

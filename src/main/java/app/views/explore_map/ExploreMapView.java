@@ -25,7 +25,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
-import app.Navigator;
+import app.NavigationService;
 import org.geotools.api.data.SimpleFeatureSource;
 import org.geotools.api.feature.simple.SimpleFeature;
 import org.geotools.api.filter.FilterFactory;
@@ -117,7 +117,7 @@ public class ExploreMapView extends AbstractView {
     private static final String MODE_SELECT = "SELECT";
 
     // Navigator
-    Navigator navigator;
+    NavigationService navigator;
 
     /**
      * -- GETTER --
@@ -172,7 +172,7 @@ public class ExploreMapView extends AbstractView {
      *
      * @param viewModel the view model for this view
      */
-    public ExploreMapView(final ViewModel<ExploreMapState> viewModel, Navigator navigator) {
+    public ExploreMapView(final ViewModel<ExploreMapState> viewModel, NavigationService navigator) {
         super(viewModel);
         this.navigator = navigator;
         this.exploreMapViewModel = viewModel;
@@ -379,12 +379,6 @@ public class ExploreMapView extends AbstractView {
         final JButton loadButton = new JButton("Load World Map");
         loadButton.addActionListener(event -> loadShapefile());
 
-        final JButton zoomInButton = new JButton("Zoom In");
-        zoomInButton.addActionListener(event -> handleZoomIn());
-
-        final JButton zoomOutButton = new JButton("Zoom Out");
-        zoomOutButton.addActionListener(event -> handleZoomOut());
-
         final JButton resetButton = new JButton("Reset View");
         resetButton.addActionListener(event -> handleResetView());
 
@@ -399,8 +393,6 @@ public class ExploreMapView extends AbstractView {
 
         panel.add(loadButton);
         panel.add(new JSeparator(SwingConstants.VERTICAL));
-        panel.add(zoomInButton);
-        panel.add(zoomOutButton);
         panel.add(resetButton);
         panel.add(new JSeparator(SwingConstants.VERTICAL));
         panel.add(panButton);
@@ -444,59 +436,6 @@ public class ExploreMapView extends AbstractView {
         }
     }
 
-    /**
-     * Zooms in around the current map center.
-     */
-    private void handleZoomIn() {
-        if (mapPane != null && currentZoomLevel < MAX_ZOOM_IN_LEVELS) {
-            final ReferencedEnvelope currentBounds = mapPane.getDisplayArea();
-            if (currentBounds != null) {
-                final double width = currentBounds.getWidth() * ZOOM_IN_FACTOR;
-                final double height = currentBounds.getHeight() * ZOOM_IN_FACTOR;
-
-                final double centerX = currentBounds.getCenterX();
-                final double centerY = currentBounds.getCenterY();
-
-                final ReferencedEnvelope newBounds = new ReferencedEnvelope(
-                        centerX - width / 2, centerX + width / 2,
-                        centerY - height / 2, centerY + height / 2,
-                        currentBounds.getCoordinateReferenceSystem()
-                );
-
-                currentZoomLevel++;
-                SwingUtilities.invokeLater(
-                        () -> mapPane.setDisplayArea(newBounds)
-                );
-            }
-        }
-    }
-
-    /**
-     * Zooms out around the current map center.
-     */
-    private void handleZoomOut() {
-        if (mapPane != null && currentZoomLevel > 0) {
-            final ReferencedEnvelope currentBounds = mapPane.getDisplayArea();
-            if (currentBounds != null) {
-                final double width = currentBounds.getWidth() * ZOOM_OUT_FACTOR;
-                final double height = currentBounds.getHeight() * ZOOM_OUT_FACTOR;
-
-                final double centerX = currentBounds.getCenterX();
-                final double centerY = currentBounds.getCenterY();
-
-                final ReferencedEnvelope newBounds = new ReferencedEnvelope(
-                        centerX - width / 2, centerX + width / 2,
-                        centerY - height / 2, centerY + height / 2,
-                        currentBounds.getCoordinateReferenceSystem()
-                );
-
-                currentZoomLevel--;
-                SwingUtilities.invokeLater(
-                        () -> mapPane.setDisplayArea(newBounds)
-                );
-            }
-        }
-    }
 
     /**
      * Resets the view to show the full map extent.
@@ -647,6 +586,7 @@ public class ExploreMapView extends AbstractView {
 
     /**
      * Handles clicks for zoom and selection interactions.
+     * In zoom mode: left-click to zoom in, right-click to zoom out.
      *
      * @param event mouse click event
      */
@@ -656,7 +596,14 @@ public class ExploreMapView extends AbstractView {
         final org.geotools.geometry.Position2D worldPos = event.getWorldPos();
 
         if (MODE_ZOOM.equals(mode)) {
-            handleZoomAtPoint(worldPos.x, worldPos.y);
+            // Check if it's a right-click (button 3)
+            if (event.getButton() == java.awt.event.MouseEvent.BUTTON3) {
+                // Right-click: zoom out
+                handleZoomOutAtPoint(worldPos.x, worldPos.y);
+            } else {
+                // Left-click: zoom in
+                handleZoomAtPoint(worldPos.x, worldPos.y);
+            }
         }
         else {
             if (MODE_SELECT.equals(mode) && controller != null) {
@@ -686,6 +633,33 @@ public class ExploreMapView extends AbstractView {
                 );
 
                 currentZoomLevel++;
+                SwingUtilities.invokeLater(
+                        () -> mapPane.setDisplayArea(newBounds)
+                );
+            }
+        }
+    }
+
+    /**
+     * Zooms out around a specific world coordinate.
+     *
+     * @param xCoord x coordinate in world space
+     * @param yCoord y coordinate in world space
+     */
+    private void handleZoomOutAtPoint(final double xCoord, final double yCoord) {
+        if (mapPane != null && currentZoomLevel > 0) {
+            final ReferencedEnvelope currentBounds = mapPane.getDisplayArea();
+            if (currentBounds != null) {
+                final double width = currentBounds.getWidth() * ZOOM_OUT_FACTOR;
+                final double height = currentBounds.getHeight() * ZOOM_OUT_FACTOR;
+
+                final ReferencedEnvelope newBounds = new ReferencedEnvelope(
+                        xCoord - width / 2, xCoord + width / 2,
+                        yCoord - height / 2, yCoord + height / 2,
+                        currentBounds.getCoordinateReferenceSystem()
+                );
+
+                currentZoomLevel--;
                 SwingUtilities.invokeLater(
                         () -> mapPane.setDisplayArea(newBounds)
                 );

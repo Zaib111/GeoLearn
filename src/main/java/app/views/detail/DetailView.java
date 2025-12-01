@@ -1,6 +1,6 @@
 package app.views.detail;
 
-import app.Navigator;
+import app.NavigationService;
 import app.controllers.DetailController;
 import app.use_cases.detail.DetailInputData;
 import app.views.AbstractView;
@@ -45,7 +45,7 @@ public class DetailView extends AbstractView {
     private final JTextArea currenciesArea = new JTextArea(3, 20);
     private final JTextArea timezonesArea = new JTextArea(3, 20);
 
-    private final Navigator navigator;
+    private final NavigationService navigator;
 
     /**
      * Constructor for this class.
