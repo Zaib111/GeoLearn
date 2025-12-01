@@ -47,7 +47,7 @@ public class MasterFrame extends JFrame {
         final JPanel topPanel = new JPanel(new BorderLayout());
 
         final JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        backButton = new JButton("Main Menu");  // Changed from "Back" to "Main Menu"
+        backButton = new JButton("Back");
         backButton.setVisible(false);
         leftPanel.add(backButton);
 
@@ -89,8 +89,7 @@ public class MasterFrame extends JFrame {
     /**
      * Navigates to the view with the specified name.
      *
-     * @param name  the name of the view to navigate to
-     * @param param a string parameter passed to the view on open
+     * @param name the name of the view to navigate to
      */
     public void navigateTo(String name, String param) {
         if (views.containsKey(name)) {
@@ -107,7 +106,8 @@ public class MasterFrame extends JFrame {
                 if (!currentView.equals(name) || !currentParam.equals(param)) {
                     navigationStack.push(List.of(name, param));
                 }
-            } else {
+            }
+            else {
                 navigationStack.push(List.of(name, param));
             }
 
@@ -134,11 +134,12 @@ public class MasterFrame extends JFrame {
             final String previousView = navigationStack.get(navigationStack.size() - 2).get(0);
             if ("authentication".equals(previousView)) {
                 backButton.setText("Sign Out");
-            } else {
-                // Default label when going back to any non-authentication view
-                backButton.setText("Main Menu");
             }
-        } else {
+            else {
+                backButton.setText("Back");
+            }
+        }
+        else {
             backButton.setVisible(false);
         }
     }
