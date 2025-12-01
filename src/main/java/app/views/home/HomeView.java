@@ -47,7 +47,7 @@ public class HomeView extends JPanel {
                 add(logoLabel);
             } else {
                 // Fallback to text if image not found
-                JLabel title = new JLabel("GeoLearn");
+                JLabel title = new JLabel("geolearn");
                 title.setFont(new Font("SansSerif", Font.BOLD, 36));
                 title.setAlignmentX(Component.CENTER_ALIGNMENT);
                 title.setHorizontalAlignment(SwingConstants.CENTER);
