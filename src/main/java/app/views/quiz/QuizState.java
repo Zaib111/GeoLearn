@@ -1,5 +1,7 @@
 package app.views.quiz;
 
+import app.entities.QuizHistoryEntry;
+
 import java.util.List;
 import java.util.Collections;
 
@@ -28,9 +30,14 @@ public class QuizState {
     // End-of-quiz info
     private int durationSeconds;
 
+    // Quiz history
+    private List<QuizHistoryEntry> historyEntries = Collections.emptyList();
+
     // UI flags
+    private boolean showQuestion;
     private boolean showFeedback;
     private boolean showEnd;
+    private boolean showHistory;
 
     public QuizState() {
     }
@@ -138,6 +145,22 @@ public class QuizState {
         this.durationSeconds = durationSeconds;
     }
 
+    public List<QuizHistoryEntry> getHistoryEntries() {
+        return historyEntries;
+    }
+
+    public void setHistoryEntries(List<QuizHistoryEntry> historyEntries) {
+        this.historyEntries = (historyEntries != null) ? historyEntries : Collections.emptyList();
+    }
+
+    public boolean isShowQuestion() {
+        return showQuestion;
+    }
+
+    public void setShowQuestion(boolean showQuestion) {
+        this.showQuestion = showQuestion;
+    }
+
     public boolean isShowFeedback() {
         return showFeedback;
     }
@@ -153,5 +176,12 @@ public class QuizState {
     public void setShowEnd(boolean showEnd) {
         this.showEnd = showEnd;
     }
-}
 
+    public boolean isShowHistory() {
+        return showHistory;
+    }
+
+    public void setShowHistory(boolean showHistory) {
+        this.showHistory = showHistory;
+    }
+}

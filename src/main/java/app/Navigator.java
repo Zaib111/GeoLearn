@@ -34,3 +34,4 @@ public class Navigator {
         masterFrame.navigateTo(name, param);
     }
 }
+

@@ -1,5 +1,9 @@
 package app.use_cases.filter_country;
 
+import app.entities.Country;
+
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,10 +11,10 @@ import app.data_access.APICountryDataAccessObject;
 import app.entities.Country;
 
 public class FilterCountriesInteractor implements FilterCountriesInputBoundary {
-    private final APICountryDataAccessObject dataAccess;
+    private final FilterCountriesDataAccessInterface dataAccess;
     private final FilterCountriesOutputBoundary presenter;
 
-    public FilterCountriesInteractor(APICountryDataAccessObject dataAccess, FilterCountriesOutputBoundary presenter) {
+    public FilterCountriesInteractor(FilterCountriesDataAccessInterface dataAccess, FilterCountriesOutputBoundary presenter) {
         this.dataAccess = dataAccess;
         this.presenter = presenter;
     }

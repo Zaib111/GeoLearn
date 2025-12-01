@@ -170,6 +170,17 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
 
         presenter.presentAnswerFeedback(response);
     }
+
+    /**
+     * Loads quiz history from the database and presents it to the view.
+     */
+    @Override
+    public void loadQuizHistory() {
+        List<QuizHistoryEntry> historyEntries = historyGateway.getAllQuizAttempts();
+        QuizHistoryResponseModel response = new QuizHistoryResponseModel(historyEntries);
+        presenter.presentQuizHistory(response);
+    }
+
     /**
      * Returns a shuffled copy of the question's options.
      */

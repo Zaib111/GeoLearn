@@ -199,7 +199,11 @@ public class QuizView extends AbstractView {
             }
         });
 
-        historyButton.addActionListener(e -> showHistoryDialog());
+        historyButton.addActionListener(e -> {
+            if (controller != null) {
+                controller.loadQuizHistory();
+            }
+        });
 
         // Type-in submit
         submitButton.addActionListener(e -> {
@@ -495,7 +499,7 @@ public class QuizView extends AbstractView {
         );
 
         dialog.setLayout(new BorderLayout());
-        dialog.add(new JLabel("Quiz History (this session):",
+        dialog.add(new JLabel("Quiz History:",
                 SwingConstants.CENTER), BorderLayout.NORTH);
         dialog.add(scrollPane, BorderLayout.CENTER);
 
@@ -509,6 +513,39 @@ public class QuizView extends AbstractView {
         dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
+    }
+
+    /**
+     * Displays quiz history from the database in a dialog.
+     * Called by the presenter when history is loaded.
+     *
+     * @param historyEntries the list of quiz history entries from the database
+     */
+    public void showQuizHistory(java.util.List<app.entities.QuizHistoryEntry> historyEntries) {
+        // Clear the existing table data
+        historyModel.setRowCount(0);
+
+        // Populate table with database history
+        int rowNumber = 1;
+        for (app.entities.QuizHistoryEntry entry : historyEntries) {
+            String quizTypeLabel = entry.getQuizType() != null
+                    ? entry.getQuizType().getDisplayName()
+                    : "Unknown";
+            String modeLabel = entry.getQuestionType() != null
+                    ? entry.getQuestionType().toString()
+                    : "Unknown";
+            String scoreLabel = entry.getScore() + " / " + entry.getNumQuestions();
+
+            historyModel.addRow(new Object[]{
+                    rowNumber++,
+                    quizTypeLabel,
+                    modeLabel,
+                    scoreLabel
+            });
+        }
+
+        // Show the dialog
+        showHistoryDialog();
     }
 
     /**
@@ -617,13 +654,55 @@ public class QuizView extends AbstractView {
     }
 
     /**
-     * Currently unused, if presenter later writes directly into QuizState,
-     * this method will update the UI in response to state changes.
+     * Responds to view model state changes and updates the UI accordingly.
+     * This method is called whenever the presenter updates the quiz state.
      */
     @Override
     public void onStateChange(Object oldState, Object newState) {
         if (!(newState instanceof QuizState)) {
             return;
+        }
+
+        final QuizState state = (QuizState) newState;
+
+        // Handle showing a new question
+        if (state.isShowQuestion()) {
+            showQuestion(
+                    state.getQuizTitle(),
+                    state.getPrompt(),
+                    state.getOptions(),
+                    state.getQuestionIndex(),
+                    state.getTotalQuestions(),
+                    state.getMediaUrl()
+            );
+        }
+
+        // Handle showing answer feedback
+        if (state.isShowFeedback()) {
+            showAnswerFeedback(
+                    state.getFeedbackMessage(),
+                    state.getCorrectAnswer(),
+                    state.getExplanation(),
+                    state.getScore(),
+                    state.getCurrentStreak(),
+                    state.getHighestStreak()
+            );
+        }
+
+        // Handle showing quiz end summary
+        if (state.isShowEnd()) {
+            showQuizEnd(
+                    "Quiz Completed!",
+                    state.getScore(),
+                    state.getTotalQuestions(),
+                    state.getDurationSeconds(),
+                    state.getHighestStreak()
+            );
+        }
+
+        // Handle showing quiz history
+        if (state.isShowHistory()) {
+            showQuizHistory(state.getHistoryEntries());
         }
     }
 

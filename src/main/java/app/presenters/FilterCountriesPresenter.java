@@ -8,6 +8,8 @@ import app.use_cases.filter_country.FilterCountriesOutputData;
 import app.views.ViewModel;
 import app.views.filter_countries.FilterCountriesState;
 
+import java.util.List;
+
 public class FilterCountriesPresenter implements FilterCountriesOutputBoundary {
     private final ViewModel<FilterCountriesState> filterCountriesViewModel;
 

@@ -1,12 +1,11 @@
 package app.presenters;
 
-import app.entities.CountryCollection;
-import app.use_cases.collection.CollectionOutputBoundary;
+import app.use_cases.country_collection.CollectionOutputBoundary;
+import app.use_cases.country_collection.CollectionOutputData;
 import app.views.ViewModel;
-import app.views.collection.CollectionState;
+import app.views.country_collection.CollectionState;
 
 import javax.swing.*;
-import java.util.List;
 
 public class CollectionPresenter implements CollectionOutputBoundary {
     private final ViewModel<CollectionState> collectionViewModel;
@@ -16,9 +15,9 @@ public class CollectionPresenter implements CollectionOutputBoundary {
     }
 
     @Override
-    public void prepareCollectionsView(List<CountryCollection> collections) {
+    public void prepareCollectionsView(CollectionOutputData outputData) {
         CollectionState state = collectionViewModel.getState();
-        state.setAllCollections(collections);
+        state.setAllCollections(outputData.getCollections());
         state.setErrorMessage(null);
         collectionViewModel.updateState(state);
     }
