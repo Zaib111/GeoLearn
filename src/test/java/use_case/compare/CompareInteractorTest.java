@@ -1,6 +1,10 @@
-package app.use_cases.compare;
+package use_case.compare;
 
 import app.entities.Country;
+import app.use_cases.compare.CompareDataAccessInterface;
+import app.use_cases.compare.CompareInteractor;
+import app.use_cases.compare.CompareOutputBoundary;
+import app.use_cases.compare.CompareOutputData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
