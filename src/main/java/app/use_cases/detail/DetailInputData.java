@@ -1,24 +1,12 @@
 package app.use_cases.detail;
 
-/**
- * Input data for detail use case.
- */
 public class DetailInputData {
-    private final String countryCode;
-
-    /**
-     * Constructor.
-     * @param countryCode the country code
-     */
-    public DetailInputData(final String countryCode) {
-        this.countryCode = countryCode;
+    private final String countryInfo;
+    public DetailInputData(String countryInfo) {
+        this.countryInfo = countryInfo;
     }
 
-    /**
-     * Get the country code.
-     * @return the country code
-     */
-    final String getCountryCode() {
-        return countryCode;
+    String getCountryInfo() {
+        return countryInfo;
     }
 }

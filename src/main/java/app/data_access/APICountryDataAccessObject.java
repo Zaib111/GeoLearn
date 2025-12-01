@@ -37,6 +37,11 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
     private static final String FIELD_CURRENCIES = "currencies";
     private static final String FIELD_TIMEZONES = "timezones";
 
+    // Retry configuration
+    private static final int MAX_RETRIES = 3;
+    private static final long INITIAL_RETRY_DELAY_MS = 1000;
+    private static final double BACKOFF_MULTIPLIER = 2.0;
+
     private final OkHttpClient client;
     private final String apiBase;
     private List<Country> cachedCountries;
@@ -67,9 +72,7 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
                     FIELD_TIMEZONES
             );
 
-            fieldGroups.forEach(field -> {
-                fetchFieldData(field, dataMaps);
-            });
+            fieldGroups.forEach(field -> fetchFieldData(field, dataMaps));
 
             dataMaps.countryCodes.forEach(countryCode -> {
                 final Country country = createCountry(countryCode, dataMaps);
@@ -81,14 +84,44 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
     }
 
     private void fetchFieldData(String field, CountryDataMaps dataMaps) {
+        int attempt = 0;
+        long retryDelay = INITIAL_RETRY_DELAY_MS;
+
+        while (attempt <= MAX_RETRIES) {
+            try {
+                performFetch(field, dataMaps);
+                break;
+            } catch (IOException | JSONException exception) {
+                attempt++;
+                if (attempt > MAX_RETRIES) {
+                    System.err.println("Failed to fetch field '" + field + "' after " + MAX_RETRIES + " retries.");
+                    throw new RuntimeException("Failed to fetch data for field: " + field, exception);
+                }
+
+                System.err.println("Attempt " + attempt + " failed for field '" + field + "': "
+                        + exception.getMessage() + ". Retrying in " + retryDelay + "ms...");
+
+                try {
+                    Thread.sleep(retryDelay);
+                } catch (InterruptedException interruptedException) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Interrupted while retrying fetch for field: " + field,
+                            interruptedException);
+                }
+
+                retryDelay = (long) (retryDelay * BACKOFF_MULTIPLIER);
+            }
+        }
+    }
+
+    private void performFetch(String field, CountryDataMaps dataMaps) throws IOException, JSONException {
         final String url = apiBase.concat(field);
         final Request request = new Request.Builder()
                 .url(url)
                 .method("GET", null)
                 .build();
-        try {
-            final Response response = client.newCall(request).execute();
 
+        try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Unexpected code " + response);
             }
@@ -97,9 +130,6 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
             final JSONArray countryArray = new JSONArray(responseBody);
 
             processCountryArray(countryArray, field, dataMaps);
-        }
-        catch (IOException | JSONException exception) {
-            throw new RuntimeException(exception);
         }
     }
 
