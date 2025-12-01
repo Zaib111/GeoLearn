@@ -16,6 +16,8 @@ public class TakeQuizController {
 
     /**
      * Creates a controller that forwards requests to the quiz interactor.
+     *
+     * @param interactor the take-quiz input boundary (interactor) to forward requests to
      */
     public TakeQuizController(TakeQuizInputBoundary interactor) {
         this.interactor = interactor;
@@ -23,11 +25,15 @@ public class TakeQuizController {
 
     /**
      * Starts a new quiz with the selected type, mode, and number of questions.
+     *
+     * @param quizType          the type of quiz to start
+     * @param questionType      the question type to include in the quiz
+     * @param numberOfQuestions the number of questions to generate for the quiz
      */
     public void startQuiz(QuizType quizType,
                           QuestionType questionType,
                           int numberOfQuestions) {
-        TakeQuizStartRequestModel request = new TakeQuizStartRequestModel(
+        final TakeQuizStartRequestModel request = new TakeQuizStartRequestModel(
                 quizType,
                 questionType,
                 numberOfQuestions
@@ -37,9 +43,11 @@ public class TakeQuizController {
 
     /**
      * Submits the user's answer to the current question.
+     *
+     * @param userAnswer the user's answer text for the current question
      */
     public void submitAnswer(String userAnswer) {
-        SubmitAnswerRequestModel request = new SubmitAnswerRequestModel(userAnswer);
+        final SubmitAnswerRequestModel request = new SubmitAnswerRequestModel(userAnswer);
         interactor.submitAnswer(request);
     }
 
@@ -55,5 +63,12 @@ public class TakeQuizController {
      */
     public void timeExpired() {
         interactor.timeExpired();
+    }
+
+    /**
+     * Requests the quiz history from the database.
+     */
+    public void loadQuizHistory() {
+        interactor.loadQuizHistory();
     }
 }

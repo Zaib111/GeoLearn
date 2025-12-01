@@ -1,4 +1,4 @@
-package app.use_cases.collection;
+package app.use_cases.country_collection;
 
 import java.util.UUID;
 
@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class RenameCollectionRequestData {
+public class CollectionRenameInputData {
     private final UUID collectionId;
     private final String newName;
 }

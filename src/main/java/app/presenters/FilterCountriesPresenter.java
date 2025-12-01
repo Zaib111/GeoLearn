@@ -1,12 +1,12 @@
 package app.presenters;
 
+import java.util.List;
+
 import app.entities.Country;
 import app.use_cases.filter_country.FilterCountriesOutputBoundary;
 import app.use_cases.filter_country.FilterCountriesOutputData;
 import app.views.ViewModel;
 import app.views.filter_countries.FilterCountriesState;
-import app.views.filter_countries.FilterCountriesView;
-import app.views.settings.SettingsState;
 
 import java.util.List;
 
@@ -19,8 +19,9 @@ public class FilterCountriesPresenter implements FilterCountriesOutputBoundary {
 
     @Override
     public void presentFilteredCountries(FilterCountriesOutputData outputData) {
-        FilterCountriesState filterCountriesState = new FilterCountriesState();
-        List<Country> filteredCountries = outputData.getCountries(); // get filtered countries from output data
+        final FilterCountriesState filterCountriesState = new FilterCountriesState();
+        // get filtered countries from output data
+        final List<Country> filteredCountries = outputData.getCountries();
         filterCountriesState.setFilteredCountries(filteredCountries);
         filterCountriesViewModel.updateState(filterCountriesState);
     }

@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import app.use_cases.filter_country.FilterCountriesDataAccessInterface;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,11 +18,13 @@ import app.entities.Country;
 import app.use_cases.compare.CompareDataAccessInterface;
 import app.use_cases.country.CountryDataAccessInterface;
 import app.use_cases.detail.DetailDataAccessInterface;
+import app.use_cases.filter_country.FilterCountriesDataAccessInterface;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class APICountryDataAccessObject implements FilterCountriesDataAccessInterface, CountryDataAccessInterface, CompareDataAccessInterface, DetailDataAccessInterface {
+public class APICountryDataAccessObject implements FilterCountriesDataAccessInterface, CountryDataAccessInterface,
+        CompareDataAccessInterface, DetailDataAccessInterface {
     private static final String FIELD_NAME = "name";
     private static final String FIELD_CAPITAL = "capital";
     private static final String FIELD_REGION = "region";
@@ -36,9 +37,14 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
     private static final String FIELD_CURRENCIES = "currencies";
     private static final String FIELD_TIMEZONES = "timezones";
 
+    // Retry configuration
+    private static final int MAX_RETRIES = 3;
+    private static final long INITIAL_RETRY_DELAY_MS = 1000;
+    private static final double BACKOFF_MULTIPLIER = 2.0;
+
     private final OkHttpClient client;
     private final String apiBase;
-    private List<Country> cachedCountries = null;
+    private List<Country> cachedCountries;
 
     public APICountryDataAccessObject() {
         this.client = new OkHttpClient().newBuilder().build();
@@ -47,47 +53,75 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
 
     @Override
     public List<Country> getCountries() {
-        if (cachedCountries != null) {
-            return cachedCountries;
+        // Cache countries if they have not been cached yet.
+        if (cachedCountries == null) {
+            final List<Country> countries = new ArrayList<>();
+            final CountryDataMaps dataMaps = new CountryDataMaps();
+
+            final List<String> fieldGroups = List.of(
+                    FIELD_NAME,
+                    FIELD_CAPITAL,
+                    FIELD_REGION,
+                    FIELD_SUBREGION,
+                    FIELD_POPULATION,
+                    FIELD_AREA,
+                    FIELD_BORDERS,
+                    FIELD_FLAGS,
+                    FIELD_LANGUAGES,
+                    FIELD_CURRENCIES,
+                    FIELD_TIMEZONES
+            );
+
+            fieldGroups.forEach(field -> fetchFieldData(field, dataMaps));
+
+            dataMaps.countryCodes.forEach(countryCode -> {
+                final Country country = createCountry(countryCode, dataMaps);
+                countries.add(country);
+            });
+            cachedCountries = countries;
         }
-        final List<Country> countries = new ArrayList<>();
-        final CountryDataMaps dataMaps = new CountryDataMaps();
-
-        final List<String> fieldGroups = List.of(
-                FIELD_NAME,
-                FIELD_CAPITAL,
-                FIELD_REGION,
-                FIELD_SUBREGION,
-                FIELD_POPULATION,
-                FIELD_AREA,
-                FIELD_BORDERS,
-                FIELD_FLAGS,
-                FIELD_LANGUAGES,
-                FIELD_CURRENCIES,
-                FIELD_TIMEZONES
-        );
-
-        fieldGroups.forEach(field -> {
-            fetchFieldData(field, dataMaps);
-        });
-
-        dataMaps.countryCodes.forEach(countryCode -> {
-            final Country country = createCountry(countryCode, dataMaps);
-            countries.add(country);
-        });
-        cachedCountries = countries;
-        return countries;
+        return cachedCountries;
     }
 
     private void fetchFieldData(String field, CountryDataMaps dataMaps) {
+        int attempt = 0;
+        long retryDelay = INITIAL_RETRY_DELAY_MS;
+
+        while (attempt <= MAX_RETRIES) {
+            try {
+                performFetch(field, dataMaps);
+                break;
+            } catch (IOException | JSONException exception) {
+                attempt++;
+                if (attempt > MAX_RETRIES) {
+                    System.err.println("Failed to fetch field '" + field + "' after " + MAX_RETRIES + " retries.");
+                    throw new RuntimeException("Failed to fetch data for field: " + field, exception);
+                }
+
+                System.err.println("Attempt " + attempt + " failed for field '" + field + "': "
+                        + exception.getMessage() + ". Retrying in " + retryDelay + "ms...");
+
+                try {
+                    Thread.sleep(retryDelay);
+                } catch (InterruptedException interruptedException) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Interrupted while retrying fetch for field: " + field,
+                            interruptedException);
+                }
+
+                retryDelay = (long) (retryDelay * BACKOFF_MULTIPLIER);
+            }
+        }
+    }
+
+    private void performFetch(String field, CountryDataMaps dataMaps) throws IOException, JSONException {
         final String url = apiBase.concat(field);
         final Request request = new Request.Builder()
                 .url(url)
                 .method("GET", null)
                 .build();
-        try {
-            final Response response = client.newCall(request).execute();
 
+        try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Unexpected code " + response);
             }
@@ -96,9 +130,6 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
             final JSONArray countryArray = new JSONArray(responseBody);
 
             processCountryArray(countryArray, field, dataMaps);
-        }
-        catch (IOException | JSONException exception) {
-            throw new RuntimeException(exception);
         }
     }
 
@@ -268,18 +299,6 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
         Country result = null;
         for (Country country : getCountries()) {
             if (country.getCode().equals(countryCode)) {
-                result = country;
-                break;
-            }
-        }
-        return result;
-    }
-
-    @Override
-    public Country getCountryByName(String countryName) {
-        Country result = null;
-        for (Country country : getCountries()) {
-            if (country.getName().equals(countryName)) {
                 result = country;
                 break;
             }
