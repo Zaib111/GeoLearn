@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class DeleteCollectionRequestData {
+public class CollectionDeleteInputData {
     private final UUID collectionId;
 }
 
