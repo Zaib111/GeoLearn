@@ -134,12 +134,13 @@ public class CompareView extends AbstractView {
 
     @Override
     public void onViewOpened(String param) {
+        // When the view opens, ask to load all countries
         compareController.loadAvailableCountries();
     }
 
     @Override
     public void onViewClosed() {
-        // no-op
+        // Optional: clear state if needed in future
     }
 
     @Override
@@ -149,6 +150,7 @@ public class CompareView extends AbstractView {
         }
         CompareState state = (CompareState) newState;
 
+        // Show any errors from use case
         if (state.getErrorMessage() != null && !state.getErrorMessage().isEmpty()) {
             JOptionPane.showMessageDialog(
                     this,
@@ -158,10 +160,12 @@ public class CompareView extends AbstractView {
             );
         }
 
+        // Populate dropdowns with full country list
         if (state.getCountryNames() != null && !state.getCountryNames().isEmpty()) {
             updateDropdownOptions(state.getCountryNames());
         }
 
+        // When comparison data is ready, render comparison in the same panel
         if (state.getSelectedCountries() != null
                 && !state.getSelectedCountries().isEmpty()
                 && state.getColumnHeaders() != null
@@ -176,6 +180,7 @@ public class CompareView extends AbstractView {
     // ----------------- Helpers to update UI from state -----------------
 
     private void updateDropdownOptions(List<String> countryNames) {
+        // All countries in every dropdown
         String[] options = countryNames.toArray(new String[0]);
 
         for (JComboBox<String> comboBox : dropdowns) {
@@ -197,6 +202,13 @@ public class CompareView extends AbstractView {
         String[] colNames = state.getColumnHeaders();
         Object[][] data = state.getComparisonTableData();
 
+        // 🔹 rename "Attribute" and country names in header row to ""
+        if (colNames != null && colNames.length > 0) {
+            for (int i = 0; i < colNames.length; i++) {
+                colNames[i] = "";
+            }
+        }
+
         removeAll();
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -204,10 +216,10 @@ public class CompareView extends AbstractView {
         // ----- Header (back button + title) -----
         JPanel headerPanel = new JPanel();
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-        headerPanel.setBorder(new EmptyBorder(0, 10, 5, 10));
+        headerPanel.setBorder(new EmptyBorder(0, -5, 5, 10));
 
         JPanel buttonsRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        JButton backToSelectionButton = new JButton("Back to Country Selection");
+        JButton backToSelectionButton = new JButton("Back");
         backToSelectionButton.addActionListener(e -> {
             buildSelectionUI();
             compareController.loadAvailableCountries();
@@ -228,8 +240,8 @@ public class CompareView extends AbstractView {
         int cols = data[0].length;
         Object[][] tableData = new Object[rows + 1][cols];
 
-        // Row 0: flags
-        tableData[0][0] = "Flag";
+        // Row 0: flags (first cell now empty)
+        tableData[0][0] = "";
         for (int c = 1; c < cols; c++) {
             Country country = selectedCountries.get(c - 1);
             ImageIcon flagIcon = loadFlag(country, 100, 65);
@@ -251,7 +263,6 @@ public class CompareView extends AbstractView {
                 return false;
             }
 
-            // Let Swing know the class per column (so Icon renderer can be used)
             @Override
             public Class<?> getColumnClass(int column) {
                 Object value = getValueAt(0, column);
