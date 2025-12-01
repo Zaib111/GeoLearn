@@ -52,6 +52,17 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
     }
 
     @Override
+    public Country getCountryByName(String name) {
+        // QUICK FIX: find country from your existing country list
+        for (Country c : getCountries()) {
+            if (c.getName().equalsIgnoreCase(name)) {
+                return c;
+            }
+        }
+        return null; // or throw exception
+    }
+
+    @Override
     public List<Country> getCountries() {
         // Cache countries if they have not been cached yet.
         if (cachedCountries == null) {
