@@ -21,7 +21,6 @@ import app.use_cases.country_collection.CollectionDataAccessInterface;
 import app.use_cases.country_collection.CollectionInteractor;
 import app.use_cases.compare.CompareInteractor;
 import app.use_cases.compare.CompareViewModel;
-import app.use_cases.country_collection.CollectionInteractor;
 import app.use_cases.detail.DetailDataAccessInterface;
 import app.use_cases.detail.DetailInteractor;
 import app.use_cases.explore_map.ExploreMapInteractor;
@@ -29,7 +28,6 @@ import app.use_cases.filter_country.FilterCountriesInteractor;
 import app.use_cases.quiz.LocalQuestionRepository;
 import app.use_cases.quiz.QuestionRepository;
 import app.use_cases.quiz.QuizHistoryDataAccessInterface;
-import app.use_cases.quiz.QuizViewModel;
 import app.use_cases.quiz.TakeQuizInteractor;
 import app.use_cases.quiz.TakeQuizOutputBoundary;
 import app.use_cases.authentication.AuthenticationDataAccessInterface;
@@ -45,6 +43,7 @@ import app.views.explore_map.ExploreMapView;
 import app.views.filter_countries.FilterCountriesState;
 import app.views.filter_countries.FilterCountriesView;
 import app.views.home.HomeView;
+import app.views.quiz.QuizState;
 import app.views.quiz.QuizView;
 import app.views.authentication.AuthenticationState;
 import app.views.authentication.AuthenticationView;
@@ -197,7 +196,7 @@ public class Main {
             APICountryDataAccessObject countryDataApi,
             QuizHistoryDataAccessInterface userDataStorage) {
         // ViewModel for the quiz screen
-        final QuizViewModel quizViewModel = new QuizViewModel();
+        final ViewModel<QuizState> quizViewModel = new ViewModel<>(new QuizState());
 
         // Swing view for the quiz screen
         final QuizView quizView = new QuizView(quizViewModel);
