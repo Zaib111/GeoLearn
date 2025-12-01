@@ -47,7 +47,7 @@ public class MasterFrame extends JFrame {
         final JPanel topPanel = new JPanel(new BorderLayout());
 
         final JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        backButton = new JButton("Back");
+        backButton = new JButton("Main Menu");
         backButton.setVisible(false);
         leftPanel.add(backButton);
 
