@@ -1,4 +1,4 @@
-package use_case.filter_countries;
+package app.use_cases.filter_countries;
 
 import app.entities.Country;
 import app.use_cases.filter_country.*;

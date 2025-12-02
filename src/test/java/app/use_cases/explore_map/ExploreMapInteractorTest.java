@@ -1,6 +1,5 @@
-package use_case.explore_map;
+package app.use_cases.explore_map;
 
-import app.use_cases.explore_map.*;
 import org.geotools.api.data.SimpleFeatureSource;
 import org.geotools.api.feature.simple.SimpleFeature;
 import org.geotools.api.feature.simple.SimpleFeatureType;
