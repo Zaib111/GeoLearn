@@ -1,7 +1,6 @@
-package use_case.detail;
+package app.use_cases.detail;
 
 import app.entities.Country;
-import app.use_cases.detail.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
