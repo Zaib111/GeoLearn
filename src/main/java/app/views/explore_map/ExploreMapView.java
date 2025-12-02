@@ -190,7 +190,7 @@ public class ExploreMapView extends AbstractView {
     @Override
     public void onViewOpened(String param) {
         // Automatically load the default world map shapefile on startup
-        if (controller != null && mapPane == null) {
+        if (controller != null && (mapPane == null || mapContent == null)) {
             // Load the default shapefile from the resources folder
             final String defaultShapefilePath = "src/main/resources/shapefiles/ne_110m_admin_0_countries.shp";
             final File shapefileFile = new File(defaultShapefilePath);
@@ -206,7 +206,16 @@ public class ExploreMapView extends AbstractView {
         // Dispose map content when view is closed.
         if (mapContent != null) {
             mapContent.dispose();
+            mapContent = null;
         }
+        if (mapPane != null) {
+            remove(mapPane);
+            mapPane = null;
+        }
+        featureLayer = null;
+        hoverLayer = null;
+        selectedLayer = null;
+        featureSource = null;
     }
 
     @Override
@@ -617,7 +626,18 @@ public class ExploreMapView extends AbstractView {
         else {
             if (MODE_SELECT.equals(mode) && controller != null) {
                 controller.selectFeature(worldPos.x, worldPos.y);
-                navigator.navigateTo("country_details", exploreMapViewModel.getState().getSelectedCountryName());
+                // Update the display to show selection highlight
+                updateSelectedDisplay();
+                // Navigate to country details if a country was selected
+                final String selectedCountryName = exploreMapViewModel.getState().getSelectedCountryName();
+                if (selectedCountryName != null) {
+                    // Small delay to show the selection before navigating
+                    javax.swing.Timer timer = new javax.swing.Timer(300, e -> {
+                        navigator.navigateTo("country_details", selectedCountryName);
+                    });
+                    timer.setRepeats(false);
+                    timer.start();
+                }
             }
         }
     }
