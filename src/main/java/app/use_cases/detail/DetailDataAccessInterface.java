@@ -2,8 +2,6 @@ package app.use_cases.detail;
 
 import app.entities.Country;
 
-import java.util.List;
-
 /**
  * Data Access Interface for the Detail Use Case.
  * Defines the methods required by the Interactor to retrieve country data from the persistence layer.
@@ -25,12 +23,4 @@ public interface DetailDataAccessInterface {
      * @return The Country entity if found, or null if not.
      */
     Country getCountryByName(String name);
-
-    /**
-     * Retrieves a list of all available countries.
-     *
-     * @return A List of all Country entities.
-     */
-    List<Country> getCountries();
-
 }
