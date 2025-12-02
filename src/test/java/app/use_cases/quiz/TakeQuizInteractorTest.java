@@ -157,6 +157,73 @@ public class TakeQuizInteractorTest {
         assertEquals(0, r.getCurrentStreak());
     }
 
+    @Test
+    void testSubmitAnswerWithNoQuizDoesNothing() {
+        interactor.submitAnswer(new SubmitAnswerRequestModel("Paris"));
+
+        assertNull(fakePresenter.lastFeedbackResponse);
+        assertNull(fakePresenter.lastEndResponse);
+    }
+
+    @Test
+    void testSubmitAnswerAfterQuizFinishedDoesNothing() {
+        interactor.startQuiz(new TakeQuizStartRequestModel(
+                QuizType.CAPITALS,
+                QuestionType.TYPE_IN,
+                1
+        ));
+
+        interactor.submitAnswer(new SubmitAnswerRequestModel("Paris"));
+        AnswerFeedbackResponseModel before =
+                fakePresenter.lastFeedbackResponse;
+
+        interactor.nextQuestion();
+        assertNotNull(fakePresenter.lastEndResponse);
+
+        interactor.submitAnswer(new SubmitAnswerRequestModel("Paris"));
+
+        assertSame(before, fakePresenter.lastFeedbackResponse);
+    }
+
+    @Test
+    void testNextQuestionWithNoQuizDoesNothing() {
+        interactor.nextQuestion();
+
+        assertNull(fakePresenter.lastQuestionResponse);
+        assertNull(fakePresenter.lastEndResponse);
+    }
+
+    @Test
+    void testTimeExpiredWithNoQuizOrFinishedDoesNothing() {
+        // Case 1: no quiz started
+        interactor.timeExpired();
+        assertNull(fakePresenter.lastFeedbackResponse);
+
+        // Case 2: quiz already finished
+        interactor.startQuiz(new TakeQuizStartRequestModel(
+                QuizType.CAPITALS,
+                QuestionType.TYPE_IN,
+                1
+        ));
+        interactor.submitAnswer(new SubmitAnswerRequestModel("Paris"));
+        interactor.nextQuestion(); // ends the quiz
+        assertNotNull(fakePresenter.lastEndResponse);
+
+        fakePresenter.lastFeedbackResponse = null;
+
+        interactor.timeExpired();
+
+        assertNull(fakePresenter.lastFeedbackResponse);
+    }
+
+    @Test
+    void testLoadQuizHistoryCallsPresenter() {
+        interactor.loadQuizHistory();
+
+        assertNotNull(fakePresenter.lastHistoryResponse,
+                "Presenter should receive a history response");
+    }
+
     // ===== Helper fakes =====
 
     /**
