@@ -189,7 +189,16 @@ public class ExploreMapView extends AbstractView {
 
     @Override
     public void onViewOpened(String param) {
-        // Initialize view when opened
+        // Automatically load the default world map shapefile on startup
+        if (controller != null && mapPane == null) {
+            // Load the default shapefile from the resources folder
+            final String defaultShapefilePath = "src/main/resources/shapefiles/ne_110m_admin_0_countries.shp";
+            final File shapefileFile = new File(defaultShapefilePath);
+
+            if (shapefileFile.exists()) {
+                controller.loadMap(shapefileFile.getAbsolutePath());
+            }
+        }
     }
 
     @Override
