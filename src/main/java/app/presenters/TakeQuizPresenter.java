@@ -1,6 +1,11 @@
 package app.presenters;
 
-import app.use_cases.quiz.*;
+import app.use_cases.quiz.AnswerFeedbackResponseModel;
+import app.use_cases.quiz.QuizHistoryResponseModel;
+import app.use_cases.quiz.TakeQuizEndResponseModel;
+import app.use_cases.quiz.TakeQuizOutputBoundary;
+import app.use_cases.quiz.TakeQuizQuestionResponseModel;
+import app.use_cases.quiz.TakeQuizStartResponseModel;
 import app.views.ViewModel;
 import app.views.quiz.QuizState;
 

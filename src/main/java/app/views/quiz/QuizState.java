@@ -1,9 +1,9 @@
 package app.views.quiz;
 
-import app.entities.QuizHistoryEntry;
-
-import java.util.List;
 import java.util.Collections;
+import java.util.List;
+
+import app.entities.QuizHistoryEntry;
 
 /**
  * View state for the quiz screen. Stores UI data for the current question,
@@ -17,7 +17,7 @@ public class QuizState {
     private List<String> options = Collections.emptyList();
     private int questionIndex;
     private int totalQuestions;
-    private String mediaUrl; // e.g. flag URL later
+    private String mediaUrl;
 
     // Feedback info
     private String feedbackMessage;
@@ -62,8 +62,17 @@ public class QuizState {
         return options;
     }
 
+    /**
+     * Sets the options for the current question. If null, an empty list is used.
+     * @param options - The options for the current question.
+     */
     public void setOptions(List<String> options) {
-        this.options = (options != null) ? options : Collections.emptyList();
+        if (options != null) {
+            this.options = options;
+        }
+        else {
+            this.options = Collections.emptyList();
+        }
     }
 
     public int getQuestionIndex() {
@@ -105,6 +114,7 @@ public class QuizState {
     public void setCorrectAnswer(String correctAnswer) {
         this.correctAnswer = correctAnswer;
     }
+
     public String getExplanation() {
         return explanation;
     }
@@ -149,8 +159,17 @@ public class QuizState {
         return historyEntries;
     }
 
+    /**
+     * Sets the quiz history entries. If null, an empty list is used.
+     * @param historyEntries - The quiz history entries.
+     */
     public void setHistoryEntries(List<QuizHistoryEntry> historyEntries) {
-        this.historyEntries = (historyEntries != null) ? historyEntries : Collections.emptyList();
+        if (historyEntries != null) {
+            this.historyEntries = historyEntries;
+        }
+        else {
+            this.historyEntries = Collections.emptyList();
+        }
     }
 
     public boolean isShowQuestion() {

@@ -14,6 +14,7 @@ public class TakeQuizStartResponseModel {
     private final String mediaUrl;
 
     /**
+     * Constructor.
      * @param quizTitle title shown to the user
      * @param prompt text of the first question
      * @param options MCQ options (empty for type-in)
@@ -35,10 +36,27 @@ public class TakeQuizStartResponseModel {
         this.mediaUrl = mediaUrl;
     }
 
-    public String getQuizTitle() { return quizTitle; }
-    public String getPrompt() { return prompt; }
-    public List<String> getOptions() { return options; }
-    public int getQuestionIndex() { return questionIndex; }
-    public int getTotalQuestions() { return totalQuestions; }
-    public String getMediaUrl() { return mediaUrl; }
+    public String getQuizTitle() {
+        return quizTitle;
+    }
+
+    public String getPrompt() {
+        return prompt;
+    }
+
+    public List<String> getOptions() {
+        return options;
+    }
+
+    public int getQuestionIndex() {
+        return questionIndex;
+    }
+
+    public int getTotalQuestions() {
+        return totalQuestions;
+    }
+
+    public String getMediaUrl() {
+        return mediaUrl;
+    }
 }

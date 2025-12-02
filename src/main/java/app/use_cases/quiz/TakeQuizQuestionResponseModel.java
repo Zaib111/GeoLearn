@@ -4,7 +4,7 @@ import java.util.List;
 
 /**
  * Response model for presenting an individual quiz question to the user.
- * It contains all information needed to display a single question in the quiz flow, including:</p>
+ * It contains all information needed to display a single question in the quiz flow
  * <ul>
  *     <li>The question prompt (text)</li>
  *     <li>Multiple-choice options (if applicable)</li>
@@ -41,9 +41,23 @@ public class TakeQuizQuestionResponseModel {
         this.mediaUrl = mediaUrl;
     }
 
-    public String getPrompt() { return prompt; }
-    public List<String> getOptions() { return options; }
-    public int getQuestionIndex() { return questionIndex; }
-    public int getTotalQuestions() { return totalQuestions; }
-    public String getMediaUrl() { return mediaUrl; }
+    public String getPrompt() {
+        return prompt;
+    }
+
+    public List<String> getOptions() {
+        return options;
+    }
+
+    public int getQuestionIndex() {
+        return questionIndex;
+    }
+
+    public int getTotalQuestions() {
+        return totalQuestions;
+    }
+
+    public String getMediaUrl() {
+        return mediaUrl;
+    }
 }

@@ -38,11 +38,27 @@ public class AnswerFeedbackResponseModel {
         this.highestStreak = highestStreak;
     }
 
-    public String getFeedbackMessage() { return feedbackMessage; }
-    public String getCorrectAnswer() { return correctAnswer; }
-    public String getExplanation() { return explanation; }
+    public String getFeedbackMessage() {
+        return feedbackMessage;
+    }
 
-    public int getScore() { return score; }
-    public int getCurrentStreak() { return currentStreak; }
-    public int getHighestStreak() { return highestStreak; }
+    public String getCorrectAnswer() {
+        return correctAnswer;
+    }
+
+    public String getExplanation() {
+        return explanation;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public int getCurrentStreak() {
+        return currentStreak;
+    }
+
+    public int getHighestStreak() {
+        return highestStreak;
+    }
 }

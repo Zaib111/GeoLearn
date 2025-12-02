@@ -13,6 +13,7 @@ public class TakeQuizStartRequestModel {
     private final int numberOfQuestions;
 
     /**
+     * Constructor.
      * @param quizType type of quiz selected
      * @param questionType question format (MCQ or TYPE_IN)
      * @param numberOfQuestions number of questions to generate
@@ -25,7 +26,15 @@ public class TakeQuizStartRequestModel {
         this.numberOfQuestions = numberOfQuestions;
     }
 
-    public QuizType getQuizType() { return quizType; }
-    public QuestionType getQuestionType() { return questionType; }
-    public int getNumberOfQuestions() { return numberOfQuestions; }
+    public QuizType getQuizType() {
+        return quizType;
+    }
+
+    public QuestionType getQuestionType() {
+        return questionType;
+    }
+
+    public int getNumberOfQuestions() {
+        return numberOfQuestions;
+    }
 }
