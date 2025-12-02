@@ -681,22 +681,22 @@ public class QuizView extends AbstractView {
         gbc.anchor = GridBagConstraints.CENTER;
         centerPanel.add(quizTitleLabel, gbc);
 
-        final JLabel topImage = makeHeroImageLabel("Globe");
+        final JLabel topImage = makeHeroImageLabel("🌍");
         gbc.gridx = 1;
         gbc.gridy = 0;
         centerPanel.add(topImage, gbc);
 
-        final JLabel bottomImage = makeHeroImageLabel("Building");
+        final JLabel bottomImage = makeHeroImageLabel("🏛️");
         gbc.gridx = 1;
         gbc.gridy = 2;
         centerPanel.add(bottomImage, gbc);
 
-        final JLabel leftImage = makeHeroImageLabel("Flag");
+        final JLabel leftImage = makeHeroImageLabel("🚩");
         gbc.gridx = 0;
         gbc.gridy = 1;
         centerPanel.add(leftImage, gbc);
 
-        final JLabel rightImage = makeHeroImageLabel("Currency");
+        final JLabel rightImage = makeHeroImageLabel("💱");
         gbc.gridx = 2;
         gbc.gridy = 1;
         centerPanel.add(rightImage, gbc);
