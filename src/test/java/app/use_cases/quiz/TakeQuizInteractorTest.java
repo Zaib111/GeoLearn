@@ -1,19 +1,8 @@
-package use_case.quiz;
+package app.use_cases.quiz;
 
 import app.entities.Question;
 import app.entities.QuestionType;
 import app.entities.QuizType;
-import app.use_cases.quiz.AnswerFeedbackResponseModel;
-import app.use_cases.quiz.QuestionRepository;
-import app.use_cases.quiz.QuizHistoryDataAccessInterface;
-import app.use_cases.quiz.QuizHistoryResponseModel;
-import app.use_cases.quiz.SubmitAnswerRequestModel;
-import app.use_cases.quiz.TakeQuizEndResponseModel;
-import app.use_cases.quiz.TakeQuizInteractor;
-import app.use_cases.quiz.TakeQuizOutputBoundary;
-import app.use_cases.quiz.TakeQuizQuestionResponseModel;
-import app.use_cases.quiz.TakeQuizStartRequestModel;
-import app.use_cases.quiz.TakeQuizStartResponseModel;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
