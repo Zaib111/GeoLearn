@@ -20,7 +20,7 @@ import app.views.AbstractView;
  * Manages view navigation and back button functionality.
  * Singleton pattern ensures only one instance exists.
  */
-public class MasterFrame extends JFrame implements NavigationService {
+public final class MasterFrame extends JFrame implements NavigationService {
     private static final int FRAME_WIDTH = 800;
     private static final int FRAME_HEIGHT = 600;
 

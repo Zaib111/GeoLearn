@@ -28,8 +28,10 @@ public abstract class AbstractView extends JPanel {
         return viewModel;
     }
 
-    /**2
+    /**
      * Called when the view is opened.
+     *
+     * @param param optional parameter passed when opening the view (may be null)
      */
     public abstract void onViewOpened(String param);
 
