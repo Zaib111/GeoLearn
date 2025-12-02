@@ -1,8 +1,8 @@
 package app.use_cases.quiz;
 
-import app.entities.QuizHistoryEntry;
-
 import java.util.List;
+
+import app.entities.QuizHistoryEntry;
 
 /**
  * Response model containing quiz history data to be presented to the user.

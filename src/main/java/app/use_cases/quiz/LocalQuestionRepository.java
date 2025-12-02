@@ -1,15 +1,15 @@
 package app.use_cases.quiz;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+import app.entities.Country;
 import app.entities.Question;
 import app.entities.QuestionType;
 import app.entities.QuizType;
-import app.entities.Country;
 import app.use_cases.country.CountryDataAccessInterface;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Collections;
 
 /**
  * A concrete implementation of QuestionRepository that provides all quiz
@@ -21,6 +21,10 @@ import java.util.Collections;
  * </ul>
  */
 public final class LocalQuestionRepository implements QuestionRepository {
+    private static final int MIN_COUNTRIES_FOR_MCQ = 4;
+    private static final int NUM_API_QUESTIONS = 20;
+    private static final int NUM_WRONG_CHOICES = 3;
+
     private final List<Question> allQuestions = new ArrayList<>();
     private final Random random = new Random();
     private final CountryDataAccessInterface countryDataAccess;
@@ -48,7 +52,7 @@ public final class LocalQuestionRepository implements QuestionRepository {
                 QuizType.CAPITALS,
                 QuestionType.MCQ,
                 "What is the capital of France?",
-                List.of("Paris","Rome","Berlin","Madrid"),
+                List.of("Paris", "Rome", "Berlin", "Madrid"),
                 "Paris",
                 List.of(),
                 "France's capital city is Paris.",
@@ -497,7 +501,6 @@ public final class LocalQuestionRepository implements QuestionRepository {
                 "English is the official language of Nigeria, used in government and education.",
                 null
         ));
-
 
         // ---- CURRENCIES - MCQ ----
 
@@ -1167,7 +1170,6 @@ public final class LocalQuestionRepository implements QuestionRepository {
                 null
         ));
 
-
         // ---- CURRENCIES - TYPE-IN ----
 
         allQuestions.add(new Question(
@@ -1393,32 +1395,28 @@ public final class LocalQuestionRepository implements QuestionRepository {
     }
 
     private void loadFlagQuestionsFromApi() {
-        List<Country> countries = countryDataAccess.getCountries();
-        if (countries.size() < 4) {
-            return; // not enough for MCQ
+        final List<Country> countries = countryDataAccess.getCountries();
+        if (countries.size() < MIN_COUNTRIES_FOR_MCQ) {
+            return;
         }
 
-        // Let's generate, say, 10 flag questions
-        int numQuestions = 20;
+        final int numQuestions = NUM_API_QUESTIONS;
 
         for (int i = 0; i < numQuestions; i++) {
-            Country correct = countries.get(random.nextInt(countries.size()));
+            final Country correct = countries.get(random.nextInt(countries.size()));
 
-            // Pick 3 distinct wrong countries
-            List<Country> pool = new ArrayList<>(countries);
+            final List<Country> pool = new ArrayList<>(countries);
             pool.remove(correct);
             Collections.shuffle(pool);
-            List<Country> wrongChoices = pool.subList(0, 3);
+            final List<Country> wrongChoices = pool.subList(0, NUM_WRONG_CHOICES);
 
-            // Build options list
-            List<String> options = new ArrayList<>();
+            final List<String> options = new ArrayList<>();
             options.add(correct.getName());
-            for (Country c : wrongChoices) {
-                options.add(c.getName());
+            for (Country country : wrongChoices) {
+                options.add(country.getName());
             }
             Collections.shuffle(options);
 
-            // If your Question has a mediaUrl field, pass correct.getFlagUrl()
             allQuestions.add(new Question(
                     QuizType.FLAGS,
                     QuestionType.MCQ,
@@ -1426,27 +1424,28 @@ public final class LocalQuestionRepository implements QuestionRepository {
                     options,
                     correct.getName(),
                     List.of(correct.getName()),
-                    "This is the flag of " + correct.getName()
-                    , correct.getFlagUrl()
+                    "This is the flag of " + correct.getName(),
+                    correct.getFlagUrl()
             ));
         }
     }
 
     private void loadFlagTypeInQuestionsFromApi() {
-        List<Country> countries = countryDataAccess.getCountries();
-        int numQuestions = 20;
+        final List<Country> countries = countryDataAccess.getCountries();
+        final int numQuestions = NUM_API_QUESTIONS;
         for (int i = 0; i < numQuestions && i < countries.size(); i++) {
-            Country c = countries.get(i);
+            final Country country = countries.get(i);
 
+            // No MCQ options for type-in questions
             allQuestions.add(new Question(
                     QuizType.FLAGS,
                     QuestionType.TYPE_IN,
                     "What country does this flag belong to?",
-                    List.of(), // no MCQ options
-                    c.getName(),
-                    List.of(c.getName()),
-                    "This is the flag of " + c.getName(),
-                    c.getFlagUrl()
+                    List.of(),
+                    country.getName(),
+                    List.of(country.getName()),
+                    "This is the flag of " + country.getName(),
+                    country.getFlagUrl()
             ));
         }
     }
@@ -1455,22 +1454,31 @@ public final class LocalQuestionRepository implements QuestionRepository {
     public List<Question> getQuestionsForQuiz(QuizType quizType,
                                               QuestionType questionType,
                                               int limit) {
-        List<Question> filtered = new ArrayList<>();
-        for (Question q : allQuestions) {
-            if (q.getQuizType() == quizType && q.getQuestionType() == questionType) {
-                filtered.add(q);
-            }
-        }
+        final List<Question> filtered = filterQuestionsByType(quizType, questionType);
 
         if (filtered.size() <= limit) {
             return filtered;
         }
 
-        List<Question> result = new ArrayList<>(limit);
-        List<Question> pool = new ArrayList<>(filtered);
+        return selectRandomQuestions(filtered, limit);
+    }
+
+    private List<Question> filterQuestionsByType(QuizType quizType, QuestionType questionType) {
+        final List<Question> filtered = new ArrayList<>();
+        for (Question question : allQuestions) {
+            if (question.getQuizType() == quizType && question.getQuestionType() == questionType) {
+                filtered.add(question);
+            }
+        }
+        return filtered;
+    }
+
+    private List<Question> selectRandomQuestions(List<Question> filtered, int limit) {
+        final List<Question> result = new ArrayList<>(limit);
+        final List<Question> pool = new ArrayList<>(filtered);
 
         for (int i = 0; i < limit; i++) {
-            int index = random.nextInt(pool.size());
+            final int index = random.nextInt(pool.size());
             result.add(pool.remove(index));
         }
 

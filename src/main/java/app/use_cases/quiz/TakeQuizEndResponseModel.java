@@ -28,9 +28,20 @@ public class TakeQuizEndResponseModel {
         this.highestStreak = highestStreak;
     }
 
-    public int getScore() { return score; }
-    public int getTotalQuestions() { return totalQuestions; }
-    public int getDurationSeconds() { return durationSeconds; }
-    public int getHighestStreak() { return highestStreak; }
+    public int getScore() {
+        return score;
+    }
+
+    public int getTotalQuestions() {
+        return totalQuestions;
+    }
+
+    public int getDurationSeconds() {
+        return durationSeconds;
+    }
+
+    public int getHighestStreak() {
+        return highestStreak;
+    }
 }
 

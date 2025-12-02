@@ -1,13 +1,13 @@
 package app.use_cases.quiz;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import app.entities.Question;
 import app.entities.QuestionType;
 import app.entities.Quiz;
 import app.entities.QuizHistoryEntry;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Interactor for the Take Quiz use case.
@@ -19,17 +19,22 @@ import java.util.List;
  *     <li>evaluating answers and preparing response models for the presenter</li>
  * </ul>
  */
-public class TakeQuizInteractor implements TakeQuizInputBoundary{
+public class TakeQuizInteractor implements TakeQuizInputBoundary {
     private final QuestionRepository questionRepo;
     private final TakeQuizOutputBoundary presenter;
     private final QuizHistoryDataAccessInterface historyGateway;
 
-    private QuestionType  currentQuestionType;
+    private QuestionType currentQuestionType;
 
     private Quiz currentQuiz;
 
     /**
-     * Creates a new TakeQuizInteractor.
+     * Constructs a TakeQuizInteractor instance which handles the process of taking a quiz,
+     * including retrieving questions, managing quiz history, and presenting updates to the user.
+     *
+     * @param questionRepo    the repository used for retrieving questions for the quiz
+     * @param historyGateway  the data access interface responsible for storing and retrieving quiz history
+     * @param presenter       the output boundary used to present quiz-related updates to the user
      */
     public TakeQuizInteractor(QuestionRepository questionRepo,
                              QuizHistoryDataAccessInterface historyGateway,
@@ -46,7 +51,7 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
     public void startQuiz(TakeQuizStartRequestModel requestModel) {
         currentQuestionType = requestModel.getQuestionType();
 
-        List<Question> questions = questionRepo.getQuestionsForQuiz(
+        final List<Question> questions = questionRepo.getQuestionsForQuiz(
                 requestModel.getQuizType(),
                 requestModel.getQuestionType(),
                 requestModel.getNumberOfQuestions()
@@ -54,9 +59,9 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
 
         currentQuiz = new Quiz(requestModel.getQuizType(), questions);
 
-        Question first = currentQuiz.getQuestions().get(0);
+        final Question first = currentQuiz.getQuestions().get(0);
 
-        TakeQuizStartResponseModel response = new TakeQuizStartResponseModel(
+        final TakeQuizStartResponseModel response = new TakeQuizStartResponseModel(
                 requestModel.getQuizType().getDisplayName(),
                 first.getPrompt(),
                 shuffledOptions(first),
@@ -72,22 +77,28 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
      * Submits the user's answer for the current question.
      */
     @Override
-    public void submitAnswer(SubmitAnswerRequestModel requestModel){
+    public void submitAnswer(SubmitAnswerRequestModel requestModel) {
         if (currentQuiz == null || currentQuiz.isFinished()) {
             return;
         }
 
-        Question currentQuestion = currentQuiz.getCurrentQuestion();
+        final Question currentQuestion = currentQuiz.getCurrentQuestion();
         if (currentQuestion == null) {
             return;
         }
 
-        String userAnswer = requestModel.getUserAnswer();
-        boolean correct = currentQuiz.answerCurrentQuestion(userAnswer);
+        final String userAnswer = requestModel.getUserAnswer();
+        final boolean correct = currentQuiz.answerCurrentQuestion(userAnswer);
 
-        String feedbackMessage = correct ? "Correct!" : "Incorrect.";
+        final String feedbackMessage;
+        if (correct) {
+            feedbackMessage = "Correct!";
+        }
+        else {
+            feedbackMessage = "Incorrect.";
+        }
 
-        AnswerFeedbackResponseModel response = new AnswerFeedbackResponseModel(
+        final AnswerFeedbackResponseModel response = new AnswerFeedbackResponseModel(
                 feedbackMessage,
                 currentQuestion.getCorrect(),
                 currentQuestion.getExplanation(),
@@ -103,7 +114,7 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
      * Advances the quiz to the next question, or ends the quiz if there are no more.
      */
     @Override
-    public void nextQuestion(){
+    public void nextQuestion() {
         if (currentQuiz == null) {
             return;
         }
@@ -111,13 +122,13 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
 
         if (currentQuiz.isFinished()) {
             currentQuiz.finish();
-            TakeQuizEndResponseModel endResponse = new TakeQuizEndResponseModel(
+            final TakeQuizEndResponseModel endResponse = new TakeQuizEndResponseModel(
                     currentQuiz.getScore(),
                     currentQuiz.getTotalQuestions(),
                     currentQuiz.getDurationPlayed(),
                     currentQuiz.getHighestStreak()
             );
-            QuizHistoryEntry entry = new QuizHistoryEntry(
+            final QuizHistoryEntry entry = new QuizHistoryEntry(
                     currentQuiz.getQuizType(),
                     currentQuestionType,
                     currentQuiz.getTotalQuestions(),
@@ -128,10 +139,11 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
             );
             historyGateway.saveQuizAttempt(entry);
             presenter.presentQuizEnd(endResponse);
-        } else {
-            Question q = currentQuiz.getCurrentQuestion();
+        }
+        else {
+            final Question q = currentQuiz.getCurrentQuestion();
 
-            TakeQuizQuestionResponseModel response = new TakeQuizQuestionResponseModel(
+            final TakeQuizQuestionResponseModel response = new TakeQuizQuestionResponseModel(
                     q.getPrompt(),
                     shuffledOptions(q),
                     currentQuiz.getCurrentIndex(),
@@ -152,14 +164,14 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
             return;
         }
 
-        Question currentQuestion = currentQuiz.getCurrentQuestion();
+        final Question currentQuestion = currentQuiz.getCurrentQuestion();
         if (currentQuestion == null) {
             return;
         }
 
         currentQuiz.answerCurrentQuestion("");
 
-        AnswerFeedbackResponseModel response = new AnswerFeedbackResponseModel(
+        final AnswerFeedbackResponseModel response = new AnswerFeedbackResponseModel(
                 "Time's up!",
                 currentQuestion.getCorrect(),
                 currentQuestion.getExplanation(),
@@ -176,16 +188,19 @@ public class TakeQuizInteractor implements TakeQuizInputBoundary{
      */
     @Override
     public void loadQuizHistory() {
-        List<QuizHistoryEntry> historyEntries = historyGateway.getAllQuizAttempts();
-        QuizHistoryResponseModel response = new QuizHistoryResponseModel(historyEntries);
+        final List<QuizHistoryEntry> historyEntries = historyGateway.getAllQuizAttempts();
+        final QuizHistoryResponseModel response = new QuizHistoryResponseModel(historyEntries);
         presenter.presentQuizHistory(response);
     }
 
     /**
-     * Returns a shuffled copy of the question's options.
+     * Shuffles the multiple-choice options of the given question and returns the shuffled list.
+     *
+     * @param question the Question object containing the multiple-choice options to be shuffled
+     * @return a list of shuffled answer options
      */
-    private List<String> shuffledOptions(Question q) {
-        List<String> shuffled = new ArrayList<>(q.getOptions());
+    private List<String> shuffledOptions(Question question) {
+        final List<String> shuffled = new ArrayList<>(question.getOptions());
         Collections.shuffle(shuffled);
         return shuffled;
     }

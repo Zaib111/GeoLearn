@@ -1,17 +1,46 @@
+
 package app.views.quiz;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dialog;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
+import java.util.logging.Logger;
+
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
 
 import app.controllers.TakeQuizController;
 import app.entities.QuestionType;
 import app.entities.QuizType;
 import app.views.AbstractView;
 import app.views.ViewModel;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.List;
-import javax.swing.table.DefaultTableModel;
 
 /**
  * A Swing-based view for running quizzes. Handles quiz selection,
@@ -22,8 +51,10 @@ import javax.swing.table.DefaultTableModel;
 public class QuizView extends AbstractView {
 
     private static final int QUESTION_TIME_LIMIT_SECONDS = 30;
+    private static final String UNKNOWN_LABEL = "Unknown";
+    private static final String TIME_PREFIX = "Time: ";
+    private static final Logger LOGGER = Logger.getLogger(QuizView.class.getName());
 
-    private final ViewModel<QuizState> viewModel;
     private TakeQuizController controller;
 
     // Timer
@@ -39,9 +70,9 @@ public class QuizView extends AbstractView {
             new JLabel("Choose a quiz to start:", SwingConstants.CENTER);
 
     // Main quiz area
-    private JPanel centerPanel;      // prompt + options + image
-    private final JPanel optionsPanel = new JPanel();   // where MCQ buttons go
-    private final JLabel imageLabel = new JLabel();     // for flags later
+    private JPanel centerPanel;
+    private final JPanel optionsPanel = new JPanel();
+    private final JLabel imageLabel = new JLabel();
 
     // Bottom: selection UI
     private JPanel configPanel;
@@ -64,21 +95,20 @@ public class QuizView extends AbstractView {
     // History tab
     private DefaultTableModel historyModel;
     private JTable historyTable;
-    private int attemptCounter = 0;
+    private int attemptCounter;
 
     private QuizType currentQuizType;
     private QuestionType currentQuestionType;
-    private int currentTotalQuestions;
 
     /**
      * Creates the quiz view and builds all UI components.
      * The presenter updates this view through the provided ViewModel.
+     * @param quizViewModel - The Quiz View Model
      */
     public QuizView(ViewModel<QuizState> quizViewModel) {
         super(quizViewModel);
-        this.viewModel = quizViewModel;
 
-        buildUI();
+        buildUserInterface();
         initListeners();
     }
 
@@ -86,20 +116,18 @@ public class QuizView extends AbstractView {
      * Builds all Swing UI components: selection menu, question UI,
      * feedback area, timer, and history table.
      */
-    private void buildUI() {
+    private void buildUserInterface() {
         setLayout(new BorderLayout());
 
-        // TOP: title + progress + timer
-        JPanel topPanel = new JPanel(new GridLayout(3, 1));
+        final JPanel topPanel = new JPanel(new GridLayout(3, 1));
         topPanel.add(quizTitleLabel);
         topPanel.add(progressLabel);
         topPanel.add(timerLabel);
         add(topPanel, BorderLayout.NORTH);
 
         quizTitleLabel.setText("Choose a quiz to start");
-        timerLabel.setText("Time: --");
+        timerLabel.setText(TIME_PREFIX + "--");
 
-        // CENTER: prompt + options + (optional) image
         centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(promptLabel, BorderLayout.NORTH);
 
@@ -113,6 +141,19 @@ public class QuizView extends AbstractView {
 
         showSelectionHero();
 
+        createHistoryModel();
+        createConfigPanel();
+        createAnswerPanel();
+
+        final JPanel selectionContainer = createSelectionContainer();
+        final JPanel bottomPanel = createBottomPanel(selectionContainer);
+
+        add(bottomPanel, BorderLayout.SOUTH);
+
+        setInitialVisibility();
+    }
+
+    private void createHistoryModel() {
         historyModel = new DefaultTableModel(
                 new Object[]{"Attempt", "Quiz Type", "Mode", "Score"}, 0
         ) {
@@ -121,8 +162,9 @@ public class QuizView extends AbstractView {
                 return false;
             }
         };
+    }
 
-        // Selection controls
+    private void createConfigPanel() {
         configPanel = new JPanel();
         configPanel.add(new JLabel("Quiz:"));
         configPanel.add(quizTypeCombo);
@@ -132,26 +174,31 @@ public class QuizView extends AbstractView {
         configPanel.add(numQuestionsSpinner);
         configPanel.add(historyButton);
         configPanel.add(startQuizButton);
+    }
 
-        // Answer controls (only visible during quiz)
+    private void createAnswerPanel() {
         answerPanel = new JPanel();
         answerPanel.add(typeInField);
         answerPanel.add(submitButton);
         answerPanel.add(resetButton);
         answerPanel.add(nextButton);
+    }
 
-        // Wrap the selection prompt + selection controls
-        JPanel selectionContainer = new JPanel(new BorderLayout());
+    private JPanel createSelectionContainer() {
+        final JPanel selectionContainer = new JPanel(new BorderLayout());
         selectionContainer.add(selectionPromptLabel, BorderLayout.NORTH);
         selectionContainer.add(configPanel, BorderLayout.CENTER);
+        return selectionContainer;
+    }
 
-        // Combine into bottomPanel
-        JPanel bottomPanel = new JPanel(new BorderLayout());
+    private JPanel createBottomPanel(JPanel selectionContainer) {
+        final JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(selectionContainer, BorderLayout.NORTH);
         bottomPanel.add(answerPanel, BorderLayout.SOUTH);
+        return bottomPanel;
+    }
 
-        add(bottomPanel, BorderLayout.SOUTH);
-
+    private void setInitialVisibility() {
         centerPanel.setVisible(true);
         answerPanel.setVisible(false);
         typeInField.setVisible(false);
@@ -167,64 +214,65 @@ public class QuizView extends AbstractView {
      * and resetting back to the selection screen.
      */
     private void initListeners() {
-        // Start Quiz: go from selection UI to quiz UI and call controller
-        startQuizButton.addActionListener(e -> {
-            if (controller != null) {
-                QuizType quizType =
-                        (QuizType) quizTypeCombo.getSelectedItem();
-                QuestionType questionType =
-                        (QuestionType) questionTypeCombo.getSelectedItem();
-                int n = (int) numQuestionsSpinner.getValue();
+        startQuizButton.addActionListener(event -> handleStartQuiz());
+        historyButton.addActionListener(event -> handleHistoryRequest());
+        submitButton.addActionListener(event -> handleSubmitAnswer());
+        nextButton.addActionListener(event -> handleNextQuestion());
+        resetButton.addActionListener(event -> resetToSelection());
+    }
 
-                currentQuizType = quizType;
-                currentQuestionType = questionType;
-                currentTotalQuestions = n;
+    private void handleStartQuiz() {
+        if (controller != null) {
+            final QuizType quizType = (QuizType) quizTypeCombo.getSelectedItem();
+            final QuestionType questionType = (QuestionType) questionTypeCombo.getSelectedItem();
+            final int questionCount = (int) numQuestionsSpinner.getValue();
 
-                // Switch UI: hide selection, show quiz
-                selectionPromptLabel.setVisible(false);
-                configPanel.setVisible(false);
-                answerPanel.setVisible(true);
-                resetButton.setVisible(true);
+            currentQuizType = quizType;
+            currentQuestionType = questionType;
 
-                // Prepare centerPanel for quiz mode: prompt + options
-                centerPanel.removeAll();
-                centerPanel.setLayout(new BorderLayout());
-                centerPanel.add(promptLabel, BorderLayout.NORTH);
-                centerPanel.add(optionsPanel, BorderLayout.CENTER);
-                centerPanel.add(imageLabel, BorderLayout.EAST);
+            switchToQuizMode();
 
-                timerLabel.setVisible(true);
+            controller.startQuiz(quizType, questionType, questionCount);
+        }
+    }
 
-                controller.startQuiz(quizType, questionType, n);
-            }
-        });
+    private void switchToQuizMode() {
+        selectionPromptLabel.setVisible(false);
+        configPanel.setVisible(false);
+        answerPanel.setVisible(true);
+        resetButton.setVisible(true);
 
-        historyButton.addActionListener(e -> {
-            if (controller != null) {
-                controller.loadQuizHistory();
-            }
-        });
+        centerPanel.removeAll();
+        centerPanel.setLayout(new BorderLayout());
+        centerPanel.add(promptLabel, BorderLayout.NORTH);
+        centerPanel.add(optionsPanel, BorderLayout.CENTER);
+        centerPanel.add(imageLabel, BorderLayout.EAST);
 
-        // Type-in submit
-        submitButton.addActionListener(e -> {
-            if (controller != null) {
-                controller.submitAnswer(typeInField.getText());
-            }
-        });
+        timerLabel.setVisible(true);
+    }
 
-        // Next question
-        nextButton.addActionListener(e -> {
-            if (controller != null) {
-                controller.nextQuestion();
-            }
-        });
+    private void handleHistoryRequest() {
+        if (controller != null) {
+            controller.loadQuizHistory();
+        }
+    }
 
-        resetButton.addActionListener(e -> resetToSelection());
+    private void handleSubmitAnswer() {
+        if (controller != null) {
+            controller.submitAnswer(typeInField.getText());
+        }
+    }
+
+    private void handleNextQuestion() {
+        if (controller != null) {
+            controller.nextQuestion();
+        }
     }
 
     /**
      * Called by Main to attach the controller. Enables user actions
      * to trigger use case requests.
+     * @param controller the quiz controller to set
      */
     public void setController(TakeQuizController controller) {
         this.controller = controller;
@@ -233,6 +281,12 @@ public class QuizView extends AbstractView {
     /**
      * Displays a new question from the presenter. Shows prompt, MCQ buttons
      * or a type-in field, optional image, progress text, and starts timer.
+     * @param quizTitle the title of the quiz
+     * @param prompt the question prompt
+     * @param options the list of answer options (null for type-in mode)
+     * @param questionIndex the current question index
+     * @param totalQuestions the total number of questions
+     * @param mediaUrl the URL or path to media content
      */
     public void showQuestion(String quizTitle,
                              String prompt,
@@ -241,101 +295,135 @@ public class QuizView extends AbstractView {
                              int totalQuestions,
                              String mediaUrl) {
 
-        quizTitleLabel.setText(quizTitle == null ? "" : quizTitle);
+        setQuizTitle(quizTitle);
         promptLabel.setText(prompt);
         progressLabel.setText("Question " + (questionIndex + 1)
                 + " of " + totalQuestions);
 
-        // Make sure we are in quiz mode (selection hidden)
-        configPanel.setVisible(false);
-        centerPanel.setVisible(true);
-        answerPanel.setVisible(true);
-        resetButton.setVisible(true);
-
-        // Reset
-        optionsPanel.removeAll();
-        imageLabel.setVisible(false);
-        typeInField.setText("");
+        prepareQuizMode();
+        resetQuestionDisplay();
 
         if (options == null || options.isEmpty()) {
-            // TYPE-IN mode
-            typeInField.setVisible(true);
-            submitButton.setVisible(true);
-        } else {
-            // MCQ mode
-            typeInField.setVisible(false);
-            submitButton.setVisible(false);
-
-            optionsPanel.removeAll();
-            optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
-
-            for (String opt : options) {
-                JButton btn = new JButton(opt);
-
-                // 🔹 Style the button (rounded + hover + press)
-                styleAnswerButton(btn);
-
-                btn.addActionListener(e -> {
-                    if (controller != null) {
-                        controller.submitAnswer(opt);
-                    }
-                });
-
-                // Center the button and add spacing between them
-                JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
-                wrapper.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
-                wrapper.setOpaque(false);  // let parent background show
-
-                wrapper.add(btn);
-                optionsPanel.add(wrapper);
-            }
+            showTypeInMode();
+        }
+        else {
+            showMultipleChoiceMode(options);
         }
 
         nextButton.setVisible(false);
-
-        // Optional image
-        if (mediaUrl != null && !mediaUrl.isEmpty()) {
-            try {
-                imageLabel.setText("");
-                imageLabel.setIcon(null);
-
-                if (mediaUrl.startsWith("http")) {
-                    // Remote image from REST Countries (flag URL)
-                    java.net.URL url = new java.net.URL(mediaUrl);
-                    imageLabel.setIcon(new javax.swing.ImageIcon(url));
-                } else {
-                    // Classpath resource like "/flags/ca.png"
-                    java.net.URL res = getClass().getResource(mediaUrl);
-                    if (res != null) {
-                        imageLabel.setIcon(new javax.swing.ImageIcon(res));
-                    } else {
-                        imageLabel.setText("[image not found]");
-                    }
-                }
-
-                imageLabel.setVisible(true);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                imageLabel.setIcon(null);
-                imageLabel.setText("[image failed to load]");
-                imageLabel.setVisible(true);
-            }
-        } else {
-            imageLabel.setIcon(null);
-            imageLabel.setVisible(false);
-        }
-
-
-        // Start countdown
+        displayMediaIfAvailable(mediaUrl);
         startTimer(QUESTION_TIME_LIMIT_SECONDS);
 
         revalidate();
         repaint();
     }
 
+    private void setQuizTitle(String quizTitle) {
+        if (quizTitle == null) {
+            quizTitleLabel.setText("");
+        }
+        else {
+            quizTitleLabel.setText(quizTitle);
+        }
+    }
+
+    private void prepareQuizMode() {
+        configPanel.setVisible(false);
+        centerPanel.setVisible(true);
+        answerPanel.setVisible(true);
+        resetButton.setVisible(true);
+    }
+
+    private void resetQuestionDisplay() {
+        optionsPanel.removeAll();
+        imageLabel.setVisible(false);
+        typeInField.setText("");
+    }
+
+    private void showTypeInMode() {
+        typeInField.setVisible(true);
+        submitButton.setVisible(true);
+    }
+
+    private void showMultipleChoiceMode(List<String> options) {
+        typeInField.setVisible(false);
+        submitButton.setVisible(false);
+
+        optionsPanel.removeAll();
+        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
+
+        for (String opt : options) {
+            final JButton btn = new JButton(opt);
+            styleAnswerButton(btn);
+
+            btn.addActionListener(event -> {
+                if (controller != null) {
+                    controller.submitAnswer(opt);
+                }
+            });
+
+            final JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            wrapper.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+            // Let parent background show
+            wrapper.setOpaque(false);
+
+            wrapper.add(btn);
+            optionsPanel.add(wrapper);
+        }
+    }
+
+    private void displayMediaIfAvailable(String mediaUrl) {
+        if (mediaUrl != null && !mediaUrl.isEmpty()) {
+            try {
+                imageLabel.setText("");
+                imageLabel.setIcon(null);
+
+                if (mediaUrl.startsWith("http")) {
+                    loadRemoteImage(mediaUrl);
+                }
+                else {
+                    loadLocalImage(mediaUrl);
+                }
+
+                imageLabel.setVisible(true);
+            }
+            catch (java.io.IOException ex) {
+                LOGGER.warning("Failed to load image: " + ex.getMessage());
+                imageLabel.setIcon(null);
+                imageLabel.setText("[image failed to load]");
+                imageLabel.setVisible(true);
+            }
+        }
+        else {
+            imageLabel.setIcon(null);
+            imageLabel.setVisible(false);
+        }
+    }
+
+    private void loadRemoteImage(String mediaUrl) throws java.io.IOException {
+        final java.net.URL url = new java.net.URL(mediaUrl);
+        imageLabel.setIcon(new javax.swing.ImageIcon(url));
+    }
+
+    private void loadLocalImage(String mediaUrl) {
+        final java.net.URL res = getClass().getResource(mediaUrl);
+        if (res != null) {
+            imageLabel.setIcon(new javax.swing.ImageIcon(res));
+        }
+        else {
+            imageLabel.setText("[image not found]");
+        }
+    }
+
     /**
      * Displays correctness feedback, explanation, updated score,
      * and streak info. Stops the timer and waits for user to click Next.
+     * @param feedbackMessage the feedback message to display
+     * @param correctAnswer the correct answer
+     * @param explanation the explanation of the answer
+     * @param score the current score
+     * @param currentStreak the current streak count
+     * @param highestStreak the highest streak achieved
      */
     public void showAnswerFeedback(String feedbackMessage,
                                    String correctAnswer,
@@ -358,7 +446,6 @@ public class QuizView extends AbstractView {
         optionsPanel.add(new JLabel("Streak: "
                 + currentStreak + " (Best: " + highestStreak + ")"));
 
-        // After feedback, hide type-in stuff and show Next
         typeInField.setVisible(false);
         submitButton.setVisible(false);
         nextButton.setVisible(true);
@@ -370,6 +457,11 @@ public class QuizView extends AbstractView {
     /**
      * Displays final quiz results in a dialog, records the attempt
      * in the session history table, and returns UI to selection mode.
+     * @param summaryText the summary text
+     * @param score the final score
+     * @param totalQuestions the total number of questions
+     * @param durationSeconds the duration in seconds
+     * @param highestStreak the highest streak achieved
      */
     public void showQuizEnd(String summaryText,
                             int score,
@@ -381,10 +473,9 @@ public class QuizView extends AbstractView {
             countdownTimer.stop();
         }
 
-        // Show summary dialog
-        String message = summaryText + "\n"
+        final String message = summaryText + "\n"
                 + "Score: " + score + "/" + totalQuestions + "\n"
-                + "Time: " + durationSeconds + " seconds\n"
+                + TIME_PREFIX + durationSeconds + " seconds\n"
                 + "Best streak: " + highestStreak;
         JOptionPane.showMessageDialog(
                 this,
@@ -393,30 +484,60 @@ public class QuizView extends AbstractView {
                 JOptionPane.INFORMATION_MESSAGE
         );
 
-        // Add a row to the history table
+        addHistoryEntry(score, totalQuestions);
+        resetToSelection();
+    }
+
+    private void addHistoryEntry(int score, int totalQuestions) {
         attemptCounter++;
-        String quizTypeLabel = (currentQuizType != null)
-                ? currentQuizType.getDisplayName()
-                : "Unknown";
-        String modeLabel = (currentQuestionType != null)
-                ? currentQuestionType.toString()
-                : "Unknown";
-        String scoreLabel = score + " / " + totalQuestions;
+        final String quizTypeLabel = getQuizTypeLabel();
+        final String modeLabel = getModeLabel();
+        final String scoreLabel = score + " / " + totalQuestions;
 
         historyModel.addRow(new Object[]{
-                attemptCounter,
-                quizTypeLabel,
-                modeLabel,
-                scoreLabel
+            attemptCounter,
+            quizTypeLabel,
+            modeLabel,
+            scoreLabel,
         });
+    }
 
-        // Return to selection page
-        resetToSelection();
+    private String getQuizTypeLabel() {
+        String result = UNKNOWN_LABEL;
+        if (currentQuizType != null) {
+            result = currentQuizType.getDisplayName();
+        }
+        return result;
+    }
+
+    private String getQuizTypeLabel(app.entities.QuizHistoryEntry entry) {
+        String result = UNKNOWN_LABEL;
+        if (entry.getQuizType() != null) {
+            result = entry.getQuizType().getDisplayName();
+        }
+        return result;
+    }
+
+    private String getModeLabel() {
+        String result = UNKNOWN_LABEL;
+        if (currentQuestionType != null) {
+            result = currentQuestionType.toString();
+        }
+        return result;
+    }
+
+    private String getModeLabel(app.entities.QuizHistoryEntry entry) {
+        String result = UNKNOWN_LABEL;
+        if (entry.getQuizType() != null) {
+            result = entry.getQuestionType().toString();
+        }
+        return result;
     }
 
     /**
      * Starts a per-question countdown timer. If time reaches zero,
      * notifies controller through timeExpired().
+     * @param seconds the number of seconds for the countdown
      */
     private void startTimer(int seconds) {
         if (countdownTimer != null) {
@@ -424,22 +545,24 @@ public class QuizView extends AbstractView {
         }
 
         remainingSeconds = seconds;
-        timerLabel.setText("Time: " + remainingSeconds + "s");
+        timerLabel.setText(TIME_PREFIX + remainingSeconds + "s");
 
-        countdownTimer = new javax.swing.Timer(1000, e -> {
-            remainingSeconds--;
-            if (remainingSeconds <= 0) {
-                countdownTimer.stop();
-                timerLabel.setText("Time: 0s");
-                if (controller != null) {
-                    controller.timeExpired();
-                }
-            } else {
-                timerLabel.setText("Time: " + remainingSeconds + "s");
-            }
-        });
-
+        countdownTimer = new javax.swing.Timer(1000, event -> handleTimerTick());
         countdownTimer.start();
+    }
+
+    private void handleTimerTick() {
+        remainingSeconds--;
+        if (remainingSeconds <= 0) {
+            countdownTimer.stop();
+            timerLabel.setText(TIME_PREFIX + "0s");
+            if (controller != null) {
+                controller.timeExpired();
+            }
+        }
+        else {
+            timerLabel.setText(TIME_PREFIX + remainingSeconds + "s");
+        }
     }
 
     /**
@@ -451,16 +574,14 @@ public class QuizView extends AbstractView {
             countdownTimer.stop();
         }
 
-        // Reset labels
         quizTitleLabel.setText("GeoLearn Quiz");
         promptLabel.setText("");
         progressLabel.setText("");
-        timerLabel.setText("Time: --");
+        timerLabel.setText(TIME_PREFIX + "--");
         timerLabel.setVisible(false);
 
         selectionPromptLabel.setVisible(true);
 
-        // Show selection UI, hide quiz UI
         configPanel.setVisible(true);
         centerPanel.setVisible(true);
         answerPanel.setVisible(false);
@@ -489,10 +610,10 @@ public class QuizView extends AbstractView {
             historyTable.setFillsViewportHeight(true);
         }
 
-        JScrollPane scrollPane = new JScrollPane(historyTable);
+        final JScrollPane scrollPane = new JScrollPane(historyTable);
         scrollPane.setPreferredSize(new Dimension(500, 200));
 
-        JDialog dialog = new JDialog(
+        final JDialog dialog = new JDialog(
                 SwingUtilities.getWindowAncestor(this),
                 "Quiz History",
                 Dialog.ModalityType.APPLICATION_MODAL
@@ -503,10 +624,10 @@ public class QuizView extends AbstractView {
                 SwingConstants.CENTER), BorderLayout.NORTH);
         dialog.add(scrollPane, BorderLayout.CENTER);
 
-        JButton closeButton = new JButton("Close");
-        closeButton.addActionListener(e -> dialog.dispose());
+        final JButton closeButton = new JButton("Close");
+        closeButton.addActionListener(event -> dialog.dispose());
 
-        JPanel buttonPanel = new JPanel();
+        final JPanel buttonPanel = new JPanel();
         buttonPanel.add(closeButton);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -522,29 +643,20 @@ public class QuizView extends AbstractView {
      * @param historyEntries the list of quiz history entries from the database
      */
     public void showQuizHistory(java.util.List<app.entities.QuizHistoryEntry> historyEntries) {
-        // Clear the existing table data
         historyModel.setRowCount(0);
 
-        // Populate table with database history
-        int rowNumber = 1;
         for (app.entities.QuizHistoryEntry entry : historyEntries) {
-            String quizTypeLabel = entry.getQuizType() != null
-                    ? entry.getQuizType().getDisplayName()
-                    : "Unknown";
-            String modeLabel = entry.getQuestionType() != null
-                    ? entry.getQuestionType().toString()
-                    : "Unknown";
-            String scoreLabel = entry.getScore() + " / " + entry.getNumQuestions();
+            final String quizTypeLabel = getQuizTypeLabel(entry);
+            final String modeLabel = getModeLabel(entry);
+            final String scoreLabel = entry.getScore() + " / " + entry.getNumQuestions();
 
             historyModel.addRow(new Object[]{
-                    rowNumber++,
-                    quizTypeLabel,
-                    modeLabel,
-                    scoreLabel
+                quizTypeLabel,
+                modeLabel,
+                scoreLabel,
             });
         }
 
-        // Show the dialog
         showHistoryDialog();
     }
 
@@ -553,7 +665,6 @@ public class QuizView extends AbstractView {
      * and decorative icons. Used when no quiz is running.
      */
     private void showSelectionHero() {
-        // Big title text
         quizTitleLabel.setText("GeoLearn Quiz");
         quizTitleLabel.setFont(quizTitleLabel.getFont().deriveFont(Font.BOLD, 32f));
 
@@ -562,37 +673,30 @@ public class QuizView extends AbstractView {
 
         centerPanel.removeAll();
         centerPanel.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
+        final GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
 
-        // Center with title
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.CENTER;
         centerPanel.add(quizTitleLabel, gbc);
 
-        // Around the title with emojis
-        JLabel topImage = makeHeroImageLabel("🌍");
-        JLabel bottomImage = makeHeroImageLabel("🏛️");
-        JLabel leftImage = makeHeroImageLabel("🚩");
-        JLabel rightImage = makeHeroImageLabel("💱");
-
-        // Top
+        final JLabel topImage = makeHeroImageLabel("Globe");
         gbc.gridx = 1;
         gbc.gridy = 0;
         centerPanel.add(topImage, gbc);
 
-        // Bottom
+        final JLabel bottomImage = makeHeroImageLabel("Building");
         gbc.gridx = 1;
         gbc.gridy = 2;
         centerPanel.add(bottomImage, gbc);
 
-        // Left
+        final JLabel leftImage = makeHeroImageLabel("Flag");
         gbc.gridx = 0;
         gbc.gridy = 1;
         centerPanel.add(leftImage, gbc);
 
-        // Right
+        final JLabel rightImage = makeHeroImageLabel("Currency");
         gbc.gridx = 2;
         gbc.gridy = 1;
         centerPanel.add(rightImage, gbc);
@@ -603,40 +707,18 @@ public class QuizView extends AbstractView {
 
     /**
      * Creates a large emoji label used in the hero layout.
+     * @param emoji the emoji or text to display
+     * @return a styled JLabel
      */
     private JLabel makeHeroImageLabel(String emoji) {
-        JLabel label = new JLabel(emoji, SwingConstants.CENTER);
+        final JLabel label = new JLabel(emoji, SwingConstants.CENTER);
         label.setFont(label.getFont().deriveFont(32f));
         return label;
     }
 
-    private static class RoundedBorder implements javax.swing.border.Border {
-        private final int radius;
-
-        RoundedBorder(int radius) {
-            this.radius = radius;
-        }
-
-        @Override
-        public Insets getBorderInsets(Component c) {
-            return new Insets(this.radius + 1, this.radius + 1, this.radius + 2, this.radius);
-        }
-
-        @Override
-        public boolean isBorderOpaque() {
-            return false;
-        }
-
-        @Override
-        public void paintBorder(Component c, Graphics g, int x, int y,
-                                int width, int height) {
-            g.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
-        }
-    }
-
-
     /**
      * Called when the quiz view becomes visible. Restores selection mode.
+     * @param param optional parameter
      */
     @Override
     public void onViewOpened(String param) {
@@ -656,6 +738,8 @@ public class QuizView extends AbstractView {
     /**
      * Responds to view model state changes and updates the UI accordingly.
      * This method is called whenever the presenter updates the quiz state.
+     * @param oldState the previous state
+     * @param newState the new state
      */
     @Override
     public void onStateChange(Object oldState, Object newState) {
@@ -665,7 +749,6 @@ public class QuizView extends AbstractView {
 
         final QuizState state = (QuizState) newState;
 
-        // Handle showing a new question
         if (state.isShowQuestion()) {
             showQuestion(
                     state.getQuizTitle(),
@@ -677,7 +760,6 @@ public class QuizView extends AbstractView {
             );
         }
 
-        // Handle showing answer feedback
         if (state.isShowFeedback()) {
             showAnswerFeedback(
                     state.getFeedbackMessage(),
@@ -689,7 +771,6 @@ public class QuizView extends AbstractView {
             );
         }
 
-        // Handle showing quiz end summary
         if (state.isShowEnd()) {
             showQuizEnd(
                     "Quiz Completed!",
@@ -700,7 +781,6 @@ public class QuizView extends AbstractView {
             );
         }
 
-        // Handle showing quiz history
         if (state.isShowHistory()) {
             showQuizHistory(state.getHistoryEntries());
         }
@@ -708,12 +788,12 @@ public class QuizView extends AbstractView {
 
     /**
      * Apply consistent styling + hover/press effects to answer buttons.
+     * @param btn the button to style
      */
     private void styleAnswerButton(JButton btn) {
-        // Base colours
-        Color normalBg = new Color(230, 230, 255);
-        Color hoverBg  = new Color(210, 210, 245);
-        Color pressedBg = new Color(190, 190, 235);
+        final Color normalBg = new Color(230, 230, 255);
+        final Color hoverBg = new Color(210, 210, 245);
+        final Color pressedBg = new Color(190, 190, 235);
 
         btn.setBorder(new RoundedBorder(12));
         btn.setFocusPainted(false);
@@ -722,41 +802,64 @@ public class QuizView extends AbstractView {
         btn.setPreferredSize(new Dimension(250, 40));
         btn.setFont(btn.getFont().deriveFont(Font.PLAIN, 16f));
 
-        // Hover (4)
         btn.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseEntered(MouseEvent e) {
+            public void mouseEntered(MouseEvent event) {
                 if (btn.isEnabled()) {
                     btn.setBackground(hoverBg);
                 }
             }
 
             @Override
-            public void mouseExited(MouseEvent e) {
+            public void mouseExited(MouseEvent event) {
                 if (btn.isEnabled()) {
                     btn.setBackground(normalBg);
                 }
             }
         });
 
-        // Press "animation" + active look (5, 7)
-        btn.getModel().addChangeListener(e -> {
-            ButtonModel model = (ButtonModel) e.getSource();
+        btn.getModel().addChangeListener(event -> {
+            final ButtonModel model = (ButtonModel) event.getSource();
             if (!btn.isEnabled()) {
                 return;
             }
 
             if (model.isPressed()) {
-                // While button is pressed
                 btn.setBackground(pressedBg);
-            } else if (model.isRollover()) {
-                // Hover but not pressed
+            }
+            else if (model.isRollover()) {
                 btn.setBackground(hoverBg);
-            } else {
-                // Default
+            }
+            else {
                 btn.setBackground(normalBg);
             }
         });
     }
 
+    /**
+     * Custom border implementation for rounded button appearance.
+     */
+    private static class RoundedBorder implements javax.swing.border.Border {
+        private final int radius;
+
+        RoundedBorder(int radius) {
+            this.radius = radius;
+        }
+
+        @Override
+        public Insets getBorderInsets(Component component) {
+            return new Insets(this.radius + 1, this.radius + 1, this.radius + 2, this.radius);
+        }
+
+        @Override
+        public boolean isBorderOpaque() {
+            return false;
+        }
+
+        @Override
+        public void paintBorder(Component component, Graphics graphics, int xCoord, int yCoord,
+                                int width, int height) {
+            graphics.drawRoundRect(xCoord, yCoord, width - 1, height - 1, radius, radius);
+        }
+    }
 }
