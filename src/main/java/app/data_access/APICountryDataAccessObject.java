@@ -91,7 +91,8 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
             try {
                 performFetch(field, dataMaps);
                 break;
-            } catch (IOException | JSONException exception) {
+            }
+            catch (IOException | JSONException exception) {
                 attempt++;
                 if (attempt > MAX_RETRIES) {
                     System.err.println("Failed to fetch field '" + field + "' after " + MAX_RETRIES + " retries.");
@@ -103,7 +104,8 @@ public class APICountryDataAccessObject implements FilterCountriesDataAccessInte
 
                 try {
                     Thread.sleep(retryDelay);
-                } catch (InterruptedException interruptedException) {
+                }
+                catch (InterruptedException interruptedException) {
                     Thread.currentThread().interrupt();
                     throw new RuntimeException("Interrupted while retrying fetch for field: " + field,
                             interruptedException);
