@@ -1,6 +1,5 @@
 package app.use_cases.quiz;
 
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
