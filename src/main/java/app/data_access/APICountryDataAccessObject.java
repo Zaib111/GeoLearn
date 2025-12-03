@@ -18,7 +18,7 @@ import app.entities.Country;
 import app.use_cases.compare.CompareDataAccessInterface;
 import app.use_cases.country.CountryDataAccessInterface;
 import app.use_cases.detail.DetailDataAccessInterface;
-import app.use_cases.filter_country.FilterCountriesDataAccessInterface;
+import app.use_cases.filter_countries.FilterCountriesDataAccessInterface;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;

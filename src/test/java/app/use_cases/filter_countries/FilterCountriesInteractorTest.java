@@ -1,7 +1,6 @@
 package app.use_cases.filter_countries;
 
 import app.entities.Country;
-import app.use_cases.filter_country.*;
 import org.junit.Test;
 
 import java.util.ArrayList;

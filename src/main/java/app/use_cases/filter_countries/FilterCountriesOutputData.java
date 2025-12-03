@@ -1,4 +1,4 @@
-package app.use_cases.filter_country;
+package app.use_cases.filter_countries;
 
 import java.util.List;
 
