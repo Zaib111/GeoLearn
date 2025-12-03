@@ -1,7 +1,7 @@
 package app.controllers;
 
-import app.use_cases.filter_country.FilterCountriesInputBoundary;
-import app.use_cases.filter_country.FilterCountriesInputData;
+import app.use_cases.filter_countries.FilterCountriesInputBoundary;
+import app.use_cases.filter_countries.FilterCountriesInputData;
 
 /**
  * Controller that adapts UI input into the filter-countries use case boundary.

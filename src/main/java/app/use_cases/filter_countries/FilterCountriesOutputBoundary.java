@@ -1,4 +1,4 @@
-package app.use_cases.filter_country;
+package app.use_cases.filter_countries;
 
 /**
  * Output boundary for the Filter Countries use case, which is responsible for presenting

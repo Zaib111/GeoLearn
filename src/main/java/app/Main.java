@@ -26,7 +26,7 @@ import app.use_cases.country_collection.CollectionInteractor;
 import app.use_cases.detail.DetailDataAccessInterface;
 import app.use_cases.detail.DetailInteractor;
 import app.use_cases.explore_map.ExploreMapInteractor;
-import app.use_cases.filter_country.FilterCountriesInteractor;
+import app.use_cases.filter_countries.FilterCountriesInteractor;
 import app.use_cases.quiz.LocalQuestionRepository;
 import app.use_cases.quiz.QuestionRepository;
 import app.use_cases.quiz.QuizHistoryDataAccessInterface;

@@ -1,13 +1,8 @@
-package app.use_cases.filter_country;
+package app.use_cases.filter_countries;
 
-import app.entities.Country;
-
-import javax.swing.*;
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import app.data_access.APICountryDataAccessObject;
 import app.entities.Country;
 
 public class FilterCountriesInteractor implements FilterCountriesInputBoundary {
