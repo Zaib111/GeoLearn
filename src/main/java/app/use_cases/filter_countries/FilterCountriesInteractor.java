@@ -1,9 +1,9 @@
 package app.use_cases.filter_countries;
 
-import app.entities.Country;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import app.entities.Country;
 
 public class FilterCountriesInteractor implements FilterCountriesInputBoundary {
     private final FilterCountriesDataAccessInterface dataAccess;
